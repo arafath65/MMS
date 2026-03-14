@@ -1,6 +1,7 @@
 package Entities.Student_Management;
 
 import java.io.Serializable;
+import java.util.List;
 import javax.persistence.*;
 
 @Entity
@@ -18,9 +19,15 @@ public class CourseEnrollment implements Serializable {
     @JoinColumn(name = "student_id")
     private Student student;
 
+    @OneToMany(mappedBy = "enrollment", fetch = FetchType.LAZY)
+    private List<StudentFeePayments> payments;
+
+    @OneToOne(mappedBy = "enrollment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private StudentFeePayments feePayments;
+
     @Column(name = "course_id")
     private Integer courseId;
-    
+
     @Column(name = "class_name")
     private String className;
 
@@ -60,7 +67,7 @@ public class CourseEnrollment implements Serializable {
     public void setCourseId(Integer courseId) {
         this.courseId = courseId;
     }
-    
+
     public String getClassName() {
         return className;
     }
@@ -101,6 +108,14 @@ public class CourseEnrollment implements Serializable {
         this.status = status;
     }
 
+    public StudentFeePayments getFeePayments() {
+        return feePayments;
+    }
+
+    public void setFeePayments(StudentFeePayments feePayments) {
+        this.feePayments = feePayments;
+    }
+
     @Override
     public int hashCode() {
         return enrollmentId != null ? enrollmentId.hashCode() : 0;
@@ -120,4 +135,3 @@ public class CourseEnrollment implements Serializable {
         return "CourseEnrollment[ enrollmentId=" + enrollmentId + " ]";
     }
 }
-

@@ -159,6 +159,74 @@ public class CourseEnrollmentDAO {
         return list;
     }
 
+    public List<Object[]> findCoursesForFeeTable(int studentId) {
+
+        EntityManager em = HibernateConfig.getEntityManager();
+
+        List<Object[]> list = em.createQuery(
+                "SELECT "
+                + "c.batch, "
+                + "c.courseName, "
+                + "c.enrolYear, "
+                + "c.enrolMonth, "
+                + "c.compYear, "
+                + "c.compMonth, "
+                + "fp.courseType, "
+                + "ce.admissionFee, "
+                + "fp.totalFee, "
+                + "COALESCE(fp.totalPaid,0), "
+                + "COALESCE(fp.totalBalance, fp.totalFee), "
+                + "ce.enrollmentId, "
+                + "fp.student.studentId "
+                + "FROM StudentFeePayments fp "
+                + "JOIN fp.enrollment ce "
+                + "JOIN Course c ON ce.courseId = c.courseId "
+                + "WHERE fp.student.studentId = :studentId "
+                + "AND fp.paymentStatus = 'ACTIVE' "
+                + "AND fp.status = 1 ORDER BY ce.enrollmentId DESC ",
+                Object[].class
+        )
+                .setParameter("studentId", studentId)
+                .getResultList();
+
+        em.close();
+
+        return list;
+    }
+
+//    public List<Object[]> findCoursesForFeeTable(int studentId) {
+//
+//        EntityManager em = HibernateConfig.getEntityManager();
+//
+//        List<Object[]> list = em.createQuery(
+//                "SELECT "
+//                + "c.batch, "
+//                + "c.courseName, "
+//                + "c.enrolYear, "
+//                + "c.enrolMonth, "
+//                + "c.compYear, "
+//                + "c.compMonth, "
+//                + "c.paymentMode, "
+//                + "ce.admissionFee, "
+//                + "ce.fee, "
+//                + "COALESCE(fp.totalPaid,0), "
+//                + "COALESCE(fp.totalBalance, ce.fee), "
+//                + "ce.enrollmentId, "
+//                + "ce.student.studentId "
+//                + "FROM CourseEnrollment ce "
+//                + "JOIN Course c ON ce.courseId = c.courseId "
+//                + "LEFT JOIN ce.payments fp "
+//                + "WHERE ce.student.studentId = :studentId "
+//                + "AND ce.status = 1",
+//                Object[].class
+//        )
+//                .setParameter("studentId", studentId)
+//                .getResultList();
+//
+//        em.close();
+//
+//        return list;
+//    }
     public void softDelete(int id) {
 
         EntityManager em = HibernateConfig.getEntityManager();

@@ -5,10 +5,12 @@ import Classes.GradientButton;
 import Classes.ModernDialog;
 import Classes.ModernMessage;
 import Classes.TableGradientCell;
+import Dashboard.Dashboard;
 import Entities.Settings.Course;
 import Entities.Settings.StudentClass;
 import Entities.Student_Management.CourseEnrollment;
 import Entities.Student_Management.Student;
+import Entities.Student_Management.StudentFeePayments;
 import JPA_DAO.Settings.ClassDAO;
 import JPA_DAO.Settings.CourseDAO;
 import JPA_DAO.Student_Management.CourseEnrollmentDAO;
@@ -26,6 +28,7 @@ import java.awt.RenderingHints;
 import java.awt.Window;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.Date;
 import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -586,6 +589,28 @@ public class Course_Enrollment extends javax.swing.JDialog {
             ce.setCourseStatus("ACTIVE");
             ce.setStatus(1); // Boolean, not int
 
+            StudentFeePayments fp = new StudentFeePayments();
+
+            int totalFee = GeneralMethods.parseCommaNumber(fee);
+
+            fp.setStudent(s);
+            fp.setEnrollment(ce);
+
+            fp.setTotalFee(totalFee);
+            fp.setTotalPaid(0);
+            fp.setTotalBalance(totalFee);
+
+            fp.setPaymentType("");
+            fp.setCourseType(payment_mode);
+            fp.setPaymentStatus("ACTIVE");
+            fp.setRemarks("COURSE_ENROLLMENT");
+
+            fp.setCreatedAt(new Date());
+            fp.setLastMofidied(new Date());
+            fp.setUser(Dashboard.main_username.getText());
+            fp.setStatus(true);
+
+            ce.setFeePayments(fp);
             new CourseEnrollmentDAO().save(ce);
 
             model.addRow(new Object[]{
@@ -614,88 +639,6 @@ public class Course_Enrollment extends javax.swing.JDialog {
             e.printStackTrace();
         }
 
-//        try {
-//
-//            DefaultTableModel model = (DefaultTableModel) stm_ce_table.getModel();
-//
-//            String course = stm_ce_course_name_combo.getEditor().getItem().toString();
-//            String courseName = course.substring(0, course.indexOf("[")).trim();
-//            String batch = course.substring(
-//                    course.indexOf("[") + 1,
-//                    course.indexOf("]")
-//            ).trim();
-//
-//            String payment_mode = stm_ce_payment_mode_textfield.getText();
-//            String admissionFee = stm_ce_admission_fee_textfield.getText();
-//            String fee = stm_ce_fee_textfield.getText();
-//
-//            int enrol_year = Integer.parseInt(stm_ce_course_start_textfield.getText().split(" - ")[1]);
-//            String enrol_month = stm_ce_course_start_textfield.getText().split(" - ")[0];
-//
-//            int comp_year = Integer.parseInt(stm_ce_course_end_textfield.getText().split(" - ")[1]);
-//            String comp_month = stm_ce_course_end_textfield.getText().split(" - ")[0];
-//
-//            // 🔴 DUPLICATE CHECK (RAW)
-//            boolean duplicate = false;
-//
-//            for (int i = 0; i < model.getRowCount(); i++) {
-//
-//                String tBatch = model.getValueAt(i, 1).toString();
-//                String tCourse = model.getValueAt(i, 2).toString();
-//                String tEnrolYear = model.getValueAt(i, 3).toString();
-//                String tCompYear = model.getValueAt(i, 4).toString();
-//                String tPaymentMode = model.getValueAt(i, 5).toString();
-//                String aFee = model.getValueAt(i, 6).toString();
-//                String tFee = model.getValueAt(i, 7).toString();
-//                String stat = model.getValueAt(i, 8).toString();
-//
-//                if (tBatch.equalsIgnoreCase(batch)
-//                        && tCourse.equalsIgnoreCase(course)
-//                        && tEnrolYear.equalsIgnoreCase(stm_ce_course_start_textfield.getText())
-//                        && tCompYear.equalsIgnoreCase(stm_ce_course_end_textfield.getText())
-//                        && tPaymentMode.equalsIgnoreCase(payment_mode)
-//                        && aFee.equals(admissionFee)
-//                        && tFee.equals(fee)
-//                        && stat.equals("ACTIVE")) {
-//                    duplicate = true;
-//                    break;
-//                }
-//            }
-//
-//            if (duplicate) {
-//                JOptionPane.showMessageDialog(
-//                        null,
-//                        "This course entry already exists!",
-//                        "Duplicate Entry",
-//                        JOptionPane.WARNING_MESSAGE
-//                );
-//                return;
-//            }
-//
-//            CourseEnrollment ce = new CourseEnrollment();
-//            ce.setStudentId(studentId);
-//            ce.setCourseId(courseID);
-//            ce.setAdmissionFee(GeneralMethods.parseCommaNumber(admissionFee));
-//            ce.setFee(GeneralMethods.parseCommaNumber(fee));
-//            ce.setCourseStatus("ACTIVE");
-//            ce.setStatus(1);
-//
-//            new CourseEnrollmentDAO().save(ce);
-//
-//            model.addRow(new Object[]{model.getRowCount() + 1, batch, course, enrol_month + " - " + enrol_year, comp_month + " - " + comp_year, payment_mode,
-//                admissionFee, fee, "ACTIVE"});
-//
-//            stm_ce_course_name_combo.removeAllItems();
-//            stm_ce_payment_mode_textfield.setText("");
-//            stm_ce_admission_fee_textfield.setText("");
-//            stm_ce_fee_textfield.setText("");
-//            stm_ce_course_start_textfield.setText("");
-//            stm_ce_course_end_textfield.setText("");
-//            stm_ce_course_name_combo.requestFocus();
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
 
     }//GEN-LAST:event_jButton2ActionPerformed
 

@@ -23,6 +23,7 @@ import java.util.List;
 import javax.imageio.ImageIO;
 import javax.persistence.EntityManager;
 import javax.swing.BorderFactory;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -37,6 +38,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.DateFormatter;
 
@@ -358,6 +360,52 @@ public class GeneralMethods {
                     e.consume(); // block non-digits
                 }
             }
+        });
+    }
+
+    // This method loads and shows matching items from the database into a combo box
+    public void loadMatchingComboItems(JComboBox<String> comboBox,
+            String column,
+            String table,
+            String input) {
+
+        SwingUtilities.invokeLater(() -> {
+
+            EntityManager em = HibernateConfig.getEntityManager();
+
+            try {
+
+                String sql = "SELECT DISTINCT " + column
+                        + " FROM " + table
+                        + " WHERE " + column + " LIKE :input";
+
+                List<String> results = em.createNativeQuery(sql)
+                        .setParameter("input", "%" + input + "%")
+                        .getResultList();
+
+                DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+                boolean found = false;
+
+                for (String value : results) {
+                    model.addElement(value);
+                    found = true;
+                }
+
+                comboBox.setModel(model);
+                comboBox.setSelectedItem(input); // keep typing text
+
+                if (found) {
+                    comboBox.setPopupVisible(true);
+                } else {
+                    comboBox.hidePopup();
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                em.close();
+            }
+
         });
     }
 

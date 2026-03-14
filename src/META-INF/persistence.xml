@@ -18,8 +18,14 @@
     <class>Entities.Student_Management.Student</class>
     <class>Entities.Student_Management.StudentParents</class>
     <class>Entities.Student_Management.CourseEnrollment</class>
-
-
+    <class>Entities.Student_Management.StudentFeePayments</class>
+    <class>Entities.Student_Management.StudentFeeInstallments</class>
+    <class>Entities.Student_Management.StudentFeeRoundPaymentMasterDetails</class>
+    <class>Entities.Student_Management.StudentFeeRoundPaymentMaster</class>
+    <class>Additional.LedgerEntries</class>
+    <class>Additional.BankNamesSriLanka</class>
+    <class>Additional.BankBranches</class>
+    
     <properties>
       <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/mms_db"/>
       <property name="javax.persistence.jdbc.user" value="root"/>

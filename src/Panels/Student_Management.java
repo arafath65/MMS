@@ -66,18 +66,18 @@ public class Student_Management extends javax.swing.JPanel {
         stm_ad_student_dob.addPropertyChangeListener("date", evt -> {
             NICParser.setAgeFromDOB(stm_ad_student_dob, stm_ad_student_age_text);
         });
-        
+
         generalMethods.setIntegerOnly(stm_ad_student_contact_text, 10);
-        
+
         generalMethods.setIntegerOnly(stm_ad_student_mother_contact_text, 10);
         generalMethods.setIntegerOnly(stm_ad_student_mother_whatsapp_text, 10);
-        
+
         generalMethods.setIntegerOnly(stm_ad_student_father_contact_text, 10);
         generalMethods.setIntegerOnly(stm_ad_student_father_whatsapp_text, 10);
-        
+
         generalMethods.setIntegerOnly(stm_ad_student_guardian_contact_text, 10);
         generalMethods.setIntegerOnly(stm_ad_student_guardian_whatsapp_text, 10);
-        
+
     }
 
     private void jComboPopulates() {
@@ -853,7 +853,8 @@ public class Student_Management extends javax.swing.JPanel {
             // 1️⃣ Load existing student
             Student existingStudent = em.find(Student.class, studentId);
             if (existingStudent == null) {
-                throw new RuntimeException("Student not found for update.");
+                JOptionPane.showMessageDialog(null, "Student not found for update.", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
             }
 
             // 2️⃣ Update student fields
@@ -1087,6 +1088,8 @@ public class Student_Management extends javax.swing.JPanel {
         stm_ad_student_guardian_address_contact.setText("");
         stm_ad_student_guardian_contact_text.setText("");
         stm_ad_student_guardian_whatsapp_text.setText("");
+
+        selectedStudentId = 0;
 
         try {
             InputStream imgStream = getClass().getResourceAsStream("/images/student_logo.png");
@@ -2498,6 +2501,8 @@ public class Student_Management extends javax.swing.JPanel {
         stm_ad_student_contact_text.setText("");
         stm_ad_student_remarks_text.setText("");
         stm_ad_student_medical_text.setText("");
+
+        selectedStudentId = 0;
 
         try {
             InputStream imgStream = getClass().getResourceAsStream("/images/student_logo.png");

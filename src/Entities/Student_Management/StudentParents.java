@@ -146,6 +146,9 @@ public class StudentParents implements Serializable {
 
     @Override
     public String toString() { return "StudentParents[ studentParentsId=" + studentParentsId + " ]"; }
+
+    public StudentParents() {
+    }
 }
 //package Entities.Student_Management;
 //
