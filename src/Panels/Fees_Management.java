@@ -4,6 +4,7 @@ import Classes.GeneralMethods;
 import Classes.GeneralMethods.StudentSearchType;
 import Classes.GradientButton;
 import Classes.HibernateConfig;
+import Classes.InstallmentIconRenderer;
 import Classes.ModernDialog;
 import Classes.TableGradientCell;
 import Classes.styleDateChooser;
@@ -70,6 +71,9 @@ public class Fees_Management extends javax.swing.JPanel {
                 + "hoverBackground:null;"
                 + "pressedBackground:null;"
                 + "separatorColor:$TableHeader.background");
+
+        fm_fees_oneTime_table.getColumnModel().getColumn(2)
+                .setCellRenderer(new InstallmentIconRenderer());
 
         mainPanel.setVisible(true);
         mainPanel.setLayout(new CardLayout());
@@ -256,8 +260,8 @@ public class Fees_Management extends javax.swing.JPanel {
                             // Update the master table row
                             model.setValueAt(GeneralMethods.formatWithComma(payment.getTotalPaid()), i, 8);    // Total Paid
                             model.setValueAt(GeneralMethods.formatWithComma(payment.getTotalBalance()), i, 9); // Total Balance
-                          //  model.setValueAt(payment.getPaymentType(), i, 4);                                  // Payment Type
-                         //   model.setValueAt(payment.getTotalBalance() <= 0 ? "COMPLETE" : payment.getPaymentStatus(), i, 5); // Status
+                            //  model.setValueAt(payment.getPaymentType(), i, 4);                                  // Payment Type
+                            //   model.setValueAt(payment.getTotalBalance() <= 0 ? "COMPLETE" : payment.getPaymentStatus(), i, 5); // Status
                             break;
                         }
                     }
@@ -484,6 +488,10 @@ public class Fees_Management extends javax.swing.JPanel {
             int tot_fee = GeneralMethods.parseCommaNumber(model.getValueAt(fm_fees_course_table.getSelectedRow(), 7).toString());
             int tot_bal = GeneralMethods.parseCommaNumber(model.getValueAt(fm_fees_course_table.getSelectedRow(), 9).toString());
 
+            StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
+
+            int pendingCheque = dao.getPendingChequeAmountForCourse(en_id);
+
             if (check.equalsIgnoreCase("ONE-TIME")) {
 
                 CardLayout cl = (CardLayout) mainPanel.getLayout();
@@ -495,37 +503,77 @@ public class Fees_Management extends javax.swing.JPanel {
             int tabIndex = OneTimeFeePanel.jTabbedPane1.getSelectedIndex();
             if (tabIndex == 0) {
 
-                StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
-
-                List<Object[]> list = dao.getInstallments(en_id);
-
-                DefaultTableModel model2 = (DefaultTableModel) fm_fees_oneTime_table.getModel();
-                model2.setRowCount(0);
-
-                for (Object[] row : list) {
-
-                    model2.addRow(new Object[]{
-                        row[0],
-                        sdf.format(row[1]),
-                        GeneralMethods.formatWithComma(Integer.parseInt(row[2].toString()))
-                    });
-
-                }
-
                 fm_fees_oneTime_total_fee_Textfield.setText(GeneralMethods.formatWithComma(tot_fee));
                 OneTimeFeePanel.fm_fees_oneTime_total_balance_Textfield.setText(GeneralMethods.formatWithComma(tot_bal));
-                OneTimeFeePanel.fm_fees_cheq_full_fees_Textfield.setText(GeneralMethods.formatWithComma(tot_fee));
 
                 OneTimeFeePanel.fm_fees_oneTime_total_paid_Textfield.setText("");
-                OneTimeFeePanel.fm_fees_oneTime_enter_amount_Textfield.setText("");
-                OneTimeFeePanel.fm_fees_oneTime_show_bal_Textfield.setText("");
+                OneTimeFeePanel.fm_fees_oneTime_chq_sum_Textfield.setText("");
+                OneTimeFeePanel.fm_fees_oneTime_chq_sum_bal_Textfield.setText("");
 
                 OneTimeFeePanel.fm_fees_oneTime_total_paid_Textfield.requestFocus();
 
-                selectedStudentIds = Integer.parseInt(model.getValueAt(fm_fees_course_table.getSelectedRow(), 11).toString());
-                selectedEnrollmentId = Integer.parseInt(model.getValueAt(fm_fees_course_table.getSelectedRow(), 10).toString());
+                // set pending cheque field
+                OneTimeFeePanel.fm_fees_oneTime_chq_sum_Textfield
+                        .setText(GeneralMethods.formatWithComma(pendingCheque));
+                System.out.println("pendingCheque - " + pendingCheque);
 
+                // calculate remaining balance
+                int balanceAfterCheque = tot_bal - pendingCheque;
+
+                if (balanceAfterCheque < 0) {
+                    balanceAfterCheque = 0;
+                }
+
+                // set remaining balance field
+                OneTimeFeePanel.fm_fees_oneTime_chq_sum_bal_Textfield
+                        .setText(GeneralMethods.formatWithComma(balanceAfterCheque));
+
+            } else if (tabIndex == 1) {
+                OneTimeFeePanel.fm_fees_cheq_full_fees_Textfield.setText(GeneralMethods.formatWithComma(tot_fee));
+                OneTimeFeePanel.fm_fees_cheq_cheque_remaining.setText(GeneralMethods.formatWithComma(tot_bal));
+                OneTimeFeePanel.fm_fees_cheq_cheque_amount.setText("");
+
+                OneTimeFeePanel.fm_fees_cheq_cheque_number.requestFocus();
+
+                // set pending cheque field
+                OneTimeFeePanel.fm_fees_cheq_cheque_sum_Textfield
+                        .setText(GeneralMethods.formatWithComma(pendingCheque));
+                System.out.println("pendingCheque - " + pendingCheque);
+
+                // calculate remaining balance
+                int balanceAfterCheque = tot_bal - pendingCheque;
+
+                if (balanceAfterCheque < 0) {
+                    balanceAfterCheque = 0;
+                }
+
+                // set remaining balance field
+                OneTimeFeePanel.fm_fees_cheq_cheque_sum_bal_Textfield
+                        .setText(GeneralMethods.formatWithComma(balanceAfterCheque));
             }
+
+//            StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
+            List<Object[]> list = dao.getInstallments(en_id);
+
+            DefaultTableModel model2 = (DefaultTableModel) fm_fees_oneTime_table.getModel();
+            model2.setRowCount(0);
+
+            for (Object[] row : list) {
+
+                String paymentMethod = row[3] != null ? row[3].toString() : "";
+                String chequeStatus = row[4] != null ? row[4].toString() : "";
+
+                model2.addRow(new Object[]{
+                    row[0],
+                    sdf.format(row[1]),
+                    GeneralMethods.formatWithComma(Integer.parseInt(row[2].toString())),
+                    paymentMethod,
+                    chequeStatus
+                });
+            }
+
+            selectedStudentIds = Integer.parseInt(model.getValueAt(fm_fees_course_table.getSelectedRow(), 11).toString());
+            selectedEnrollmentId = Integer.parseInt(model.getValueAt(fm_fees_course_table.getSelectedRow(), 10).toString());
 
         } catch (Exception e) {
             e.printStackTrace();

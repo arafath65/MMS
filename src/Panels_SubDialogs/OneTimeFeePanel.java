@@ -112,6 +112,40 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
         return false;
     }
 
+//    private int getTotalCourseBalance() {
+//
+//        DefaultTableModel model = (DefaultTableModel) Fees_Management.fm_fees_course_table.getModel();
+//        int totalBalance = 0;
+//
+//        for (int i = 0; i < model.getRowCount(); i++) {
+//
+//            Object val = model.getValueAt(i, 9); // balance column
+//
+//            if (val != null) {
+//                totalBalance += GeneralMethods.parseCommaNumber(val.toString());
+//            }
+//        }
+//
+//        return totalBalance;
+//    }
+    private int getTotalBalanceFromTable() {
+
+        DefaultTableModel model = (DefaultTableModel) Fees_Management.fm_fees_course_table.getModel();
+
+        int totalBalance = 0;
+
+        for (int i = 0; i < model.getRowCount(); i++) {
+
+            Object val = model.getValueAt(i, 9); // balance column
+
+            if (val != null) {
+                totalBalance += GeneralMethods.parseCommaNumber(val.toString());
+            }
+        }
+
+        return totalBalance;
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -131,8 +165,8 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
         jPanel6 = new javax.swing.JPanel();
         firstName_label9 = new javax.swing.JLabel();
         firstName_label10 = new javax.swing.JLabel();
-        fm_fees_oneTime_enter_amount_Textfield = new javax.swing.JTextField();
-        fm_fees_oneTime_show_bal_Textfield = new javax.swing.JTextField();
+        fm_fees_oneTime_chq_sum_Textfield = new javax.swing.JTextField();
+        fm_fees_oneTime_chq_sum_bal_Textfield = new javax.swing.JTextField();
         jPanel10 = new javax.swing.JPanel();
         fm_fees_cheq_cheque_number = new javax.swing.JTextField();
         fm_fees_cheq_cheque_bank = new javax.swing.JComboBox<>();
@@ -144,6 +178,11 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
         fm_fees_cheq_cheque_status = new javax.swing.JComboBox<>();
         fm_fees_cheq_cheque_remaining = new javax.swing.JTextField();
         buttonGradient3 = new Classes.ButtonGradient();
+        sup_payment_cheque_label1 = new javax.swing.JLabel();
+        fm_fees_cheq_cheque_sum_Textfield = new javax.swing.JTextField();
+        fm_fees_cheq_cheque_sum_bal_Textfield = new javax.swing.JTextField();
+        firstName_label11 = new javax.swing.JLabel();
+        firstName_label12 = new javax.swing.JLabel();
         jPanel5 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         fm_fees_oneTime_table = new javax.swing.JTable();
@@ -226,41 +265,42 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
         firstName_label9.setBackground(new java.awt.Color(33, 33, 33));
         firstName_label9.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
         firstName_label9.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        firstName_label9.setText("Enter Amount");
+        firstName_label9.setText("Pending Cheques");
 
         firstName_label10.setBackground(new java.awt.Color(33, 33, 33));
         firstName_label10.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
         firstName_label10.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        firstName_label10.setText("Balance");
+        firstName_label10.setText("Final Balance");
 
-        fm_fees_oneTime_enter_amount_Textfield.setFont(new java.awt.Font("Roboto Condensed Light", 0, 14)); // NOI18N
-        fm_fees_oneTime_enter_amount_Textfield.addActionListener(new java.awt.event.ActionListener() {
+        fm_fees_oneTime_chq_sum_Textfield.setEditable(false);
+        fm_fees_oneTime_chq_sum_Textfield.setFont(new java.awt.Font("Roboto Condensed Light", 0, 14)); // NOI18N
+        fm_fees_oneTime_chq_sum_Textfield.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                fm_fees_oneTime_enter_amount_TextfieldActionPerformed(evt);
+                fm_fees_oneTime_chq_sum_TextfieldActionPerformed(evt);
             }
         });
-        fm_fees_oneTime_enter_amount_Textfield.addKeyListener(new java.awt.event.KeyAdapter() {
+        fm_fees_oneTime_chq_sum_Textfield.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
-                fm_fees_oneTime_enter_amount_TextfieldKeyPressed(evt);
+                fm_fees_oneTime_chq_sum_TextfieldKeyPressed(evt);
             }
             public void keyReleased(java.awt.event.KeyEvent evt) {
-                fm_fees_oneTime_enter_amount_TextfieldKeyReleased(evt);
+                fm_fees_oneTime_chq_sum_TextfieldKeyReleased(evt);
             }
         });
 
-        fm_fees_oneTime_show_bal_Textfield.setEditable(false);
-        fm_fees_oneTime_show_bal_Textfield.setFont(new java.awt.Font("Roboto Condensed Light", 0, 14)); // NOI18N
-        fm_fees_oneTime_show_bal_Textfield.addActionListener(new java.awt.event.ActionListener() {
+        fm_fees_oneTime_chq_sum_bal_Textfield.setEditable(false);
+        fm_fees_oneTime_chq_sum_bal_Textfield.setFont(new java.awt.Font("Roboto Condensed Light", 0, 14)); // NOI18N
+        fm_fees_oneTime_chq_sum_bal_Textfield.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                fm_fees_oneTime_show_bal_TextfieldActionPerformed(evt);
+                fm_fees_oneTime_chq_sum_bal_TextfieldActionPerformed(evt);
             }
         });
-        fm_fees_oneTime_show_bal_Textfield.addKeyListener(new java.awt.event.KeyAdapter() {
+        fm_fees_oneTime_chq_sum_bal_Textfield.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
-                fm_fees_oneTime_show_bal_TextfieldKeyPressed(evt);
+                fm_fees_oneTime_chq_sum_bal_TextfieldKeyPressed(evt);
             }
             public void keyReleased(java.awt.event.KeyEvent evt) {
-                fm_fees_oneTime_show_bal_TextfieldKeyReleased(evt);
+                fm_fees_oneTime_chq_sum_bal_TextfieldKeyReleased(evt);
             }
         });
 
@@ -272,10 +312,10 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                 .addContainerGap()
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(firstName_label9, javax.swing.GroupLayout.DEFAULT_SIZE, 150, Short.MAX_VALUE)
-                    .addComponent(fm_fees_oneTime_enter_amount_Textfield))
+                    .addComponent(fm_fees_oneTime_chq_sum_Textfield))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(fm_fees_oneTime_show_bal_Textfield)
+                    .addComponent(fm_fees_oneTime_chq_sum_bal_Textfield)
                     .addComponent(firstName_label10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -289,10 +329,10 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addComponent(fm_fees_oneTime_show_bal_Textfield, javax.swing.GroupLayout.DEFAULT_SIZE, 37, Short.MAX_VALUE)
+                        .addComponent(fm_fees_oneTime_chq_sum_bal_Textfield, javax.swing.GroupLayout.DEFAULT_SIZE, 37, Short.MAX_VALUE)
                         .addGap(7, 7, 7))
                     .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addComponent(fm_fees_oneTime_enter_amount_Textfield)
+                        .addComponent(fm_fees_oneTime_chq_sum_Textfield)
                         .addContainerGap())))
         );
 
@@ -427,7 +467,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
         });
 
         fm_fees_cheq_cheque_status.setFont(new java.awt.Font("Roboto Condensed Light", 0, 14)); // NOI18N
-        fm_fees_cheq_cheque_status.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Pending", "Cleared" }));
+        fm_fees_cheq_cheque_status.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Pending" }));
         fm_fees_cheq_cheque_status.setMinimumSize(new java.awt.Dimension(83, 30));
         fm_fees_cheq_cheque_status.setPreferredSize(new java.awt.Dimension(72, 30));
         fm_fees_cheq_cheque_status.addActionListener(new java.awt.event.ActionListener() {
@@ -461,6 +501,53 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
             }
         });
 
+        sup_payment_cheque_label1.setBackground(new java.awt.Color(33, 33, 33));
+        sup_payment_cheque_label1.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        sup_payment_cheque_label1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        sup_payment_cheque_label1.setText("Remaining Balance");
+
+        fm_fees_cheq_cheque_sum_Textfield.setEditable(false);
+        fm_fees_cheq_cheque_sum_Textfield.setFont(new java.awt.Font("Roboto Condensed Light", 0, 14)); // NOI18N
+        fm_fees_cheq_cheque_sum_Textfield.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                fm_fees_cheq_cheque_sum_TextfieldActionPerformed(evt);
+            }
+        });
+        fm_fees_cheq_cheque_sum_Textfield.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                fm_fees_cheq_cheque_sum_TextfieldKeyPressed(evt);
+            }
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                fm_fees_cheq_cheque_sum_TextfieldKeyReleased(evt);
+            }
+        });
+
+        fm_fees_cheq_cheque_sum_bal_Textfield.setEditable(false);
+        fm_fees_cheq_cheque_sum_bal_Textfield.setFont(new java.awt.Font("Roboto Condensed Light", 0, 14)); // NOI18N
+        fm_fees_cheq_cheque_sum_bal_Textfield.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                fm_fees_cheq_cheque_sum_bal_TextfieldActionPerformed(evt);
+            }
+        });
+        fm_fees_cheq_cheque_sum_bal_Textfield.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                fm_fees_cheq_cheque_sum_bal_TextfieldKeyPressed(evt);
+            }
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                fm_fees_cheq_cheque_sum_bal_TextfieldKeyReleased(evt);
+            }
+        });
+
+        firstName_label11.setBackground(new java.awt.Color(33, 33, 33));
+        firstName_label11.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        firstName_label11.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        firstName_label11.setText("Pending Cheques");
+
+        firstName_label12.setBackground(new java.awt.Color(33, 33, 33));
+        firstName_label12.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        firstName_label12.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        firstName_label12.setText("Final Balance");
+
         javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
         jPanel10.setLayout(jPanel10Layout);
         jPanel10Layout.setHorizontalGroup(
@@ -469,23 +556,34 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                 .addContainerGap()
                 .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(fm_fees_cheq_cheque_number)
-                    .addComponent(fm_fees_cheq_cheque_bank, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel10Layout.createSequentialGroup()
                         .addComponent(sup_payment_cheque_label, javax.swing.GroupLayout.DEFAULT_SIZE, 149, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(fm_fees_cheq_full_fees_Textfield, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel10Layout.createSequentialGroup()
-                        .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(fm_fees_cheq_cheque_amount)
-                            .addComponent(fm_fees_cheq_cheque_branch))
+                        .addComponent(fm_fees_cheq_cheque_bank, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(fm_fees_cheq_cheque_status, 0, 134, Short.MAX_VALUE)
-                            .addComponent(fm_fees_cheq_cheque_date, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addComponent(fm_fees_cheq_cheque_remaining)
+                        .addComponent(fm_fees_cheq_cheque_branch, javax.swing.GroupLayout.PREFERRED_SIZE, 134, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel10Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(buttonGradient3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(fm_fees_cheq_cheque_amount, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(fm_fees_cheq_cheque_date, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(fm_fees_cheq_cheque_status, javax.swing.GroupLayout.PREFERRED_SIZE, 106, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel10Layout.createSequentialGroup()
+                        .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(sup_payment_cheque_label1, javax.swing.GroupLayout.DEFAULT_SIZE, 149, Short.MAX_VALUE)
+                            .addComponent(firstName_label11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(firstName_label12, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel10Layout.createSequentialGroup()
+                                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(fm_fees_cheq_cheque_sum_Textfield)
+                                    .addComponent(fm_fees_cheq_cheque_sum_bal_Textfield))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(buttonGradient3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(fm_fees_cheq_cheque_remaining, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addContainerGap())
         );
         jPanel10Layout.setVerticalGroup(
@@ -498,19 +596,27 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(fm_fees_cheq_cheque_number, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(fm_fees_cheq_cheque_bank, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(fm_fees_cheq_cheque_bank, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(fm_fees_cheq_cheque_branch, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(fm_fees_cheq_cheque_branch, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(fm_fees_cheq_cheque_date, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(fm_fees_cheq_cheque_date, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(fm_fees_cheq_cheque_amount, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(fm_fees_cheq_cheque_status, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(fm_fees_cheq_cheque_status, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(fm_fees_cheq_cheque_amount, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(fm_fees_cheq_cheque_remaining, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(buttonGradient3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(fm_fees_cheq_cheque_remaining, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(sup_payment_cheque_label1, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(fm_fees_cheq_cheque_sum_Textfield, javax.swing.GroupLayout.DEFAULT_SIZE, 37, Short.MAX_VALUE)
+                    .addComponent(firstName_label11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(5, 5, 5)
+                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(buttonGradient3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(fm_fees_cheq_cheque_sum_bal_Textfield, javax.swing.GroupLayout.DEFAULT_SIZE, 37, Short.MAX_VALUE)
+                    .addComponent(firstName_label12, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -523,11 +629,11 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
 
             },
             new String [] {
-                "Installmet Seq", "Payment Date", "Paid Amount"
+                "Installmet Seq", "Payment Date", "Paid Amount", "Payment Method", "Cheque Status"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false
+                false, false, false, true, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -619,17 +725,6 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
 
     private void fm_fees_oneTime_total_paid_TextfieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fm_fees_oneTime_total_paid_TextfieldActionPerformed
 
-        try {
-
-//            int bal_fee = GeneralMethods.parseCommaNumber(fm_fees_oneTime_total_balance_Textfield.getText());
-//            int paid_fee = GeneralMethods.parseCommaNumber(fm_fees_oneTime_total_paid_Textfield.getText());
-//
-//            fm_fees_oneTime_total_balance_Textfield.setText(GeneralMethods.formatWithComma(bal_fee - paid_fee));
-            fm_fees_oneTime_enter_amount_Textfield.requestFocus();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }//GEN-LAST:event_fm_fees_oneTime_total_paid_TextfieldActionPerformed
 
     private void fm_fees_oneTime_total_paid_TextfieldKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fm_fees_oneTime_total_paid_TextfieldKeyPressed
@@ -638,8 +733,8 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
 
     private void fm_fees_oneTime_total_paid_TextfieldKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fm_fees_oneTime_total_paid_TextfieldKeyReleased
         if (fm_fees_oneTime_total_paid_Textfield.getText().equals("")) {
-            fm_fees_oneTime_enter_amount_Textfield.setText("");
-            fm_fees_oneTime_show_bal_Textfield.setText("");
+            fm_fees_oneTime_chq_sum_Textfield.setText("");
+            fm_fees_oneTime_chq_sum_bal_Textfield.setText("");
         }
     }//GEN-LAST:event_fm_fees_oneTime_total_paid_TextfieldKeyReleased
 
@@ -692,7 +787,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
     }//GEN-LAST:event_fm_fees_cheq_cheque_amountKeyReleased
 
     private void fm_fees_cheq_full_fees_TextfieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fm_fees_cheq_full_fees_TextfieldActionPerformed
-        // TODO add your handling code here:
+        fm_fees_cheq_cheque_number.requestFocus();
     }//GEN-LAST:event_fm_fees_cheq_full_fees_TextfieldActionPerformed
 
     private void fm_fees_cheq_full_fees_TextfieldKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fm_fees_cheq_full_fees_TextfieldKeyReleased
@@ -722,110 +817,651 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
             int st_id = Fees_Management.selectedStudentIds;
             int en_id = Fees_Management.selectedEnrollmentId;
 
+            // Check if user entered amount
+            if (fm_fees_oneTime_total_paid_Textfield.getText().equalsIgnoreCase("") || fm_fees_oneTime_total_paid_Textfield.getText().equalsIgnoreCase("0")) {
+                JOptionPane.showMessageDialog(null, "Paying amount cannot be empty or 0", "Not Found", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
+            int pendingCheque = dao.getStudentPendingChequeTotal(st_id);
+            int totalBalance = getTotalBalanceFromTable();
+
+            int actualBalance = totalBalance - pendingCheque;
+            int cheq_final_bal = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
+
+            // ⚠ Prevent payment if fully paid
+            if (cheq_final_bal <= 0) {
+                JOptionPane.showMessageDialog(null,
+                        "Cannot pay. All active courses are fully paid or covered by pending cheques.",
+                        "Payment Not Allowed",
+                        JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
             int amount_paid = GeneralMethods.parseCommaNumber(fm_fees_oneTime_total_paid_Textfield.getText());
+
+            // Check if entered amount exceeds max allowed
+            if (amount_paid > actualBalance) {
+                String message
+                        = "Total Balance : " + GeneralMethods.formatWithComma(totalBalance)
+                        + "\nPending Cheques : " + GeneralMethods.formatWithComma(pendingCheque)
+                        + "\n\nMaximum Payable Now : "
+                        + GeneralMethods.formatWithComma(actualBalance);
+
+                Object[] options = {"Pay Balance Amount Only", "Cancel"};
+
+                int choice = JOptionPane.showOptionDialog(
+                        null,
+                        message,
+                        "Payment Exceeds Allowed Amount",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE,
+                        null,
+                        options,
+                        options[0]
+                );
+
+                if (choice == 0) {
+                    fm_fees_oneTime_total_paid_Textfield
+                            .setText(GeneralMethods.formatWithComma(actualBalance));
+                    amount_paid = actualBalance;
+                } else {
+                    return;
+                }
+            }
+
             System.out.println("PAID AMOU1 - " + fm_fees_oneTime_total_paid_Textfield.getText());
             Date utilDate = fm_fees_oneTime_payment_date.getDate();
             java.sql.Date paymentDate = new java.sql.Date(utilDate.getTime());
             String pay_method = fm_fees_oneTime_payment_method_combo.getSelectedItem().toString();
 
-            int balance = GeneralMethods.parseCommaNumber(fm_fees_oneTime_total_balance_Textfield.getText());
-            StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
+            int balance = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
             LedgerDAO ledgerDAO = new LedgerDAO();
 
+            int nextInstallmentNo = 1;
+            DefaultTableModel model = (DefaultTableModel) fm_fees_oneTime_table.getModel();
+
+            for (int i = 0; i < model.getRowCount(); i++) {
+                int instNo = Integer.parseInt(model.getValueAt(i, 0).toString());
+                if (instNo >= nextInstallmentNo) {
+                    nextInstallmentNo = instNo + 1;
+                }
+            }
+
+            // Round payment logic
             if (amount_paid > balance) {
                 int choice = showRoundPaymentDialog(st_id, en_id, amount_paid - balance);
                 switch (choice) {
                     case 1:
-
-                        dao.processRoundPayment(st_id, en_id, amount_paid, paymentDate, pay_method, username);
+                        dao.processRoundPayment(st_id, en_id, amount_paid, paymentDate, pay_method, null, null, null, null, username);
                         Fees_Management.updateMasterTableRows(st_id);
                         int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
+                        model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
                         ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, pay_method, "Student Management", username);
                         break;
 
                     case 2:
-                        // Pay this course only: leave excess in this course
-                        DefaultTableModel instModel = (DefaultTableModel) fm_fees_oneTime_table.getModel();
-                        dao.saveInstallment(st_id, en_id, balance, paymentDate, pay_method, "", username);
+                        // Pay this course only
+                        dao.saveInstallment(st_id, en_id, balance, paymentDate, pay_method, "FULL", "", username);
                         Fees_Management.updateMasterTableRows(st_id);
-
                         int paymentIds = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
-                        int lastInstallmentNo = dao.getLastInstallmentNo(paymentIds);
-                        instModel.addRow(new Object[]{lastInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
-
+                        model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
                         ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentIds, pay_method, "Student Management", username);
-
                         break;
+
                     default:
-                        // Cancel: do nothing
                         return;
                 }
             } else {
-
-                DefaultTableModel instModel = (DefaultTableModel) fm_fees_oneTime_table.getModel();
-                dao.saveInstallment(st_id, en_id, amount_paid, paymentDate, pay_method, "", username);
+                dao.saveInstallment(st_id, en_id, amount_paid, paymentDate, pay_method, "FULL", "", username);
                 Fees_Management.updateMasterTableRows(st_id);
-
                 int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
-                int nextInstallmentNo = dao.getNextInstallmentNo(paymentId);
-
-                instModel.addRow(new Object[]{
-                    nextInstallmentNo,
-                    paymentDate,
-                    GeneralMethods.formatWithComma(amount_paid)
-                });
-
+                model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(amount_paid)});
                 ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentId, pay_method, "Student Management", username);
-
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+//        try {
+//
+//            int st_id = Fees_Management.selectedStudentIds;
+//            int en_id = Fees_Management.selectedEnrollmentId;
+//
+//            if (fm_fees_oneTime_total_paid_Textfield.getText().equalsIgnoreCase("") || fm_fees_oneTime_total_paid_Textfield.getText().equalsIgnoreCase("0")) {
+//                JOptionPane.showMessageDialog(null, "Paying amount cannot be empty or 0", "Not Found", JOptionPane.WARNING_MESSAGE);
+//                return;
+//            }
+//
+//            int amount_paid = GeneralMethods.parseCommaNumber(fm_fees_oneTime_total_paid_Textfield.getText());
+//
+//            StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
+//            int pendingCheque = dao.getStudentPendingChequeTotal(st_id);
+//            int totalBalance = getTotalBalanceFromTable();
+//
+//            int actualBalance = totalBalance - pendingCheque;
+//
+//            if (amount_paid > actualBalance) {
+//
+//                String message
+//                        = "Total Balance : " + GeneralMethods.formatWithComma(totalBalance)
+//                        + "\nPending Cheques : " + GeneralMethods.formatWithComma(pendingCheque)
+//                        + "\n\nMaximum Payable Now : "
+//                        + GeneralMethods.formatWithComma(actualBalance);
+//
+//                Object[] options = {"Pay Balance Amount Only", "Cancel"};
+//
+//                int choice = JOptionPane.showOptionDialog(
+//                        null,
+//                        message,
+//                        "Payment Exceeds Allowed Amount",
+//                        JOptionPane.YES_NO_OPTION,
+//                        JOptionPane.WARNING_MESSAGE,
+//                        null,
+//                        options,
+//                        options[0]
+//                );
+//
+//                if (choice == 0) {
+//
+//                    fm_fees_oneTime_total_paid_Textfield
+//                            .setText(GeneralMethods.formatWithComma(actualBalance));
+//
+//                    amount_paid = actualBalance;
+//
+//                } else {
+//                    return;
+//                }
+//            }
+    ////            int pendingCheque = dao.getStudentPendingChequeTotal(st_id);
+////            int totalBalance = getTotalBalanceFromTable();
+////
+////            if (pendingCheque > 0) {
+////
+////                int remainingBalance = totalBalance - pendingCheque;
+////
+////                String message
+////                        = "Total Balance : " + GeneralMethods.formatWithComma(totalBalance)
+////                        + "\nPending Cheques : " + GeneralMethods.formatWithComma(pendingCheque)
+////                        + "\n\nRemaining Balance To Pay : "
+////                        + GeneralMethods.formatWithComma(remainingBalance);
+////
+////                Object[] options = {"Pay Balance Amount Only", "Cancel"};
+////
+////                int choice = JOptionPane.showOptionDialog(
+////                        null,
+////                        message,
+////                        "Pending Cheque Detected",
+////                        JOptionPane.YES_NO_OPTION,
+////                        JOptionPane.WARNING_MESSAGE,
+////                        null,
+////                        options,
+////                        options[0]
+////                );
+////
+////                if (choice == 0) {
+////
+////                    fm_fees_oneTime_total_paid_Textfield
+////                            .setText(GeneralMethods.formatWithComma(remainingBalance));
+////
+////                } else {
+////                    return;
+////                }
+////            }
+//
+//            System.out.println("PAID AMOU1 - " + fm_fees_oneTime_total_paid_Textfield.getText());
+//            Date utilDate = fm_fees_oneTime_payment_date.getDate();
+//            java.sql.Date paymentDate = new java.sql.Date(utilDate.getTime());
+//            String pay_method = fm_fees_oneTime_payment_method_combo.getSelectedItem().toString();
+//
+//            int balance = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
+//            LedgerDAO ledgerDAO = new LedgerDAO();
+//
+//            int nextInstallmentNo = 1;
+//
+//            DefaultTableModel model = (DefaultTableModel) fm_fees_oneTime_table.getModel();
+//
+//            for (int i = 0; i < model.getRowCount(); i++) {
+//                int instNo = Integer.parseInt(model.getValueAt(i, 0).toString());
+//                if (instNo >= nextInstallmentNo) {
+//                    nextInstallmentNo = instNo + 1;
+//                }
+//            }
+//
+//            if (amount_paid > balance) {
+//                int choice = showRoundPaymentDialog(st_id, en_id, amount_paid - balance);
+//                switch (choice) {
+//                    case 1:
+//
+//                        dao.processRoundPayment(st_id, en_id, amount_paid, paymentDate, pay_method, username);
+//                        Fees_Management.updateMasterTableRows(st_id);
+//                        int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
+//                        model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
+//                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, pay_method, "Student Management", username);
+//                        break;
+//
+//                    case 2:
+//                        // Pay this course only: leave excess in this course
+//                        dao.saveInstallment(st_id, en_id, balance, paymentDate, pay_method, "FULL", "", username);
+//                        Fees_Management.updateMasterTableRows(st_id);
+//
+//                        int paymentIds = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
+//                        model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
+//
+//                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentIds, pay_method, "Student Management", username);
+//
+//                        break;
+//                    default:
+//                        // Cancel: do nothing
+//                        return;
+//                }
+//            } else {
+//
+//                dao.saveInstallment(st_id, en_id, amount_paid, paymentDate, pay_method, "FULL", "", username);
+//                Fees_Management.updateMasterTableRows(st_id);
+//
+//                int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
+//
+//                model.addRow(new Object[]{
+//                    nextInstallmentNo,
+//                    paymentDate,
+//                    GeneralMethods.formatWithComma(amount_paid)
+//                });
+//
+//                ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentId, pay_method, "Student Management", username);
+//
+//            }
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
     }//GEN-LAST:event_buttonGradient2ActionPerformed
 
     private void buttonGradient3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient3ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_buttonGradient3ActionPerformed
-
-    private void fm_fees_oneTime_enter_amount_TextfieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fm_fees_oneTime_enter_amount_TextfieldActionPerformed
         try {
 
-            int amount_type = GeneralMethods.parseCommaNumber(fm_fees_oneTime_enter_amount_Textfield.getText());
-            int paid_fee = GeneralMethods.parseCommaNumber(fm_fees_oneTime_total_paid_Textfield.getText());
+            DefaultTableModel instModel = (DefaultTableModel) fm_fees_oneTime_table.getModel();
 
-            fm_fees_oneTime_show_bal_Textfield.setText(GeneralMethods.formatWithComma(amount_type - paid_fee));
+            int st_id = Fees_Management.selectedStudentIds;
+            int en_id = Fees_Management.selectedEnrollmentId;
+
+            // Check mandatory fields
+            if (fm_fees_cheq_full_fees_Textfield.getText().equals("")
+                    || fm_fees_cheq_cheque_number.getText().equals("")
+                    || fm_fees_cheq_cheque_bank.getEditor().getItem().toString().equals("")
+                    || fm_fees_cheq_cheque_amount.getText().equalsIgnoreCase("")
+                    || fm_fees_cheq_cheque_amount.getText().equalsIgnoreCase("0")) {
+                JOptionPane.showMessageDialog(null, "Fields cannot be empty or 0", "Not Found", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            int amount_paid = GeneralMethods.parseCommaNumber(fm_fees_cheq_cheque_amount.getText());
+
+            StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
+            int pendingCheque = dao.getStudentPendingChequeTotal(st_id);
+            int totalBalance = getTotalBalanceFromTable();
+
+            int actualBalance = totalBalance - pendingCheque;
+            int cheq_final_bal = GeneralMethods.parseCommaNumber(fm_fees_cheq_cheque_sum_bal_Textfield.getText());
+
+            // ⚠ Prevent payment if fully paid
+            if (cheq_final_bal <= 0) {
+                JOptionPane.showMessageDialog(null,
+                        "Cannot pay. All active courses are fully paid or covered by pending cheques.",
+                        "Payment Not Allowed",
+                        JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            // Warn if entering more than allowed
+            if (amount_paid > actualBalance) {
+                String message
+                        = "Total Balance : " + GeneralMethods.formatWithComma(totalBalance)
+                        + "\nPending Cheques : " + GeneralMethods.formatWithComma(pendingCheque)
+                        + "\n\nMaximum Payable Now : "
+                        + GeneralMethods.formatWithComma(actualBalance);
+
+                Object[] options = {"Pay Balance Amount Only", "Cancel"};
+
+                int choice = JOptionPane.showOptionDialog(
+                        null,
+                        message,
+                        "Payment Exceeds Allowed Amount",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE,
+                        null,
+                        options,
+                        options[0]
+                );
+
+                if (choice == 0) {
+                    fm_fees_cheq_cheque_amount.setText(GeneralMethods.formatWithComma(actualBalance));
+                    amount_paid = actualBalance;
+                } else {
+                    return;
+                }
+            }
+
+            int tot_fee = GeneralMethods.parseCommaNumber(fm_fees_cheq_full_fees_Textfield.getText());
+            String chq_no = fm_fees_cheq_cheque_number.getText();
+            String bank_name = fm_fees_cheq_cheque_bank.getEditor().getItem().toString();
+            String bank_branch = fm_fees_cheq_cheque_branch.getText();
+
+            if (fm_fees_cheq_cheque_date.getDate() == null) {
+                JOptionPane.showMessageDialog(null, "Select cheque date", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            Date utilDate = fm_fees_oneTime_payment_date.getDate();
+            Date chq_date = fm_fees_cheq_cheque_date.getDate();
+            java.sql.Date paymentDate = new java.sql.Date(utilDate.getTime());
+            java.sql.Date chqPaymentDate = new java.sql.Date(chq_date.getTime());
+
+            String chq_status = fm_fees_cheq_cheque_status.getSelectedItem().toString();
+
+            int balance = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
+            LedgerDAO ledgerDAO = new LedgerDAO();
+
+            int nextInstallmentNo = 1;
+
+            for (int i = 0; i < instModel.getRowCount(); i++) {
+                int instNo = Integer.parseInt(instModel.getValueAt(i, 0).toString());
+                if (instNo >= nextInstallmentNo) {
+                    nextInstallmentNo = instNo + 1;
+                }
+            }
+
+            // ROUND payment logic
+            if (amount_paid > balance) {
+                int choice = showRoundPaymentDialog(st_id, en_id, amount_paid - balance);
+                switch (choice) {
+                    case 1:
+                        dao.processRoundPayment(st_id, en_id, amount_paid, paymentDate, "CHEQUE", chq_no, bank_name, bank_branch, chqPaymentDate, username);
+                        Fees_Management.updateMasterTableRows(st_id);
+                        int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
+
+//                        dao.saveChequePayment(st_id, en_id, amount_paid,
+//                                paymentDate, chq_no, bank_name, bank_branch, chqPaymentDate, username);
+
+                        instModel.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
+                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, "CHEQUE", "Student Management", username);
+                        break;
+
+                    case 2:
+                        // Pay this course only
+                        dao.saveInstallment(st_id, en_id, balance, paymentDate, "CHEQUE", "FULL", "", username);
+                        Fees_Management.updateMasterTableRows(st_id);
+
+                        int paymentIds = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
+
+                        dao.saveChequePayment(st_id, en_id, amount_paid, paymentDate, chq_no, bank_name, bank_branch, chqPaymentDate, username);
+                        instModel.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
+
+                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentIds, "CHEQUE", "Student Management", username);
+                        break;
+
+                    default:
+                        return;
+                }
+            } else {
+                // Regular payment less than balance
+                dao.saveInstallment(st_id, en_id, amount_paid, paymentDate, "CHEQUE", "FULL", "", username);
+                Fees_Management.updateMasterTableRows(st_id);
+
+                int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
+
+                dao.saveChequePayment(st_id, en_id, amount_paid, paymentDate, chq_no, bank_name, bank_branch, chqPaymentDate, username);
+                instModel.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(amount_paid)});
+
+                ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentId, "CHEQUE", "Student Management", username);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }//GEN-LAST:event_fm_fees_oneTime_enter_amount_TextfieldActionPerformed
 
-    private void fm_fees_oneTime_enter_amount_TextfieldKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fm_fees_oneTime_enter_amount_TextfieldKeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_fm_fees_oneTime_enter_amount_TextfieldKeyPressed
+//        try {
+//
+//            DefaultTableModel instModel = (DefaultTableModel) fm_fees_oneTime_table.getModel();
+//
+//            int st_id = Fees_Management.selectedStudentIds;
+//            int en_id = Fees_Management.selectedEnrollmentId;
+//
+//            if (fm_fees_cheq_full_fees_Textfield.getText().equals("") || fm_fees_cheq_cheque_number.getText().equals("") || fm_fees_cheq_cheque_bank.getEditor().getItem().toString().equals("")
+//                    || fm_fees_cheq_cheque_amount.getText().equalsIgnoreCase("") || fm_fees_cheq_cheque_amount.getText().equalsIgnoreCase("0")) {
+//                JOptionPane.showMessageDialog(null, "Fields cannot be empty or 0", "Not Found", JOptionPane.WARNING_MESSAGE);
+//                return;
+//            }
+//
+//            int amount_paid = GeneralMethods.parseCommaNumber(fm_fees_cheq_cheque_amount.getText());
+//            StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
+//            int pendingCheque = dao.getStudentPendingChequeTotal(st_id);
+//            int totalBalance = getTotalBalanceFromTable();
+//
+//            int actualBalance = totalBalance - pendingCheque;
+//
+//            if (amount_paid > actualBalance) {
+//
+//                String message
+//                        = "Total Balance : " + GeneralMethods.formatWithComma(totalBalance)
+//                        + "\nPending Cheques : " + GeneralMethods.formatWithComma(pendingCheque)
+//                        + "\n\nMaximum Payable Now : "
+//                        + GeneralMethods.formatWithComma(actualBalance);
+//
+//                Object[] options = {"Pay Balance Amount Only", "Cancel"};
+//
+//                int choice = JOptionPane.showOptionDialog(
+//                        null,
+//                        message,
+//                        "Payment Exceeds Allowed Amount",
+//                        JOptionPane.YES_NO_OPTION,
+//                        JOptionPane.WARNING_MESSAGE,
+//                        null,
+//                        options,
+//                        options[0]
+//                );
+//
+//                if (choice == 0) {
+//
+//                    fm_fees_oneTime_total_paid_Textfield
+//                            .setText(GeneralMethods.formatWithComma(actualBalance));
+//
+//                    amount_paid = actualBalance;
+//
+//                } else {
+//                    return;
+//                }
+//            }
+    ////            int pendingCheque = dao.getStudentPendingChequeTotal(st_id);
+////            int totalBalance = getTotalBalanceFromTable();
+////
+////            if (pendingCheque > 0) {
+////
+////                int remainingBalance = totalBalance - pendingCheque;
+////
+////                String message
+////                        = "Total Balance : " + GeneralMethods.formatWithComma(totalBalance)
+////                        + "\nPending Cheques : " + GeneralMethods.formatWithComma(pendingCheque)
+////                        + "\n\nRemaining Balance To Pay : "
+////                        + GeneralMethods.formatWithComma(remainingBalance);
+////
+////                Object[] options = {"Pay Balance Amount Only", "Cancel"};
+////
+////                int choice = JOptionPane.showOptionDialog(
+////                        null,
+////                        message,
+////                        "Pending Cheque Detected",
+////                        JOptionPane.YES_NO_OPTION,
+////                        JOptionPane.WARNING_MESSAGE,
+////                        null,
+////                        options,
+////                        options[0]
+////                );
+////
+////                if (choice == 0) {
+////
+////                    fm_fees_oneTime_total_paid_Textfield
+////                            .setText(GeneralMethods.formatWithComma(remainingBalance));
+////
+////                } else {
+////                    return;
+////                }
+////            }
+//
+////            int totalCourseBalance = getTotalCourseBalance();
+////            if (amount_paid > totalCourseBalance) {
+////
+////                JOptionPane.showMessageDialog(
+////                        null,
+////                        "Pay amount cannot exceed total pending course balance.\n\n"
+////                        + "Total Balance : " + GeneralMethods.formatWithComma(totalCourseBalance),
+////                        "Invalid Amount",
+////                        JOptionPane.WARNING_MESSAGE
+////                );
+////
+////                return;
+////            }
+//            int tot_fee = GeneralMethods.parseCommaNumber(fm_fees_cheq_full_fees_Textfield.getText());
+//            String chq_no = fm_fees_cheq_cheque_number.getText();
+//            String bank_name = fm_fees_cheq_cheque_bank.getEditor().getItem().toString();
+//            String bank_branch = fm_fees_cheq_cheque_branch.getText();
+//
+//            if (fm_fees_cheq_cheque_date.getDate() == null) {
+//                JOptionPane.showMessageDialog(null, "Select cheque date", "Warning", JOptionPane.WARNING_MESSAGE);
+//                return;
+//            }
+//
+//            Date utilDate = fm_fees_oneTime_payment_date.getDate();
+//            Date chq_date = fm_fees_cheq_cheque_date.getDate();
+//            java.sql.Date paymentDate = new java.sql.Date(utilDate.getTime());
+//            java.sql.Date chqPaymentDate = new java.sql.Date(chq_date.getTime());
+//
+//            String chq_status = fm_fees_cheq_cheque_status.getSelectedItem().toString();
+//
+//            int balance = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
+//
+//            LedgerDAO ledgerDAO = new LedgerDAO();
+//
+//            int nextInstallmentNo = 1;
+//
+//            DefaultTableModel model = (DefaultTableModel) fm_fees_oneTime_table.getModel();
+//
+//            for (int i = 0; i < model.getRowCount(); i++) {
+//                int instNo = Integer.parseInt(model.getValueAt(i, 0).toString());
+//                if (instNo >= nextInstallmentNo) {
+//                    nextInstallmentNo = instNo + 1;
+//                }
+//            }
+//
+//            if (amount_paid > balance) {
+//                int choice = showRoundPaymentDialog(st_id, en_id, amount_paid - balance);
+//                switch (choice) {
+//                    case 1:
+//
+//                        dao.processRoundPayment(st_id, en_id, amount_paid, paymentDate, "CHEQUE", username);
+//                        Fees_Management.updateMasterTableRows(st_id);
+//                        int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
+//                        // int lastInstallmentNo = dao.getLastInstallmentNo(paymentId);
+//
+//                        dao.saveChequePayment(st_id, en_id, amount_paid,
+//                                paymentDate, chq_no, bank_name, bank_branch, chqPaymentDate, username);
+//                        instModel.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
+//                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, "CHEQUE", "Student Management", username);
+//                        break;
+//
+//                    case 2:
+//                        // Pay this course only: leave excess in this course
+//                        dao.saveInstallment(st_id, en_id, balance, paymentDate, "CHEQUE", "FULL", "", username);
+//                        Fees_Management.updateMasterTableRows(st_id);
+//
+//                        int paymentIds = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
+//                        // int lastInstallmentNos = dao.getLastInstallmentNo(paymentIds);
+//
+//                        dao.saveChequePayment(st_id, en_id, amount_paid, paymentDate, chq_no, bank_name, bank_branch, chqPaymentDate, username);
+//                        instModel.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
+//
+//                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentIds, "CHEQUE", "Student Management", username);
+//
+//                        break;
+//                    default:
+//                        // Cancel: do nothing
+//                        return;
+//                }
+//            } else {
+//
+//                dao.saveInstallment(st_id, en_id, amount_paid, paymentDate, "CHEQUE", "FULL", "", username);
+//                Fees_Management.updateMasterTableRows(st_id);
+//
+//                int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
+//
+//                dao.saveChequePayment(st_id, en_id, amount_paid, paymentDate, chq_no, bank_name, bank_branch, chqPaymentDate, username);
+//                instModel.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(amount_paid)});
+//
+//                ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentId, "CHEQUE", "Student Management", username);
+//
+//            }
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+    }//GEN-LAST:event_buttonGradient3ActionPerformed
 
-    private void fm_fees_oneTime_enter_amount_TextfieldKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fm_fees_oneTime_enter_amount_TextfieldKeyReleased
-        // TODO add your handling code here:
-    }//GEN-LAST:event_fm_fees_oneTime_enter_amount_TextfieldKeyReleased
+    private void fm_fees_oneTime_chq_sum_TextfieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fm_fees_oneTime_chq_sum_TextfieldActionPerformed
 
-    private void fm_fees_oneTime_show_bal_TextfieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fm_fees_oneTime_show_bal_TextfieldActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_fm_fees_oneTime_show_bal_TextfieldActionPerformed
+    }//GEN-LAST:event_fm_fees_oneTime_chq_sum_TextfieldActionPerformed
 
-    private void fm_fees_oneTime_show_bal_TextfieldKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fm_fees_oneTime_show_bal_TextfieldKeyPressed
+    private void fm_fees_oneTime_chq_sum_TextfieldKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fm_fees_oneTime_chq_sum_TextfieldKeyPressed
         // TODO add your handling code here:
-    }//GEN-LAST:event_fm_fees_oneTime_show_bal_TextfieldKeyPressed
+    }//GEN-LAST:event_fm_fees_oneTime_chq_sum_TextfieldKeyPressed
 
-    private void fm_fees_oneTime_show_bal_TextfieldKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fm_fees_oneTime_show_bal_TextfieldKeyReleased
+    private void fm_fees_oneTime_chq_sum_TextfieldKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fm_fees_oneTime_chq_sum_TextfieldKeyReleased
         // TODO add your handling code here:
-    }//GEN-LAST:event_fm_fees_oneTime_show_bal_TextfieldKeyReleased
+    }//GEN-LAST:event_fm_fees_oneTime_chq_sum_TextfieldKeyReleased
+
+    private void fm_fees_oneTime_chq_sum_bal_TextfieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fm_fees_oneTime_chq_sum_bal_TextfieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_fm_fees_oneTime_chq_sum_bal_TextfieldActionPerformed
+
+    private void fm_fees_oneTime_chq_sum_bal_TextfieldKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fm_fees_oneTime_chq_sum_bal_TextfieldKeyPressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_fm_fees_oneTime_chq_sum_bal_TextfieldKeyPressed
+
+    private void fm_fees_oneTime_chq_sum_bal_TextfieldKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fm_fees_oneTime_chq_sum_bal_TextfieldKeyReleased
+        // TODO add your handling code here:
+    }//GEN-LAST:event_fm_fees_oneTime_chq_sum_bal_TextfieldKeyReleased
+
+    private void fm_fees_cheq_cheque_sum_TextfieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fm_fees_cheq_cheque_sum_TextfieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_fm_fees_cheq_cheque_sum_TextfieldActionPerformed
+
+    private void fm_fees_cheq_cheque_sum_TextfieldKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fm_fees_cheq_cheque_sum_TextfieldKeyPressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_fm_fees_cheq_cheque_sum_TextfieldKeyPressed
+
+    private void fm_fees_cheq_cheque_sum_TextfieldKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fm_fees_cheq_cheque_sum_TextfieldKeyReleased
+        // TODO add your handling code here:
+    }//GEN-LAST:event_fm_fees_cheq_cheque_sum_TextfieldKeyReleased
+
+    private void fm_fees_cheq_cheque_sum_bal_TextfieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fm_fees_cheq_cheque_sum_bal_TextfieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_fm_fees_cheq_cheque_sum_bal_TextfieldActionPerformed
+
+    private void fm_fees_cheq_cheque_sum_bal_TextfieldKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fm_fees_cheq_cheque_sum_bal_TextfieldKeyPressed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_fm_fees_cheq_cheque_sum_bal_TextfieldKeyPressed
+
+    private void fm_fees_cheq_cheque_sum_bal_TextfieldKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fm_fees_cheq_cheque_sum_bal_TextfieldKeyReleased
+        // TODO add your handling code here:
+    }//GEN-LAST:event_fm_fees_cheq_cheque_sum_bal_TextfieldKeyReleased
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private Classes.ButtonGradient buttonGradient2;
     private Classes.ButtonGradient buttonGradient3;
     private javax.swing.JLabel firstName_label10;
+    private javax.swing.JLabel firstName_label11;
+    private javax.swing.JLabel firstName_label12;
     private javax.swing.JLabel firstName_label7;
     private javax.swing.JLabel firstName_label8;
     private javax.swing.JLabel firstName_label9;
@@ -836,11 +1472,13 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
     public static javax.swing.JTextField fm_fees_cheq_cheque_number;
     public static javax.swing.JTextField fm_fees_cheq_cheque_remaining;
     public static javax.swing.JComboBox<String> fm_fees_cheq_cheque_status;
+    public static javax.swing.JTextField fm_fees_cheq_cheque_sum_Textfield;
+    public static javax.swing.JTextField fm_fees_cheq_cheque_sum_bal_Textfield;
     public static javax.swing.JTextField fm_fees_cheq_full_fees_Textfield;
-    public static javax.swing.JTextField fm_fees_oneTime_enter_amount_Textfield;
+    public static javax.swing.JTextField fm_fees_oneTime_chq_sum_Textfield;
+    public static javax.swing.JTextField fm_fees_oneTime_chq_sum_bal_Textfield;
     public static com.toedter.calendar.JDateChooser fm_fees_oneTime_payment_date;
     public static javax.swing.JComboBox<String> fm_fees_oneTime_payment_method_combo;
-    public static javax.swing.JTextField fm_fees_oneTime_show_bal_Textfield;
     public static javax.swing.JTable fm_fees_oneTime_table;
     public static javax.swing.JTextField fm_fees_oneTime_total_balance_Textfield;
     public static javax.swing.JTextField fm_fees_oneTime_total_fee_Textfield;
@@ -856,6 +1494,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
     public static javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JLabel sup_payment_cash_label;
     private javax.swing.JLabel sup_payment_cheque_label;
+    private javax.swing.JLabel sup_payment_cheque_label1;
     // End of variables declaration//GEN-END:variables
 private int showRoundPaymentDialog(int studentId, int enrollmentId, int overpaidAmount) {
         Window parent = SwingUtilities.getWindowAncestor(this);

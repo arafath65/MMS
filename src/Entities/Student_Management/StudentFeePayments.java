@@ -57,8 +57,8 @@ public class StudentFeePayments implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "enrollment_id")
 
-    @OneToOne
-    @JoinColumn(name = "enrollment_id")
+//    @OneToOne
+//    @JoinColumn(name = "enrollment_id")
     private CourseEnrollment enrollment;
 
     @Column(name = "total_fee")

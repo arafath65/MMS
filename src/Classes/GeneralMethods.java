@@ -377,10 +377,10 @@ public class GeneralMethods {
 
                 String sql = "SELECT DISTINCT " + column
                         + " FROM " + table
-                        + " WHERE " + column + " LIKE :input";
+                        + " WHERE " + column + " LIKE ?";
 
                 List<String> results = em.createNativeQuery(sql)
-                        .setParameter("input", "%" + input + "%")
+                        .setParameter(1, "%" + input + "%")
                         .getResultList();
 
                 DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
@@ -392,7 +392,7 @@ public class GeneralMethods {
                 }
 
                 comboBox.setModel(model);
-                comboBox.setSelectedItem(input); // keep typing text
+                comboBox.setSelectedItem(input);
 
                 if (found) {
                     comboBox.setPopupVisible(true);

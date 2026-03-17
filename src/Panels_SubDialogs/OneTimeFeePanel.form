@@ -301,11 +301,11 @@
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
                                   <Component id="firstName_label9" pref="150" max="32767" attributes="0"/>
-                                  <Component id="fm_fees_oneTime_enter_amount_Textfield" max="32767" attributes="0"/>
+                                  <Component id="fm_fees_oneTime_chq_sum_Textfield" max="32767" attributes="0"/>
                               </Group>
                               <EmptySpace type="separate" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="fm_fees_oneTime_show_bal_Textfield" max="32767" attributes="0"/>
+                                  <Component id="fm_fees_oneTime_chq_sum_bal_Textfield" max="32767" attributes="0"/>
                                   <Component id="firstName_label10" max="32767" attributes="0"/>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
@@ -323,11 +323,11 @@
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Group type="102" attributes="0">
-                                      <Component id="fm_fees_oneTime_show_bal_Textfield" pref="37" max="32767" attributes="0"/>
+                                      <Component id="fm_fees_oneTime_chq_sum_bal_Textfield" pref="37" max="32767" attributes="0"/>
                                       <EmptySpace min="-2" pref="7" max="-2" attributes="0"/>
                                   </Group>
                                   <Group type="102" attributes="0">
-                                      <Component id="fm_fees_oneTime_enter_amount_Textfield" max="32767" attributes="0"/>
+                                      <Component id="fm_fees_oneTime_chq_sum_Textfield" max="32767" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                   </Group>
                               </Group>
@@ -345,7 +345,7 @@
                           <Font name="Roboto Medium" size="12" style="0"/>
                         </Property>
                         <Property name="horizontalAlignment" type="int" value="0"/>
-                        <Property name="text" type="java.lang.String" value="Enter Amount"/>
+                        <Property name="text" type="java.lang.String" value="Pending Cheques"/>
                       </Properties>
                     </Component>
                     <Component class="javax.swing.JLabel" name="firstName_label10">
@@ -357,25 +357,10 @@
                           <Font name="Roboto Medium" size="12" style="0"/>
                         </Property>
                         <Property name="horizontalAlignment" type="int" value="0"/>
-                        <Property name="text" type="java.lang.String" value="Balance"/>
+                        <Property name="text" type="java.lang.String" value="Final Balance"/>
                       </Properties>
                     </Component>
-                    <Component class="javax.swing.JTextField" name="fm_fees_oneTime_enter_amount_Textfield">
-                      <Properties>
-                        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                          <Font name="Roboto Condensed Light" size="14" style="0"/>
-                        </Property>
-                      </Properties>
-                      <Events>
-                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="fm_fees_oneTime_enter_amount_TextfieldActionPerformed"/>
-                        <EventHandler event="keyPressed" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="fm_fees_oneTime_enter_amount_TextfieldKeyPressed"/>
-                        <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="fm_fees_oneTime_enter_amount_TextfieldKeyReleased"/>
-                      </Events>
-                      <AuxValues>
-                        <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="9"/>
-                      </AuxValues>
-                    </Component>
-                    <Component class="javax.swing.JTextField" name="fm_fees_oneTime_show_bal_Textfield">
+                    <Component class="javax.swing.JTextField" name="fm_fees_oneTime_chq_sum_Textfield">
                       <Properties>
                         <Property name="editable" type="boolean" value="false"/>
                         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
@@ -383,9 +368,25 @@
                         </Property>
                       </Properties>
                       <Events>
-                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="fm_fees_oneTime_show_bal_TextfieldActionPerformed"/>
-                        <EventHandler event="keyPressed" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="fm_fees_oneTime_show_bal_TextfieldKeyPressed"/>
-                        <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="fm_fees_oneTime_show_bal_TextfieldKeyReleased"/>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="fm_fees_oneTime_chq_sum_TextfieldActionPerformed"/>
+                        <EventHandler event="keyPressed" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="fm_fees_oneTime_chq_sum_TextfieldKeyPressed"/>
+                        <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="fm_fees_oneTime_chq_sum_TextfieldKeyReleased"/>
+                      </Events>
+                      <AuxValues>
+                        <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="9"/>
+                      </AuxValues>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="fm_fees_oneTime_chq_sum_bal_Textfield">
+                      <Properties>
+                        <Property name="editable" type="boolean" value="false"/>
+                        <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                          <Font name="Roboto Condensed Light" size="14" style="0"/>
+                        </Property>
+                      </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="fm_fees_oneTime_chq_sum_bal_TextfieldActionPerformed"/>
+                        <EventHandler event="keyPressed" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="fm_fees_oneTime_chq_sum_bal_TextfieldKeyPressed"/>
+                        <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="fm_fees_oneTime_chq_sum_bal_TextfieldKeyReleased"/>
                       </Events>
                       <AuxValues>
                         <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="9"/>
@@ -411,27 +412,41 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Component id="fm_fees_cheq_cheque_number" alignment="0" max="32767" attributes="0"/>
-                              <Component id="fm_fees_cheq_cheque_bank" alignment="0" max="32767" attributes="0"/>
                               <Group type="102" alignment="0" attributes="0">
                                   <Component id="sup_payment_cheque_label" pref="149" max="32767" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="fm_fees_cheq_full_fees_Textfield" min="-2" pref="195" max="-2" attributes="0"/>
                               </Group>
                               <Group type="102" alignment="1" attributes="0">
+                                  <Component id="fm_fees_cheq_cheque_bank" max="32767" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="fm_fees_cheq_cheque_branch" min="-2" pref="134" max="-2" attributes="0"/>
+                              </Group>
+                              <Group type="102" alignment="1" attributes="0">
+                                  <Component id="fm_fees_cheq_cheque_amount" min="-2" pref="112" max="-2" attributes="0"/>
+                                  <EmptySpace min="-2" max="-2" attributes="0"/>
+                                  <Component id="fm_fees_cheq_cheque_date" max="32767" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="fm_fees_cheq_cheque_status" min="-2" pref="106" max="-2" attributes="0"/>
+                              </Group>
+                              <Group type="102" alignment="1" attributes="0">
                                   <Group type="103" groupAlignment="0" attributes="0">
-                                      <Component id="fm_fees_cheq_cheque_amount" max="32767" attributes="0"/>
-                                      <Component id="fm_fees_cheq_cheque_branch" max="32767" attributes="0"/>
+                                      <Component id="sup_payment_cheque_label1" pref="149" max="32767" attributes="0"/>
+                                      <Component id="firstName_label11" max="32767" attributes="0"/>
+                                      <Component id="firstName_label12" alignment="0" max="32767" attributes="0"/>
                                   </Group>
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                                      <Component id="fm_fees_cheq_cheque_status" alignment="0" pref="134" max="32767" attributes="0"/>
-                                      <Component id="fm_fees_cheq_cheque_date" alignment="0" max="32767" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Group type="102" alignment="1" attributes="0">
+                                          <Group type="103" groupAlignment="0" attributes="0">
+                                              <Component id="fm_fees_cheq_cheque_sum_Textfield" max="32767" attributes="0"/>
+                                              <Component id="fm_fees_cheq_cheque_sum_bal_Textfield" max="32767" attributes="0"/>
+                                          </Group>
+                                          <EmptySpace max="-2" attributes="0"/>
+                                          <Component id="buttonGradient3" min="-2" max="-2" attributes="0"/>
+                                      </Group>
+                                      <Component id="fm_fees_cheq_cheque_remaining" min="-2" pref="195" max="-2" attributes="0"/>
                                   </Group>
-                              </Group>
-                              <Component id="fm_fees_cheq_cheque_remaining" alignment="0" max="32767" attributes="0"/>
-                              <Group type="102" alignment="1" attributes="0">
-                                  <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                                  <Component id="buttonGradient3" min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
@@ -449,21 +464,32 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="fm_fees_cheq_cheque_number" min="-2" pref="35" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="fm_fees_cheq_cheque_bank" min="-2" pref="35" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="fm_fees_cheq_cheque_bank" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
+                              <Component id="fm_fees_cheq_cheque_branch" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
+                          </Group>
                           <EmptySpace max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="1" attributes="0">
-                              <Component id="fm_fees_cheq_cheque_branch" alignment="1" min="-2" pref="35" max="-2" attributes="0"/>
-                              <Component id="fm_fees_cheq_cheque_date" alignment="1" min="-2" pref="35" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="fm_fees_cheq_cheque_date" min="-2" pref="35" max="-2" attributes="0"/>
+                              <Component id="fm_fees_cheq_cheque_amount" min="-2" pref="35" max="-2" attributes="0"/>
+                              <Component id="fm_fees_cheq_cheque_status" min="-2" pref="35" max="-2" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="fm_fees_cheq_cheque_status" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
-                              <Component id="fm_fees_cheq_cheque_amount" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
+                              <Component id="fm_fees_cheq_cheque_remaining" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
+                              <Component id="sup_payment_cheque_label1" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
                           </Group>
-                          <EmptySpace max="-2" attributes="0"/>
-                          <Component id="fm_fees_cheq_cheque_remaining" min="-2" pref="35" max="-2" attributes="0"/>
-                          <EmptySpace max="32767" attributes="0"/>
-                          <Component id="buttonGradient3" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="fm_fees_cheq_cheque_sum_Textfield" alignment="3" pref="37" max="32767" attributes="0"/>
+                              <Component id="firstName_label11" alignment="3" max="32767" attributes="0"/>
+                          </Group>
+                          <EmptySpace min="-2" pref="5" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="buttonGradient3" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="fm_fees_cheq_cheque_sum_bal_Textfield" alignment="3" pref="37" max="32767" attributes="0"/>
+                              <Component id="firstName_label12" alignment="3" max="32767" attributes="0"/>
+                          </Group>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -577,9 +603,8 @@
                       <Font name="Roboto Condensed Light" size="14" style="0"/>
                     </Property>
                     <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                      <StringArray count="2">
+                      <StringArray count="1">
                         <StringItem index="0" value="Pending"/>
-                        <StringItem index="1" value="Cleared"/>
                       </StringArray>
                     </Property>
                     <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
@@ -620,6 +645,74 @@
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonGradient3ActionPerformed"/>
                   </Events>
+                </Component>
+                <Component class="javax.swing.JLabel" name="sup_payment_cheque_label1">
+                  <Properties>
+                    <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                      <Color blue="21" green="21" red="21" type="rgb"/>
+                    </Property>
+                    <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                      <Font name="Roboto Medium" size="12" style="0"/>
+                    </Property>
+                    <Property name="horizontalAlignment" type="int" value="2"/>
+                    <Property name="text" type="java.lang.String" value="Remaining Balance"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JTextField" name="fm_fees_cheq_cheque_sum_Textfield">
+                  <Properties>
+                    <Property name="editable" type="boolean" value="false"/>
+                    <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                      <Font name="Roboto Condensed Light" size="14" style="0"/>
+                    </Property>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="fm_fees_cheq_cheque_sum_TextfieldActionPerformed"/>
+                    <EventHandler event="keyPressed" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="fm_fees_cheq_cheque_sum_TextfieldKeyPressed"/>
+                    <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="fm_fees_cheq_cheque_sum_TextfieldKeyReleased"/>
+                  </Events>
+                  <AuxValues>
+                    <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="9"/>
+                  </AuxValues>
+                </Component>
+                <Component class="javax.swing.JTextField" name="fm_fees_cheq_cheque_sum_bal_Textfield">
+                  <Properties>
+                    <Property name="editable" type="boolean" value="false"/>
+                    <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                      <Font name="Roboto Condensed Light" size="14" style="0"/>
+                    </Property>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="fm_fees_cheq_cheque_sum_bal_TextfieldActionPerformed"/>
+                    <EventHandler event="keyPressed" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="fm_fees_cheq_cheque_sum_bal_TextfieldKeyPressed"/>
+                    <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="fm_fees_cheq_cheque_sum_bal_TextfieldKeyReleased"/>
+                  </Events>
+                  <AuxValues>
+                    <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="9"/>
+                  </AuxValues>
+                </Component>
+                <Component class="javax.swing.JLabel" name="firstName_label11">
+                  <Properties>
+                    <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                      <Color blue="21" green="21" red="21" type="rgb"/>
+                    </Property>
+                    <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                      <Font name="Roboto Medium" size="12" style="0"/>
+                    </Property>
+                    <Property name="horizontalAlignment" type="int" value="2"/>
+                    <Property name="text" type="java.lang.String" value="Pending Cheques"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JLabel" name="firstName_label12">
+                  <Properties>
+                    <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+                      <Color blue="21" green="21" red="21" type="rgb"/>
+                    </Property>
+                    <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                      <Font name="Roboto Medium" size="12" style="0"/>
+                    </Property>
+                    <Property name="horizontalAlignment" type="int" value="2"/>
+                    <Property name="text" type="java.lang.String" value="Final Balance"/>
+                  </Properties>
                 </Component>
               </SubComponents>
             </Container>
@@ -673,10 +766,12 @@
                 <Component class="javax.swing.JTable" name="fm_fees_oneTime_table">
                   <Properties>
                     <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                      <Table columnCount="3" rowCount="0">
+                      <Table columnCount="5" rowCount="0">
                         <Column editable="false" title="Installmet Seq" type="java.lang.Object"/>
                         <Column editable="false" title="Payment Date" type="java.lang.Object"/>
                         <Column editable="false" title="Paid Amount" type="java.lang.Object"/>
+                        <Column editable="true" title="Payment Method" type="java.lang.Object"/>
+                        <Column editable="false" title="Cheque Status" type="java.lang.Object"/>
                       </Table>
                     </Property>
                     <Property name="columnModel" type="javax.swing.table.TableColumnModel" editor="org.netbeans.modules.form.editors2.TableColumnModelEditor">
@@ -692,6 +787,16 @@
                           <Renderer/>
                         </Column>
                         <Column maxWidth="-1" minWidth="-1" prefWidth="150" resizable="true">
+                          <Title/>
+                          <Editor/>
+                          <Renderer/>
+                        </Column>
+                        <Column maxWidth="-1" minWidth="-1" prefWidth="-1" resizable="true">
+                          <Title/>
+                          <Editor/>
+                          <Renderer/>
+                        </Column>
+                        <Column maxWidth="-1" minWidth="-1" prefWidth="-1" resizable="true">
                           <Title/>
                           <Editor/>
                           <Renderer/>

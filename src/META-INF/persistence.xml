@@ -22,6 +22,7 @@
     <class>Entities.Student_Management.StudentFeeInstallments</class>
     <class>Entities.Student_Management.StudentFeeRoundPaymentMasterDetails</class>
     <class>Entities.Student_Management.StudentFeeRoundPaymentMaster</class>
+    <class>Entities.Student_Management.StudentFeeChequeDetails</class>
     <class>Additional.LedgerEntries</class>
     <class>Additional.BankNamesSriLanka</class>
     <class>Additional.BankBranches</class>
