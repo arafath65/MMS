@@ -38,12 +38,35 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
 
     public OneTimeFeePanel() {
         initComponents();
+        
+        fm_fees_oneTime_table.getColumnModel().getColumn(3).setMinWidth(0);
+        fm_fees_oneTime_table.getColumnModel().getColumn(3).setMaxWidth(0);
+        fm_fees_oneTime_table.getColumnModel().getColumn(3).setWidth(0);
+
+        fm_fees_oneTime_table.getColumnModel().getColumn(4).setMinWidth(0);
+        fm_fees_oneTime_table.getColumnModel().getColumn(4).setMaxWidth(0);
+        fm_fees_oneTime_table.getColumnModel().getColumn(4).setWidth(0);
 
         fm_fees_oneTime_payment_date.setDate(new Date());
         // fm_fees_oneTime_payment_date.setDate(new Date());
 
         styleDateChooser.applyDarkTheme(fm_fees_oneTime_payment_date);
         styleDateChooser.applyDarkTheme(fm_fees_cheq_cheque_date);
+
+        fm_fees_oneTime_total_paid_Textfield.putClientProperty("JComponent.outline", new Color(255, 160, 41));
+        fm_fees_oneTime_total_paid_Textfield.putClientProperty("JComponent.focusWidth", 2);
+        
+        fm_fees_cheq_cheque_number.putClientProperty("JComponent.outline", new Color(255, 160, 41));
+        fm_fees_cheq_cheque_number.putClientProperty("JComponent.focusWidth", 2);
+        
+        fm_fees_cheq_cheque_amount.putClientProperty("JComponent.outline", new Color(255, 160, 41));
+        fm_fees_cheq_cheque_amount.putClientProperty("JComponent.focusWidth", 2);
+        
+        fm_fees_cheq_cheque_bank.putClientProperty("JComponent.outline", new Color(255, 160, 41));
+        fm_fees_cheq_cheque_bank.putClientProperty("JComponent.focusWidth", 2);
+        
+        fm_fees_oneTime_payment_method_combo.putClientProperty("JComponent.outline", new Color(255, 160, 41));
+        fm_fees_oneTime_payment_method_combo.putClientProperty("JComponent.focusWidth", 2);
 
         JComboPopulatesBankInfo();
     }
@@ -633,7 +656,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, true, false
+                false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -670,7 +693,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
         );
 
         jLabel13.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel13.setText("Select Payment Mode");
+        jLabel13.setText("Select Payment Date");
 
         fm_fees_oneTime_payment_date.setForeground(new java.awt.Color(204, 204, 204));
         fm_fees_oneTime_payment_date.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
@@ -1183,7 +1206,6 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
 
 //                        dao.saveChequePayment(st_id, en_id, amount_paid,
 //                                paymentDate, chq_no, bank_name, bank_branch, chqPaymentDate, username);
-
                         instModel.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
                         ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, "CHEQUE", "Student Management", username);
                         break;

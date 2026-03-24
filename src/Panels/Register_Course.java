@@ -274,9 +274,7 @@ public class Register_Course extends javax.swing.JPanel {
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                .addGroup(jPanel3Layout.createSequentialGroup()
-                                    .addGap(25, 25, 25)
-                                    .addComponent(reg_course_comp_month_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(reg_course_comp_month_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGroup(jPanel3Layout.createSequentialGroup()
                                     .addComponent(jLabel19, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addGap(41, 41, 41)))
@@ -302,9 +300,7 @@ public class Register_Course extends javax.swing.JPanel {
                                         .addComponent(reg_course_fees_textfield, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(reg_course_admission_fees_textfield, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))))
                             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                .addGroup(jPanel3Layout.createSequentialGroup()
-                                    .addGap(25, 25, 25)
-                                    .addComponent(reg_course_payment_mode_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(reg_course_payment_mode_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGroup(jPanel3Layout.createSequentialGroup()
                                     .addComponent(jLabel22, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addGap(41, 41, 41))))))
@@ -331,6 +327,7 @@ public class Register_Course extends javax.swing.JPanel {
         });
         jScrollPane1.setViewportView(reg_course_CourseTable);
         if (reg_course_CourseTable.getColumnModel().getColumnCount() > 0) {
+            reg_course_CourseTable.getColumnModel().getColumn(0).setResizable(false);
             reg_course_CourseTable.getColumnModel().getColumn(0).setPreferredWidth(30);
             reg_course_CourseTable.getColumnModel().getColumn(1).setPreferredWidth(120);
             reg_course_CourseTable.getColumnModel().getColumn(2).setPreferredWidth(200);
@@ -403,9 +400,19 @@ public class Register_Course extends javax.swing.JPanel {
             new String [] {
                 "#", "Class"
             }
-        ));
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
         jScrollPane2.setViewportView(reg_course_ClassTable);
         if (reg_course_ClassTable.getColumnModel().getColumnCount() > 0) {
+            reg_course_ClassTable.getColumnModel().getColumn(0).setResizable(false);
+            reg_course_ClassTable.getColumnModel().getColumn(1).setResizable(false);
             reg_course_ClassTable.getColumnModel().getColumn(1).setPreferredWidth(180);
         }
 

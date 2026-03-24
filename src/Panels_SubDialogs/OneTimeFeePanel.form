@@ -770,7 +770,7 @@
                         <Column editable="false" title="Installmet Seq" type="java.lang.Object"/>
                         <Column editable="false" title="Payment Date" type="java.lang.Object"/>
                         <Column editable="false" title="Paid Amount" type="java.lang.Object"/>
-                        <Column editable="true" title="Payment Method" type="java.lang.Object"/>
+                        <Column editable="false" title="Payment Method" type="java.lang.Object"/>
                         <Column editable="false" title="Cheque Status" type="java.lang.Object"/>
                       </Table>
                     </Property>
@@ -823,7 +823,7 @@
             <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
               <Font name="Roboto Medium" size="12" style="0"/>
             </Property>
-            <Property name="text" type="java.lang.String" value="Select Payment Mode"/>
+            <Property name="text" type="java.lang.String" value="Select Payment Date"/>
           </Properties>
         </Component>
         <Component class="com.toedter.calendar.JDateChooser" name="fm_fees_oneTime_payment_date">

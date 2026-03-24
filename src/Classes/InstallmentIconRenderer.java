@@ -18,7 +18,9 @@ import javax.swing.table.DefaultTableCellRenderer;
  */
 public class InstallmentIconRenderer extends TableGradientCell {
 
-    private Icon chequeIcon = new ImageIcon(getClass().getResource("/images/timer16.png"));
+//    private Icon chequeIcon = new ImageIcon(getClass().getResource("/images/timer16.png"));
+    private Icon chequeIcon = new ImageIcon(getClass().getResource("/images/yellowcircle.png"));
+    private Icon chequeIcon2 = new ImageIcon(getClass().getResource("/images/greencircle.png"));
 
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value,
@@ -33,6 +35,9 @@ public class InstallmentIconRenderer extends TableGradientCell {
 
         if ("CHEQUE".equalsIgnoreCase(paymentMethod) && "PENDING".equalsIgnoreCase(chequeStatus)) {
             label.setIcon(chequeIcon);
+            label.setIconTextGap(8);
+        }else if ("CASH".equalsIgnoreCase(paymentMethod) || "CARD".equalsIgnoreCase(paymentMethod)) {
+            label.setIcon(chequeIcon2);
             label.setIconTextGap(8);
         }
 

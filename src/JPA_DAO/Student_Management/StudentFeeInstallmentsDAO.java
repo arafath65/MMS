@@ -7,9 +7,14 @@ import Entities.Student_Management.StudentFeePayments;
 import Entities.Student_Management.StudentFeeRoundPaymentMaster;
 import Entities.Student_Management.StudentFeeRoundPaymentMasterDetails;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.swing.JOptionPane;
 
@@ -192,78 +197,6 @@ public class StudentFeeInstallmentsDAO {
 
         }
     }
-//    public void saveInstallment(int studentId, int enrollmentId, int amountPaid, Date paymentDate, String paymentMethod, String paymentType, String monthFor, String user) {
-//        EntityManager em = HibernateConfig.getEntityManager();
-//        EntityTransaction tx = em.getTransaction();
-//
-//        try {
-//            tx.begin();
-//
-//            // Fetch StudentFeePayments record for this student & enrollment
-//            TypedQuery<StudentFeePayments> query = em.createQuery(
-//                    "SELECT p FROM StudentFeePayments p "
-//                    + "WHERE p.student.studentId = :studentId "
-//                    + "AND p.enrollment.enrollmentId = :enrollmentId "
-//                    + "AND p.status = true",
-//                    StudentFeePayments.class
-//            );
-//            query.setParameter("studentId", studentId);
-//            query.setParameter("enrollmentId", enrollmentId);
-//
-//            StudentFeePayments payment = query.getSingleResult();
-//            int paymentId = payment.getStudentFeePaymentsId();
-//
-//            // Check duplicate
-//            if (isDuplicatePayment(paymentId, paymentDate, amountPaid)) {
-//                JOptionPane.showMessageDialog(null, "Duplicate payment detected.", "Warning", JOptionPane.WARNING_MESSAGE);
-//                return;
-//            }
-//
-//            // Next installment number
-//            int nextInstallment = getNextInstallmentNo(paymentId);
-//
-//            // Create installment
-//            StudentFeeInstallments ins = new StudentFeeInstallments();
-//            ins.setStudentFeePaymentsId(paymentId);
-//            ins.setEnrollmentId(enrollmentId);
-//            ins.setInstallmentNo(nextInstallment);
-//            ins.setAmountPaid(amountPaid);
-//            ins.setPaymentDate(paymentDate);
-//            ins.setPaymentMethod(paymentMethod);
-//            ins.setPaymentMethod(paymentType);
-//            ins.setMonthFor(monthFor);
-//            ins.setStatus(1);
-//
-//            em.persist(ins);
-//
-//            // Update main payment totals
-//            int newPaid = payment.getTotalPaid() + amountPaid;
-//            int newBalance = payment.getTotalFee() - newPaid;
-//
-//            payment.setTotalPaid(newPaid);
-//            payment.setTotalBalance(newBalance);
-//            payment.setPaymentType("FULL"); // always mark as installment
-//            payment.setLastMofidied(new Date());
-//
-//            // Update payment status
-//            if (newBalance == 0) {
-//                payment.setPaymentStatus("COMPLETE");
-//            } else {
-//                payment.setPaymentStatus("ACTIVE");
-//            }
-//
-//            em.merge(payment);
-//
-//            tx.commit();
-//        } catch (Exception e) {
-//            if (tx.isActive()) {
-//                tx.rollback();
-//            }
-//            e.printStackTrace();
-//        } finally {
-//            em.close();
-//        }
-//    }
 
     public int getPaymentIdByStudentAndEnrollment(int studentId, int enrollmentId) {
         EntityManager em = HibernateConfig.getEntityManager();
@@ -279,196 +212,6 @@ public class StudentFeeInstallmentsDAO {
         return payment.getStudentFeePaymentsId();
     }
 
-//    public void processRoundPayment(int studentId, int startEnrollmentId, int paidAmount,
-//            Date paymentDate, String paymentMethod, String user) {
-//
-//        EntityManager em = HibernateConfig.getEntityManager();
-//        EntityTransaction tx = em.getTransaction();
-//
-//        try {
-//
-//            tx.begin();
-//
-//            boolean isCheque = paymentMethod.equalsIgnoreCase("CHEQUE");
-//            int remainingAmount = paidAmount;
-//
-//            // =====================================================
-//            // CREATE ROUND PAYMENT MASTER
-//            // =====================================================
-//            StudentFeeRoundPaymentMaster master = new StudentFeeRoundPaymentMaster();
-//            master.setStudentId(studentId);
-//            master.setPaymentDate(paymentDate);
-//            master.setPaymentMode(paymentMethod);
-//            master.setTotalPaid(paidAmount);
-//            master.setRoundingAdjustment(0);
-//            master.setRemarks("ROUND PAYMENT");
-//            master.setUser(user);
-//            master.setStatus(1);
-//
-//            em.persist(master);
-//            em.flush();
-//
-//            // =====================================================
-//            // 1️⃣ PAY SELECTED COURSE FIRST
-//            // =====================================================
-//            StudentFeePayments selectedPayment = em.createQuery(
-//                    "SELECT p FROM StudentFeePayments p "
-//                    + "WHERE p.student.studentId = :sid "
-//                    + "AND p.enrollment.enrollmentId = :eid "
-//                    + "AND p.status = true",
-//                    StudentFeePayments.class)
-//                    .setParameter("sid", studentId)
-//                    .setParameter("eid", startEnrollmentId)
-//                    .getSingleResult();
-//
-    ////            int selectedBalance = selectedPayment.getTotalBalance();
-////            int deductSelected = Math.min(selectedBalance, remainingAmount);
-//            int selectedBalance = selectedPayment.getTotalBalance();
-//
-//            int pendingCheque = getPendingChequeAmountForCourse(
-//                    em,
-//                    selectedPayment.getEnrollment().getEnrollmentId()
-//            );
-//
-//            int usableBalance = selectedBalance - pendingCheque;
-//
-//            if (usableBalance < 0) {
-//                usableBalance = 0;
-//            }
-//
-//            int deductSelected = Math.min(usableBalance, remainingAmount);
-//
-//            // Update balances only if NOT cheque
-//            if (!isCheque) {
-//
-//                selectedPayment.setTotalPaid(selectedPayment.getTotalPaid() + deductSelected);
-//                selectedPayment.setTotalBalance(selectedPayment.getTotalBalance() - deductSelected);
-//                selectedPayment.setPaymentType("ROUND");
-//
-//                if (selectedPayment.getTotalBalance() <= 0) {
-//                    selectedPayment.setPaymentStatus("COMPLETE");
-//                }
-//
-//                em.merge(selectedPayment);
-//            }
-//
-//            // ROUND DETAIL
-//            StudentFeeRoundPaymentMasterDetails detailFirst = new StudentFeeRoundPaymentMasterDetails();
-//            detailFirst.setStudentFeeRoundPaymentMasterId(master);
-//            detailFirst.setEnrollmentId(startEnrollmentId);
-//            detailFirst.setPaidAmount(deductSelected);
-//            detailFirst.setStatus(1);
-//
-//            em.persist(detailFirst);
-//
-//            // INSTALLMENT RECORD
-//            StudentFeeInstallments installmentFirst = new StudentFeeInstallments();
-//            installmentFirst.setStudentFeePaymentsId(selectedPayment.getStudentFeePaymentsId());
-//            installmentFirst.setEnrollmentId(selectedPayment.getEnrollment().getEnrollmentId());
-//            installmentFirst.setAmountPaid(deductSelected);
-//            installmentFirst.setPaymentDate(paymentDate);
-//            installmentFirst.setPaymentMethod(paymentMethod);
-//            installmentFirst.setPaymentType("ROUND");
-//            installmentFirst.setInstallmentNo(getNextInstallmentNo(selectedPayment.getStudentFeePaymentsId()));
-//            installmentFirst.setStatus(1);
-//
-//            em.persist(installmentFirst);
-//
-//            remainingAmount -= deductSelected;
-//
-//            // =====================================================
-//            // 2️⃣ PAY OTHER COURSES (OLDEST FIRST)
-//            // =====================================================
-//            List<StudentFeePayments> payments = em.createQuery(
-//                    "SELECT p FROM StudentFeePayments p "
-//                    + "WHERE p.student.studentId = :sid "
-//                    + "AND p.status = true "
-//                    + "AND p.totalBalance > 0 "
-//                    + "AND p.enrollment.enrollmentId <> :eid "
-//                    + "ORDER BY p.createdAt ASC",
-//                    StudentFeePayments.class)
-//                    .setParameter("sid", studentId)
-//                    .setParameter("eid", startEnrollmentId)
-//                    .getResultList();
-//
-//            for (StudentFeePayments payment : payments) {
-//
-//                if (remainingAmount <= 0) {
-//                    break;
-//                }
-//
-////                int balance = payment.getTotalBalance();
-////                int deductAmount = Math.min(balance, remainingAmount);
-//                int balance = payment.getTotalBalance();
-//
-//                int pendingCheques = getPendingChequeAmountForCourse(
-//                        em,
-//                        payment.getEnrollment().getEnrollmentId()
-//                );
-//
-//                int usableBalances = balance - pendingCheques;
-//
-//                if (usableBalances <= 0) {
-//                    continue;
-//                }
-//
-//                int deductAmount = Math.min(usableBalances, remainingAmount);
-//
-//                // Update balances only if NOT cheque
-//                if (!isCheque) {
-//
-//                    payment.setTotalPaid(payment.getTotalPaid() + deductAmount);
-//                    payment.setTotalBalance(payment.getTotalBalance() - deductAmount);
-//                    payment.setPaymentType("ROUND");
-//
-//                    if (payment.getTotalBalance() <= 0) {
-//                        payment.setPaymentStatus("COMPLETE");
-//                    }
-//
-//                    em.merge(payment);
-//                }
-//
-//                // ROUND DETAIL
-//                StudentFeeRoundPaymentMasterDetails detail = new StudentFeeRoundPaymentMasterDetails();
-//                detail.setStudentFeeRoundPaymentMasterId(master);
-//                detail.setEnrollmentId(payment.getEnrollment().getEnrollmentId());
-//                detail.setPaidAmount(deductAmount);
-//                detail.setStatus(1);
-//
-//                em.persist(detail);
-//
-//                // INSTALLMENT RECORD
-//                StudentFeeInstallments installment = new StudentFeeInstallments();
-//                installment.setStudentFeePaymentsId(payment.getStudentFeePaymentsId());
-//                installment.setEnrollmentId(payment.getEnrollment().getEnrollmentId());
-//                installment.setAmountPaid(deductAmount);
-//                installment.setPaymentDate(paymentDate);
-//                installment.setPaymentMethod(paymentMethod);
-//                installment.setPaymentType("ROUND");
-//                installment.setInstallmentNo(getNextInstallmentNo(payment.getStudentFeePaymentsId()));
-//                installment.setStatus(1);
-//
-//                em.persist(installment);
-//
-//                remainingAmount -= deductAmount;
-//            }
-//
-//            tx.commit();
-//
-//        } catch (Exception e) {
-//
-//            if (tx.isActive()) {
-//                tx.rollback();
-//            }
-//
-//            e.printStackTrace();
-//
-//        } finally {
-//
-//            em.close();
-//        }
-//    }
-    
     public void processRoundPayment(int studentId, int startEnrollmentId, int paidAmount,
             Date paymentDate, String paymentMethod,
             String chequeNo, String bank, String branch, Date chequeDate,
@@ -566,7 +309,7 @@ public class StudentFeeInstallmentsDAO {
 
             em.persist(installmentFirst);
             em.flush();
-            
+
             if (isCheque) {
                 StudentFeeChequeDetails cheque = new StudentFeeChequeDetails();
                 cheque.setStudentFeeInstallmentsId(installmentFirst.getStudentFeeInstallmentsId());
@@ -657,7 +400,7 @@ public class StudentFeeInstallmentsDAO {
 
                 em.persist(installment);
                 em.flush();
-                
+
                 if (isCheque) {
                     StudentFeeChequeDetails cheque = new StudentFeeChequeDetails();
                     cheque.setStudentFeeInstallmentsId(installment.getStudentFeeInstallmentsId());
@@ -799,5 +542,186 @@ public class StudentFeeInstallmentsDAO {
         em.close();
 
         return pendingChequeTotal == null ? 0 : pendingChequeTotal.intValue();
+    }
+
+    public class MonthDataDTO {
+
+        public int startYear;
+        public int startMonth;
+        public int endYear;
+        public int endMonth;
+
+        public int monthlyFee; // ✅ NEW
+
+        public Set<String> paidMonths = new HashSet<>();
+        public Map<String, Integer> monthAmountMap = new HashMap<>();
+        public Map<String, String> chequeStatusMap = new HashMap<>();
+    }
+
+    public MonthDataDTO getMonthData(int enrollmentId) {
+
+        EntityManager em = HibernateConfig.getEntityManager();
+        MonthDataDTO dto = new MonthDataDTO();
+
+        try {
+
+            List<Object[]> chequeList = em.createNativeQuery(
+                    "SELECT i.month_for, c.cheque_status "
+                    + "FROM student_fee_cheque_details c "
+                    + "JOIN student_fee_installments i "
+                    + "ON c.student_fee_installments_id = i.student_fee_installments_id "
+                    + "WHERE i.enrollment_id = ? AND c.status = 1"
+            )
+                    .setParameter(1, enrollmentId)
+                    .getResultList();
+
+            for (Object[] row : chequeList) {
+                if (row[0] != null) {
+                    dto.chequeStatusMap.put(
+                            row[0].toString(),
+                            row[1] != null ? row[1].toString() : ""
+                    );
+                }
+            }
+
+            // ============================
+            // 1. COURSE RANGE
+            // ============================
+            Object[] course = (Object[]) em.createNativeQuery(
+                    "SELECT c.enrol_year, c.enrol_month, c.comp_year, c.comp_month "
+                    + "FROM course_enrollment ce "
+                    + "JOIN course c ON ce.course_id = c.course_id "
+                    + "WHERE ce.enrollment_id = ?"
+            )
+                    .setParameter(1, enrollmentId)
+                    .getSingleResult();
+
+            dto.startYear = ((Number) course[0]).intValue();
+            dto.startMonth = ((Number) course[1]).intValue();
+            dto.endYear = ((Number) course[2]).intValue();
+            dto.endMonth = ((Number) course[3]).intValue();
+
+            // ============================
+            // 2. LOAD INSTALLMENTS (IMPORTANT)
+            // ============================
+            List<Object[]> list = em.createNativeQuery(
+                    "SELECT month_for, amount_paid "
+                    + "FROM student_fee_installments "
+                    + "WHERE enrollment_id = ? AND status = 1"
+            )
+                    .setParameter(1, enrollmentId)
+                    .getResultList();
+
+            for (Object[] row : list) {
+
+                String monthFor = (String) row[0];
+                int amount = ((Number) row[1]).intValue();
+
+                dto.monthAmountMap.put(monthFor, amount);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
+
+        return dto;
+    }
+
+//    public class MonthDataDTO {
+//
+//        public int startYear;
+//        public int startMonth;
+//        public int endYear;
+//        public int endMonth;
+//
+//        public int monthlyFee; // ✅ NEW
+//
+//        public Set<String> paidMonths = new HashSet<>();
+//        public Map<String, Integer> monthAmountMap = new HashMap<>();
+//    }
+//
+//    public MonthDataDTO getMonthData(int enrollmentId) {
+//
+//        EntityManager em = HibernateConfig.getEntityManager();
+//        MonthDataDTO dto = new MonthDataDTO();
+//
+//        try {
+//
+//            // ============================
+//            // 1. COURSE RANGE
+//            // ============================
+//            Object[] course = (Object[]) em.createNativeQuery(
+//                    "SELECT c.enrol_year, c.enrol_month, c.comp_year, c.comp_month "
+//                    + "FROM course_enrollment ce "
+//                    + "JOIN course c ON ce.course_id = c.course_id "
+//                    + "WHERE ce.enrollment_id = ?"
+//            )
+//                    .setParameter(1, enrollmentId)
+//                    .getSingleResult();
+//
+//            dto.startYear = ((Number) course[0]).intValue();
+//            dto.startMonth = ((Number) course[1]).intValue();
+//            dto.endYear = ((Number) course[2]).intValue();
+//            dto.endMonth = ((Number) course[3]).intValue();
+//
+//            // ============================
+//            // 2. LOAD INSTALLMENTS (IMPORTANT)
+//            // ============================
+//            List<Object[]> list = em.createNativeQuery(
+//                    "SELECT month_for, amount_paid "
+//                    + "FROM student_fee_installments "
+//                    + "WHERE enrollment_id = ? AND status = 1"
+//            )
+//                    .setParameter(1, enrollmentId)
+//                    .getResultList();
+//
+//            for (Object[] row : list) {
+//
+//                String monthFor = (String) row[0];
+//                int amount = ((Number) row[1]).intValue();
+//
+//                dto.monthAmountMap.put(monthFor, amount);
+//            }
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        } finally {
+//            em.close();
+//        }
+//
+//        return dto;
+//    }
+    public int getPendingChequeAmount(int enrollmentId) {
+
+        EntityManager em = HibernateConfig.getEntityManager();
+        int total = 0;
+
+        try {
+
+            Object result = em.createNativeQuery(
+                    "SELECT COALESCE(SUM(c.cheque_amount),0) "
+                    + "FROM student_fee_cheque_details c "
+                    + "JOIN student_fee_installments i "
+                    + "ON c.student_fee_installments_id = i.student_fee_installments_id "
+                    + "WHERE i.enrollment_id = ? "
+                    + "AND c.cheque_status = 'PENDING' "
+                    + "AND c.status = 1"
+            )
+                    .setParameter(1, enrollmentId)
+                    .getSingleResult();
+
+            if (result != null) {
+                total = ((Number) result).intValue();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
+
+        return total;
     }
 }

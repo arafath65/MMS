@@ -52,6 +52,8 @@ public class StudentFeeInstallments implements Serializable {
     private String paymentMethod;
     @Column(name = "month_for")
     private String monthFor;
+    @Column(name = "remarks")
+    private String remarks;
     @Column(name = "status")
     private int status;
 
@@ -117,6 +119,14 @@ public class StudentFeeInstallments implements Serializable {
 
     public void setMonthFor(String monthFor) {
         this.monthFor = monthFor;
+    }
+    
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
     }
 
     public int getStatus() {

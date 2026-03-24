@@ -62,40 +62,89 @@ public class GeneralMethods {
     }
 
     public static int getMonthNumber(String month) {
-        if (month == null) {
+
+        if (month == null || month.trim().isEmpty()) {
             return 0;
         }
 
-        switch (month.toLowerCase()) {
+        String m = month.trim().toLowerCase();
+
+        // normalize short names to full names
+        switch (m) {
+            case "jan":
             case "january":
                 return 1;
+            case "feb":
             case "february":
                 return 2;
+            case "mar":
             case "march":
                 return 3;
+            case "apr":
             case "april":
                 return 4;
             case "may":
                 return 5;
+            case "jun":
             case "june":
                 return 6;
+            case "jul":
             case "july":
                 return 7;
+            case "aug":
             case "august":
                 return 8;
+            case "sep":
             case "september":
                 return 9;
+            case "oct":
             case "october":
                 return 10;
+            case "nov":
             case "november":
                 return 11;
+            case "dec":
             case "december":
                 return 12;
             default:
-                return 0; // invalid
+                return 0;
         }
     }
 
+//    public static int getMonthNumber(String month) {
+//        if (month == null) {
+//            return 0;
+//        }
+//
+//        switch (month.toLowerCase()) {
+//            case "january":
+//                return 1;
+//            case "february":
+//                return 2;
+//            case "march":
+//                return 3;
+//            case "april":
+//                return 4;
+//            case "may":
+//                return 5;
+//            case "june":
+//                return 6;
+//            case "july":
+//                return 7;
+//            case "august":
+//                return 8;
+//            case "september":
+//                return 9;
+//            case "october":
+//                return 10;
+//            case "november":
+//                return 11;
+//            case "december":
+//                return 12;
+//            default:
+//                return 0; // invalid
+//        }
+//    }
     public static String getMonthName(int month) {
         switch (month) {
             case 1:
