@@ -1,6 +1,7 @@
 package Dashboard;
 
 import Dashboard_Design.MyDrawerBuilder;
+import Panels.Cheque_Handling;
 import Panels.Dashboard_Panel;
 import Panels.Fees_Management;
 import Panels.Register_Course;
@@ -24,6 +25,7 @@ public class Dashboard extends javax.swing.JFrame {
     Student_Management studentManagement;
     Register_Course register_Courses;
     Fees_Management fees_Management;
+    Cheque_Handling cheque_Handling;
    // Course_enrolment course_enrolment;
 
     public Dashboard() {
@@ -40,6 +42,7 @@ public class Dashboard extends javax.swing.JFrame {
         studentManagement = new Student_Management();
         register_Courses = new Register_Course();
         fees_Management = new Fees_Management();
+        cheque_Handling = new Cheque_Handling();
        // course_enrolment = new Course_enrolment();
 
         // ADD PANEL TO CARDLAYOUT (ONLY ONCE)
@@ -47,6 +50,7 @@ public class Dashboard extends javax.swing.JFrame {
         main_panels.add(studentManagement, "STUDENT_ADMISSION");
         main_panels.add(register_Courses, "REGISTER_COURSE");
         main_panels.add(fees_Management, "FEES_MANAGEMENT");
+        main_panels.add(cheque_Handling, "CHEQUE_HANDLING");
        // main_panels.add(course_enrolment, "COURSE_ENROLMENT");
 
         showPanel("DASHBOARD_PANEL"); // default

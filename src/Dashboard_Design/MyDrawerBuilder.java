@@ -81,7 +81,9 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
             .subMenu("New Admission")
             .subMenu("Fees Handling")
             .subMenu("Reports"),
-            new Item("Settings", "chat.svg")
+            new Item("Accounts", "accountsvg.svg")
+            .subMenu("Cheque Handling"),
+            new Item("Settings", "settingssvg.svg")
             .subMenu("Register Course"),};
 
         SimpleMenuOption simpleMenuOption = new SimpleMenuOption() {
@@ -128,14 +130,23 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
                     return;
                 }
 
-                // SETTINGS -> REGISTER COURSE
+                // Accounts -> CHEQUE HANDLING
+                // Accounts -> CHEQUE HANDLING
                 if (index.length == 2 && index[0] == 2 && index[1] == 0) {
+                    dashboard.showPanel("CHEQUE_HANDLING");
+                    Dashboard.Dashboard.Main_Lable.setText("CHEQUE HANDLING");
+                    return;
+                }
+
+                // SETTINGS -> REGISTER COURSE
+                if (index.length == 2 && index[0] == 3 && index[1] == 0) {
                     dashboard.showPanel("REGISTER_COURSE");
                     Dashboard.Dashboard.Main_Lable.setText("REGISTER COURSE");
                     return;
                 }
 
                 System.out.println("Drawer menu selected " + Arrays.toString(index));
+                System.out.println("Menu Click: " + Arrays.toString(index));
             }
 
         });
@@ -177,10 +188,10 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
             public boolean menuValidation(int[] index) {
                 if (index.length == 1) {
                     // Hide Calendar
-                    if (index[0] == 3) {
+                    if (index[0] == 5) {
                         return false;
                     }
-                } else if (index.length == 3) {
+                } else if (index.length == 5) {
                     //  Hide Read 4
                     if (index[0] == 1 && index[1] == 1 && index[2] == 4) {
                         return false;
