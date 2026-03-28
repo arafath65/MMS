@@ -15,6 +15,7 @@ import Entities.Student_Management.StudentFeePayments;
 import JPA_DAO.Student_Management.CourseEnrollmentDAO;
 import JPA_DAO.Student_Management.StudentDAO;
 import JPA_DAO.Student_Management.StudentFeeInstallmentsDAO;
+import Panels_SubDialogs.Admission_Fee_Payment;
 import Panels_SubDialogs.MonthlyFeePanel;
 import Panels_SubDialogs.OneTimeFeePanel;
 import static Panels_SubDialogs.OneTimeFeePanel.fm_fees_oneTime_table;
@@ -36,6 +37,7 @@ import javax.persistence.EntityTransaction;
 import javax.swing.ComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
@@ -51,6 +53,7 @@ public class Fees_Management extends javax.swing.JPanel {
 
     public static int selectedStudentIds = 0;
     public static int selectedEnrollmentId = 0;
+    public static int admis_Fees = 0;
 
     GeneralMethods generalMethods = new GeneralMethods();
     styleDateChooser stDateChooser = new styleDateChooser();
@@ -59,11 +62,15 @@ public class Fees_Management extends javax.swing.JPanel {
     private File selectedImageFile;
 
     private int selectedStudentId;
+    String username;
+    String role;
 
-    public Fees_Management() {
+    public Fees_Management(String username, String role) {
+        this.username = username;
+        this.role = role;
         initComponents();
 
-        oneTimeFeePanel = new OneTimeFeePanel();
+        oneTimeFeePanel = new OneTimeFeePanel(username, role);
         monthlyFeePanel = new MonthlyFeePanel();
 
         fm_fees_course_table.setDefaultRenderer(Object.class, new TableGradientCell());
@@ -171,6 +178,61 @@ public class Fees_Management extends javax.swing.JPanel {
                 fm_fees_name_combo.setSelectedItem(name_combo);
 
                 loadStudentCoursesToTable(admis_combo);
+
+                DefaultTableModel model = (DefaultTableModel) OneTimeFeePanel.fm_fees_oneTime_table.getModel();
+                model.setRowCount(0);
+
+                DefaultTableModel model1 = (DefaultTableModel) MonthlyFeePanel.mm_fees_monthly_table.getModel();
+                model1.setRowCount(0);
+
+                // ONE TIME FRAME
+                OneTimeFeePanel.fm_fees_oneTime_payment_date.setDate(new Date());
+                OneTimeFeePanel.fm_fees_oneTime_payment_method_combo.setSelectedIndex(0);
+                OneTimeFeePanel.fm_fees_oneTime_total_fee_Textfield.setText("");
+                OneTimeFeePanel.fm_fees_oneTime_total_paid_Textfield.setText("");
+                OneTimeFeePanel.fm_fees_oneTime_total_balance_Textfield.setText("");
+                OneTimeFeePanel.fm_fees_oneTime_chq_sum_Textfield.setText("");
+                OneTimeFeePanel.fm_fees_oneTime_chq_sum_bal_Textfield.setText("");
+
+                OneTimeFeePanel.fm_fees_cheq_full_fees_Textfield.setText("");
+                OneTimeFeePanel.fm_fees_cheq_cheque_number.setText("");
+                OneTimeFeePanel.fm_fees_cheq_cheque_bank.removeAllItems();
+                OneTimeFeePanel.fm_fees_cheq_cheque_branch.setText("");
+                OneTimeFeePanel.fm_fees_cheq_cheque_amount.setText("");
+                OneTimeFeePanel.fm_fees_cheq_cheque_date.setDate(null);
+                OneTimeFeePanel.fm_fees_cheq_cheque_status.setSelectedIndex(0);
+                OneTimeFeePanel.fm_fees_cheq_cheque_remaining.setText("");
+                OneTimeFeePanel.fm_fees_cheq_cheque_sum_Textfield.setText("");
+                OneTimeFeePanel.fm_fees_cheq_cheque_sum_bal_Textfield.setText("");
+
+                // MONTHLY FRAME
+                MonthlyFeePanel.mm_fees_Monthly_payment_date.setDate(new Date());
+                MonthlyFeePanel.mm_fees_Monthly_payment_method_combo.setSelectedIndex(0);
+                MonthlyFeePanel.mm_fees_Monthly_total_fee_Textfield.setText("");
+                MonthlyFeePanel.mm_fees_Monthly_fee_cal_Textfield.setText("");
+                MonthlyFeePanel.mm_fees_Monthly_total_paid_Textfield.setText("");
+                MonthlyFeePanel.mm_fees_Monthly_total_balance_Textfield.setText("");
+                MonthlyFeePanel.fm_fees_cheq_full_fees_Textfield.setText("");
+                MonthlyFeePanel.fm_fees_cheq_full_fees_cal_Textfield.setText("");
+                MonthlyFeePanel.mm_fees_cheq_cheque_number.setText("");
+                MonthlyFeePanel.mm_fees_cheq_cheque_bank.removeAllItems();
+                MonthlyFeePanel.mm_fees_cheq_cheque_branch.setText("");
+                MonthlyFeePanel.mm_fees_cheq_cheque_amount.setText("");
+                MonthlyFeePanel.mm_fees_cheq_cheque_date.setDate(null);
+                MonthlyFeePanel.mm_fees_cheq_cheque_status.setSelectedIndex(0);
+                MonthlyFeePanel.mm_fees_cheq_cheque_remaining.setText("");
+
+                MonthlyFeePanel.mm_fees_Monthly_tot_paid_months_Textfield.setText("");
+                MonthlyFeePanel.mm_fees_Monthly_tot_paid_amount_Textfield.setText("");
+                MonthlyFeePanel.mm_fees_Monthly_tot_cheque_pending_Textfield.setText("");
+                MonthlyFeePanel.mm_fees_Monthly_tot_totPaid_Textfield.setText("");
+                MonthlyFeePanel.mm_fees_Monthly_tot_pending_months_Textfield.setText("");
+                MonthlyFeePanel.mm_fees_Monthly_tot_pending_balancee_Textfield.setText("");
+                MonthlyFeePanel.mm_fees_Monthly_fee_note_Textarea.setText("");
+
+                admis_Fees = 0;
+                selectedStudentIds = 0;
+                selectedEnrollmentId = 0;
 
                 // comboBox.setSelectedItem(admis_combo);
                 nextFocusComponent.requestFocus();
@@ -519,6 +581,14 @@ public class Fees_Management extends javax.swing.JPanel {
                 .addContainerGap())
         );
 
+        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/admissionfee.png"))); // NOI18N
+        jButton1.setToolTipText("Pay Admission Fee");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
         mainPanel.setLayout(mainPanelLayout);
         mainPanelLayout.setHorizontalGroup(
@@ -731,6 +801,7 @@ public class Fees_Management extends javax.swing.JPanel {
 
             }
 
+            admis_Fees = GeneralMethods.parseCommaNumber(model.getValueAt(fm_fees_course_table.getSelectedRow(), 6).toString());
             selectedStudentIds = Integer.parseInt(model.getValueAt(fm_fees_course_table.getSelectedRow(), 11).toString());
             selectedEnrollmentId = Integer.parseInt(model.getValueAt(fm_fees_course_table.getSelectedRow(), 10).toString());
 
@@ -743,6 +814,18 @@ public class Fees_Management extends javax.swing.JPanel {
 
 
     }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+
+      //  int admiFee = GeneralMethods.parseCommaNumber(fm_fees_course_table.getValueAt(fm_fees_course_table.getSelectedRow(), 6).toString());
+
+        Admission_Fee_Payment dialog = new Admission_Fee_Payment(parentFrame, selectedStudentId, this, selectedStudentIds, selectedEnrollmentId, admis_Fees, username, role);
+        System.out.println("CLICK ADMI - "+admis_Fees);
+
+        GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
+
+    }//GEN-LAST:event_jButton1ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

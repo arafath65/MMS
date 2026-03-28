@@ -4,6 +4,7 @@ import Additional.LedgerDAO;
 import Classes.ChequeNumberFormatter;
 import Classes.GeneralMethods;
 import Classes.GradientButton;
+import Classes.HibernateConfig;
 import Classes.ModernDialog;
 import Classes.NumberOnlyFilter;
 import Classes.styleDateChooser;
@@ -17,6 +18,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import javax.persistence.EntityManager;
 import javax.swing.ComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -34,11 +37,14 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
     GeneralMethods generalMethods = new GeneralMethods();
     SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
 
-    String username = "";
+    String username;
+    String role;
 
-    public OneTimeFeePanel() {
+    public OneTimeFeePanel(String username, String role) {
+        this.username = username;
+        this.role = role;
         initComponents();
-        
+
         fm_fees_oneTime_table.getColumnModel().getColumn(3).setMinWidth(0);
         fm_fees_oneTime_table.getColumnModel().getColumn(3).setMaxWidth(0);
         fm_fees_oneTime_table.getColumnModel().getColumn(3).setWidth(0);
@@ -55,16 +61,16 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
 
         fm_fees_oneTime_total_paid_Textfield.putClientProperty("JComponent.outline", new Color(255, 160, 41));
         fm_fees_oneTime_total_paid_Textfield.putClientProperty("JComponent.focusWidth", 2);
-        
+
         fm_fees_cheq_cheque_number.putClientProperty("JComponent.outline", new Color(255, 160, 41));
         fm_fees_cheq_cheque_number.putClientProperty("JComponent.focusWidth", 2);
-        
+
         fm_fees_cheq_cheque_amount.putClientProperty("JComponent.outline", new Color(255, 160, 41));
         fm_fees_cheq_cheque_amount.putClientProperty("JComponent.focusWidth", 2);
-        
+
         fm_fees_cheq_cheque_bank.putClientProperty("JComponent.outline", new Color(255, 160, 41));
         fm_fees_cheq_cheque_bank.putClientProperty("JComponent.focusWidth", 2);
-        
+
         fm_fees_oneTime_payment_method_combo.putClientProperty("JComponent.outline", new Color(255, 160, 41));
         fm_fees_oneTime_payment_method_combo.putClientProperty("JComponent.focusWidth", 2);
 
@@ -135,22 +141,6 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
         return false;
     }
 
-//    private int getTotalCourseBalance() {
-//
-//        DefaultTableModel model = (DefaultTableModel) Fees_Management.fm_fees_course_table.getModel();
-//        int totalBalance = 0;
-//
-//        for (int i = 0; i < model.getRowCount(); i++) {
-//
-//            Object val = model.getValueAt(i, 9); // balance column
-//
-//            if (val != null) {
-//                totalBalance += GeneralMethods.parseCommaNumber(val.toString());
-//            }
-//        }
-//
-//        return totalBalance;
-//    }
     private int getTotalBalanceFromTable() {
 
         DefaultTableModel model = (DefaultTableModel) Fees_Management.fm_fees_course_table.getModel();
@@ -167,6 +157,180 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
         }
 
         return totalBalance;
+    }
+
+    public void deleteOneTimeOrRoundPayment(int enrollmentId, String paymentDate, int amount) {
+
+        EntityManager em = HibernateConfig.getEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            // ============================
+            // 1. FIND INSTALLMENT ID + PAYMENT
+            // ============================
+            List<Object[]> list = em.createNativeQuery(
+                    "SELECT sfi.student_fee_installments_id, "
+                    + "sfp.student_fee_payments_id, "
+                    + "sfp.total_paid, sfp.total_fee, "
+                    + "sfi.payment_method "
+                    + "FROM student_fee_installments sfi "
+                    + "JOIN student_fee_payments sfp "
+                    + "ON sfi.student_fee_payments_id = sfp.student_fee_payments_id "
+                    + "WHERE sfp.enrollment_id = ? "
+                    + "AND DATE(sfi.payment_date) = ? "
+                    + "AND sfi.amount_paid = ? "
+                    + "AND sfi.status = 1"
+            )
+                    .setParameter(1, enrollmentId)
+                    .setParameter(2, paymentDate)
+                    .setParameter(3, amount)
+                    .getResultList();
+
+            if (list.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Payment not found!");
+                em.getTransaction().rollback();
+                return;
+            }
+
+            Object[] row = list.get(0);
+
+            int installmentId = ((Number) row[0]).intValue();
+            int paymentId = ((Number) row[1]).intValue();
+            int totalPaid = ((Number) row[2]).intValue();
+            int totalFee = ((Number) row[3]).intValue();
+            String paymentMethod = row[4].toString();
+
+            // ============================
+            // 2. CHECK CHEQUE ONLY FOR THIS INSTALLMENT
+            // ============================
+            if ("CHEQUE".equalsIgnoreCase(paymentMethod)) {
+
+                List<Object> chequeList = em.createNativeQuery(
+                        "SELECT cheque_status "
+                        + "FROM student_fee_cheque_details "
+                        + "WHERE student_fee_installments_id = ? "
+                        + "AND status = 1"
+                )
+                        .setParameter(1, installmentId)
+                        .getResultList();
+
+                for (Object obj : chequeList) {
+                    String chequeStatus = obj.toString();
+
+                    if ("CLEARED".equalsIgnoreCase(chequeStatus)) {
+                        JOptionPane.showMessageDialog(null,
+                                "Cannot delete! Cheque already CLEARED.");
+                        em.getTransaction().rollback();
+                        return;
+                    }
+                }
+            }
+
+            // ============================
+            // 3. UPDATE MASTER (CONDITIONALLY)
+            // ============================
+            boolean shouldUpdateAmount = true;
+
+            if ("CHEQUE".equalsIgnoreCase(paymentMethod)) {
+
+                List<Object> chequeList = em.createNativeQuery(
+                        "SELECT cheque_status "
+                        + "FROM student_fee_cheque_details "
+                        + "WHERE student_fee_installments_id = ? "
+                        + "AND status = 1"
+                )
+                        .setParameter(1, installmentId)
+                        .getResultList();
+
+                for (Object obj : chequeList) {
+                    String chequeStatus = obj.toString();
+
+                    // ❌ If cheque is pending → DO NOT reduce amount
+                    if ("PENDING".equalsIgnoreCase(chequeStatus)) {
+                        shouldUpdateAmount = false;
+                    }
+
+                    // ❌ Already handled earlier → block delete if CLEARED
+                }
+            }
+
+            // ============================
+            // APPLY UPDATE ONLY IF NEEDED
+            // ============================
+            if (shouldUpdateAmount) {
+
+                int newTotalPaid = totalPaid - amount;
+                if (newTotalPaid < 0) {
+                    newTotalPaid = 0;
+                }
+
+                int newBalance = totalFee - newTotalPaid;
+
+                String paymentStatus;
+
+                // ============================
+                // 🔥 STATUS LOGIC
+                // ============================
+                if (newTotalPaid == 0) {
+                    paymentStatus = "ACTIVE";   // nothing paid
+                } else if (newTotalPaid < totalFee) {
+                    paymentStatus = "ACTIVE";  // partially paid (optional but recommended)
+                } else {
+                    paymentStatus = "COMPLETED";     // fully paid
+                }
+
+                em.createNativeQuery(
+                        "UPDATE student_fee_payments "
+                        + "SET total_paid = ?, total_balance = ?, payment_status = ? "
+                        + "WHERE student_fee_payments_id = ?"
+                )
+                        .setParameter(1, newTotalPaid)
+                        .setParameter(2, newBalance)
+                        .setParameter(3, paymentStatus)
+                        .setParameter(4, paymentId)
+                        .executeUpdate();
+            }
+
+            // ============================
+            // 4. DELETE CHEQUE (ONLY THIS INSTALLMENT)
+            // ============================
+            em.createNativeQuery(
+                    "UPDATE student_fee_cheque_details "
+                    + "SET status = 0 "
+                    + "WHERE student_fee_installments_id = ?"
+            )
+                    .setParameter(1, installmentId)
+                    .executeUpdate();
+
+            // ============================
+            // 5. DELETE INSTALLMENT (ONLY THIS ROW)
+            // ============================
+            em.createNativeQuery(
+                    "UPDATE student_fee_installments "
+                    + "SET status = 0 "
+                    + "WHERE student_fee_installments_id = ?"
+            )
+                    .setParameter(1, installmentId)
+                    .executeUpdate();
+
+            em.getTransaction().commit();
+            
+
+            JOptionPane.showMessageDialog(null, "Payment Deleted Successfully!");
+
+        } catch (Exception e) {
+
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
+
+        } finally {
+            em.close();
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -190,6 +354,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
         firstName_label10 = new javax.swing.JLabel();
         fm_fees_oneTime_chq_sum_Textfield = new javax.swing.JTextField();
         fm_fees_oneTime_chq_sum_bal_Textfield = new javax.swing.JTextField();
+        buttonGradient4 = new Classes.ButtonGradient();
         jPanel10 = new javax.swing.JPanel();
         fm_fees_cheq_cheque_number = new javax.swing.JTextField();
         fm_fees_cheq_cheque_bank = new javax.swing.JComboBox<>();
@@ -270,7 +435,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
             }
         });
 
-        buttonGradient2.setText("F1");
+        buttonGradient2.setText("DELETE");
         buttonGradient2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonGradient2ActionPerformed(evt);
@@ -359,6 +524,13 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                         .addContainerGap())))
         );
 
+        buttonGradient4.setText("SAVE");
+        buttonGradient4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonGradient4ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
@@ -377,17 +549,17 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                         .addComponent(fm_fees_oneTime_total_paid_Textfield, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
                         .addComponent(jLabel14)
-                        .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel7Layout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(buttonGradient2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel7Layout.createSequentialGroup()
-                                .addGap(27, 27, 27)
-                                .addComponent(fm_fees_oneTime_payment_method_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addGap(27, 27, 27)
+                        .addComponent(fm_fees_oneTime_payment_method_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
                         .addComponent(firstName_label8, javax.swing.GroupLayout.DEFAULT_SIZE, 149, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(fm_fees_oneTime_total_balance_Textfield, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(fm_fees_oneTime_total_balance_Textfield, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(buttonGradient4, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(buttonGradient2, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         jPanel7Layout.setVerticalGroup(
@@ -412,7 +584,9 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(buttonGradient2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(buttonGradient2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buttonGradient4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
@@ -835,270 +1009,16 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
 
     private void buttonGradient2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient2ActionPerformed
 
-        try {
+        int st_id = Fees_Management.selectedStudentIds;
+        DefaultTableModel model = (DefaultTableModel) fm_fees_oneTime_table.getModel();
 
-            int st_id = Fees_Management.selectedStudentIds;
-            int en_id = Fees_Management.selectedEnrollmentId;
+        String payDate = fm_fees_oneTime_table.getValueAt(fm_fees_oneTime_table.getSelectedRow(), 1).toString();
+        int payAmount = GeneralMethods.parseCommaNumber(fm_fees_oneTime_table.getValueAt(fm_fees_oneTime_table.getSelectedRow(), 2).toString());
+        deleteOneTimeOrRoundPayment(Fees_Management.selectedEnrollmentId, payDate, payAmount);
 
-            // Check if user entered amount
-            if (fm_fees_oneTime_total_paid_Textfield.getText().equalsIgnoreCase("") || fm_fees_oneTime_total_paid_Textfield.getText().equalsIgnoreCase("0")) {
-                JOptionPane.showMessageDialog(null, "Paying amount cannot be empty or 0", "Not Found", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
+        model.removeRow(fm_fees_oneTime_table.getSelectedRow());
+        Fees_Management.updateMasterTableRows(st_id);
 
-            StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
-            int pendingCheque = dao.getStudentPendingChequeTotal(st_id);
-            int totalBalance = getTotalBalanceFromTable();
-
-            int actualBalance = totalBalance - pendingCheque;
-            int cheq_final_bal = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
-
-            // ⚠ Prevent payment if fully paid
-            if (cheq_final_bal <= 0) {
-                JOptionPane.showMessageDialog(null,
-                        "Cannot pay. All active courses are fully paid or covered by pending cheques.",
-                        "Payment Not Allowed",
-                        JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-
-            int amount_paid = GeneralMethods.parseCommaNumber(fm_fees_oneTime_total_paid_Textfield.getText());
-
-            // Check if entered amount exceeds max allowed
-            if (amount_paid > actualBalance) {
-                String message
-                        = "Total Balance : " + GeneralMethods.formatWithComma(totalBalance)
-                        + "\nPending Cheques : " + GeneralMethods.formatWithComma(pendingCheque)
-                        + "\n\nMaximum Payable Now : "
-                        + GeneralMethods.formatWithComma(actualBalance);
-
-                Object[] options = {"Pay Balance Amount Only", "Cancel"};
-
-                int choice = JOptionPane.showOptionDialog(
-                        null,
-                        message,
-                        "Payment Exceeds Allowed Amount",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.WARNING_MESSAGE,
-                        null,
-                        options,
-                        options[0]
-                );
-
-                if (choice == 0) {
-                    fm_fees_oneTime_total_paid_Textfield
-                            .setText(GeneralMethods.formatWithComma(actualBalance));
-                    amount_paid = actualBalance;
-                } else {
-                    return;
-                }
-            }
-
-            System.out.println("PAID AMOU1 - " + fm_fees_oneTime_total_paid_Textfield.getText());
-            Date utilDate = fm_fees_oneTime_payment_date.getDate();
-            java.sql.Date paymentDate = new java.sql.Date(utilDate.getTime());
-            String pay_method = fm_fees_oneTime_payment_method_combo.getSelectedItem().toString();
-
-            int balance = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
-            LedgerDAO ledgerDAO = new LedgerDAO();
-
-            int nextInstallmentNo = 1;
-            DefaultTableModel model = (DefaultTableModel) fm_fees_oneTime_table.getModel();
-
-            for (int i = 0; i < model.getRowCount(); i++) {
-                int instNo = Integer.parseInt(model.getValueAt(i, 0).toString());
-                if (instNo >= nextInstallmentNo) {
-                    nextInstallmentNo = instNo + 1;
-                }
-            }
-
-            // Round payment logic
-            if (amount_paid > balance) {
-                int choice = showRoundPaymentDialog(st_id, en_id, amount_paid - balance);
-                switch (choice) {
-                    case 1:
-                        dao.processRoundPayment(st_id, en_id, amount_paid, paymentDate, pay_method, null, null, null, null, username);
-                        Fees_Management.updateMasterTableRows(st_id);
-                        int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
-                        model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
-                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, pay_method, "Student Management", username);
-                        break;
-
-                    case 2:
-                        // Pay this course only
-                        dao.saveInstallment(st_id, en_id, balance, paymentDate, pay_method, "FULL", "", username);
-                        Fees_Management.updateMasterTableRows(st_id);
-                        int paymentIds = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
-                        model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
-                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentIds, pay_method, "Student Management", username);
-                        break;
-
-                    default:
-                        return;
-                }
-            } else {
-                dao.saveInstallment(st_id, en_id, amount_paid, paymentDate, pay_method, "FULL", "", username);
-                Fees_Management.updateMasterTableRows(st_id);
-                int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
-                model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(amount_paid)});
-                ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentId, pay_method, "Student Management", username);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-//        try {
-//
-//            int st_id = Fees_Management.selectedStudentIds;
-//            int en_id = Fees_Management.selectedEnrollmentId;
-//
-//            if (fm_fees_oneTime_total_paid_Textfield.getText().equalsIgnoreCase("") || fm_fees_oneTime_total_paid_Textfield.getText().equalsIgnoreCase("0")) {
-//                JOptionPane.showMessageDialog(null, "Paying amount cannot be empty or 0", "Not Found", JOptionPane.WARNING_MESSAGE);
-//                return;
-//            }
-//
-//            int amount_paid = GeneralMethods.parseCommaNumber(fm_fees_oneTime_total_paid_Textfield.getText());
-//
-//            StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
-//            int pendingCheque = dao.getStudentPendingChequeTotal(st_id);
-//            int totalBalance = getTotalBalanceFromTable();
-//
-//            int actualBalance = totalBalance - pendingCheque;
-//
-//            if (amount_paid > actualBalance) {
-//
-//                String message
-//                        = "Total Balance : " + GeneralMethods.formatWithComma(totalBalance)
-//                        + "\nPending Cheques : " + GeneralMethods.formatWithComma(pendingCheque)
-//                        + "\n\nMaximum Payable Now : "
-//                        + GeneralMethods.formatWithComma(actualBalance);
-//
-//                Object[] options = {"Pay Balance Amount Only", "Cancel"};
-//
-//                int choice = JOptionPane.showOptionDialog(
-//                        null,
-//                        message,
-//                        "Payment Exceeds Allowed Amount",
-//                        JOptionPane.YES_NO_OPTION,
-//                        JOptionPane.WARNING_MESSAGE,
-//                        null,
-//                        options,
-//                        options[0]
-//                );
-//
-//                if (choice == 0) {
-//
-//                    fm_fees_oneTime_total_paid_Textfield
-//                            .setText(GeneralMethods.formatWithComma(actualBalance));
-//
-//                    amount_paid = actualBalance;
-//
-//                } else {
-//                    return;
-//                }
-//            }
-    ////            int pendingCheque = dao.getStudentPendingChequeTotal(st_id);
-////            int totalBalance = getTotalBalanceFromTable();
-////
-////            if (pendingCheque > 0) {
-////
-////                int remainingBalance = totalBalance - pendingCheque;
-////
-////                String message
-////                        = "Total Balance : " + GeneralMethods.formatWithComma(totalBalance)
-////                        + "\nPending Cheques : " + GeneralMethods.formatWithComma(pendingCheque)
-////                        + "\n\nRemaining Balance To Pay : "
-////                        + GeneralMethods.formatWithComma(remainingBalance);
-////
-////                Object[] options = {"Pay Balance Amount Only", "Cancel"};
-////
-////                int choice = JOptionPane.showOptionDialog(
-////                        null,
-////                        message,
-////                        "Pending Cheque Detected",
-////                        JOptionPane.YES_NO_OPTION,
-////                        JOptionPane.WARNING_MESSAGE,
-////                        null,
-////                        options,
-////                        options[0]
-////                );
-////
-////                if (choice == 0) {
-////
-////                    fm_fees_oneTime_total_paid_Textfield
-////                            .setText(GeneralMethods.formatWithComma(remainingBalance));
-////
-////                } else {
-////                    return;
-////                }
-////            }
-//
-//            System.out.println("PAID AMOU1 - " + fm_fees_oneTime_total_paid_Textfield.getText());
-//            Date utilDate = fm_fees_oneTime_payment_date.getDate();
-//            java.sql.Date paymentDate = new java.sql.Date(utilDate.getTime());
-//            String pay_method = fm_fees_oneTime_payment_method_combo.getSelectedItem().toString();
-//
-//            int balance = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
-//            LedgerDAO ledgerDAO = new LedgerDAO();
-//
-//            int nextInstallmentNo = 1;
-//
-//            DefaultTableModel model = (DefaultTableModel) fm_fees_oneTime_table.getModel();
-//
-//            for (int i = 0; i < model.getRowCount(); i++) {
-//                int instNo = Integer.parseInt(model.getValueAt(i, 0).toString());
-//                if (instNo >= nextInstallmentNo) {
-//                    nextInstallmentNo = instNo + 1;
-//                }
-//            }
-//
-//            if (amount_paid > balance) {
-//                int choice = showRoundPaymentDialog(st_id, en_id, amount_paid - balance);
-//                switch (choice) {
-//                    case 1:
-//
-//                        dao.processRoundPayment(st_id, en_id, amount_paid, paymentDate, pay_method, username);
-//                        Fees_Management.updateMasterTableRows(st_id);
-//                        int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
-//                        model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
-//                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, pay_method, "Student Management", username);
-//                        break;
-//
-//                    case 2:
-//                        // Pay this course only: leave excess in this course
-//                        dao.saveInstallment(st_id, en_id, balance, paymentDate, pay_method, "FULL", "", username);
-//                        Fees_Management.updateMasterTableRows(st_id);
-//
-//                        int paymentIds = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
-//                        model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
-//
-//                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentIds, pay_method, "Student Management", username);
-//
-//                        break;
-//                    default:
-//                        // Cancel: do nothing
-//                        return;
-//                }
-//            } else {
-//
-//                dao.saveInstallment(st_id, en_id, amount_paid, paymentDate, pay_method, "FULL", "", username);
-//                Fees_Management.updateMasterTableRows(st_id);
-//
-//                int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
-//
-//                model.addRow(new Object[]{
-//                    nextInstallmentNo,
-//                    paymentDate,
-//                    GeneralMethods.formatWithComma(amount_paid)
-//                });
-//
-//                ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentId, pay_method, "Student Management", username);
-//
-//            }
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
     }//GEN-LAST:event_buttonGradient2ActionPerformed
 
     private void buttonGradient3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient3ActionPerformed
@@ -1477,10 +1397,146 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_fm_fees_cheq_cheque_sum_bal_TextfieldKeyReleased
 
+    private void buttonGradient4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient4ActionPerformed
+
+        try {
+
+            int st_id = Fees_Management.selectedStudentIds;
+            int en_id = Fees_Management.selectedEnrollmentId;
+
+            // Check if user entered amount
+            if (fm_fees_oneTime_total_paid_Textfield.getText().equalsIgnoreCase("") || fm_fees_oneTime_total_paid_Textfield.getText().equalsIgnoreCase("0")) {
+                JOptionPane.showMessageDialog(null, "Paying amount cannot be empty or 0", "Not Found", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
+            int pendingCheque = dao.getStudentPendingChequeTotal(st_id);
+            int totalBalance = getTotalBalanceFromTable();
+
+            int actualBalance = totalBalance - pendingCheque;
+            int cheq_final_bal = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
+
+            // ⚠ Prevent payment if fully paid
+            if (cheq_final_bal <= 0) {
+                JOptionPane.showMessageDialog(null,
+                        "Cannot pay. All active courses are fully paid or covered by pending cheques.",
+                        "Payment Not Allowed",
+                        JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            int amount_paid = GeneralMethods.parseCommaNumber(fm_fees_oneTime_total_paid_Textfield.getText());
+
+            // Check if entered amount exceeds max allowed
+            if (amount_paid > actualBalance) {
+                String message
+                        = "Total Balance : " + GeneralMethods.formatWithComma(totalBalance)
+                        + "\nPending Cheques : " + GeneralMethods.formatWithComma(pendingCheque)
+                        + "\n\nMaximum Payable Now : "
+                        + GeneralMethods.formatWithComma(actualBalance);
+
+                Object[] options = {"Pay Balance Amount Only", "Cancel"};
+
+                int choice = JOptionPane.showOptionDialog(
+                        null,
+                        message,
+                        "Payment Exceeds Allowed Amount",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE,
+                        null,
+                        options,
+                        options[0]
+                );
+
+                if (choice == 0) {
+                    fm_fees_oneTime_total_paid_Textfield
+                            .setText(GeneralMethods.formatWithComma(actualBalance));
+                    amount_paid = actualBalance;
+                } else {
+                    return;
+                }
+            }
+
+            Date utilDate = fm_fees_oneTime_payment_date.getDate();
+            java.sql.Date paymentDate = new java.sql.Date(utilDate.getTime());
+            String pay_method = fm_fees_oneTime_payment_method_combo.getSelectedItem().toString();
+
+            int balance = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
+            LedgerDAO ledgerDAO = new LedgerDAO();
+
+            int nextInstallmentNo = 1;
+            DefaultTableModel model = (DefaultTableModel) fm_fees_oneTime_table.getModel();
+
+            for (int i = 0; i < model.getRowCount(); i++) {
+                int instNo = Integer.parseInt(model.getValueAt(i, 0).toString());
+                if (instNo >= nextInstallmentNo) {
+                    nextInstallmentNo = instNo + 1;
+                }
+            }
+
+            // Round payment logic
+            if (amount_paid > balance) {
+                int choice = showRoundPaymentDialog(st_id, en_id, amount_paid - balance);
+                switch (choice) {
+                    case 1:
+                        dao.processRoundPayment(st_id, en_id, amount_paid, paymentDate, pay_method, null, null, null, null, username);
+                        Fees_Management.updateMasterTableRows(st_id);
+                        int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
+                        model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
+                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, pay_method, "Student Management", username);
+                        break;
+
+                    case 2:
+                        // Pay this course only
+                        dao.saveInstallment(st_id, en_id, balance, paymentDate, pay_method, "FULL", "", username);
+                        Fees_Management.updateMasterTableRows(st_id);
+                        int paymentIds = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
+                        model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
+                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentIds, pay_method, "Student Management", username);
+                        break;
+
+                    default:
+                        return;
+                }
+            } else {
+                dao.saveInstallment(st_id, en_id, amount_paid, paymentDate, pay_method, "FULL", "", username);
+                Fees_Management.updateMasterTableRows(st_id);
+                int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
+                model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(amount_paid)});
+                ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentId, pay_method, "Student Management", username);
+            }
+
+            List<Object[]> list = dao.getInstallments(en_id);
+
+            DefaultTableModel model2 = (DefaultTableModel) fm_fees_oneTime_table.getModel();
+            model2.setRowCount(0);
+
+            for (Object[] row : list) {
+
+                String paymentMethod = row[3] != null ? row[3].toString() : "";
+                String chequeStatus = row[4] != null ? row[4].toString() : "";
+
+                model2.addRow(new Object[]{
+                    row[0],
+                    sdf.format(row[1]),
+                    GeneralMethods.formatWithComma(Integer.parseInt(row[2].toString())),
+                    paymentMethod,
+                    chequeStatus
+                });
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }//GEN-LAST:event_buttonGradient4ActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private Classes.ButtonGradient buttonGradient2;
     private Classes.ButtonGradient buttonGradient3;
+    private Classes.ButtonGradient buttonGradient4;
     private javax.swing.JLabel firstName_label10;
     private javax.swing.JLabel firstName_label11;
     private javax.swing.JLabel firstName_label12;
@@ -1490,7 +1546,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
     public static javax.swing.JTextField fm_fees_cheq_cheque_amount;
     public static javax.swing.JComboBox<String> fm_fees_cheq_cheque_bank;
     public static javax.swing.JTextField fm_fees_cheq_cheque_branch;
-    private com.toedter.calendar.JDateChooser fm_fees_cheq_cheque_date;
+    public static com.toedter.calendar.JDateChooser fm_fees_cheq_cheque_date;
     public static javax.swing.JTextField fm_fees_cheq_cheque_number;
     public static javax.swing.JTextField fm_fees_cheq_cheque_remaining;
     public static javax.swing.JComboBox<String> fm_fees_cheq_cheque_status;

@@ -27,12 +27,18 @@ public class Dashboard extends javax.swing.JFrame {
     Fees_Management fees_Management;
     Cheque_Handling cheque_Handling;
    // Course_enrolment course_enrolment;
+    
+    String username;
+    String role;
 
     public Dashboard() {
         GlassPanePopup.install(this);
         MyDrawerBuilder myDrawerBuilder = new MyDrawerBuilder(this);
         Drawer.getInstance().setDrawerBuilder(myDrawerBuilder);
         initComponents();
+        
+        username = main_username.getText();
+        role = "Admin";
 
         // main_panels MUST already exist from NetBeans designer
         cardLayout = new CardLayout();
@@ -41,7 +47,7 @@ public class Dashboard extends javax.swing.JFrame {
         dashboard_Panel = new Dashboard_Panel();
         studentManagement = new Student_Management();
         register_Courses = new Register_Course();
-        fees_Management = new Fees_Management();
+        fees_Management = new Fees_Management(username, role);
         cheque_Handling = new Cheque_Handling();
        // course_enrolment = new Course_enrolment();
 
