@@ -631,8 +631,8 @@
                         <Column editable="false" title="#" type="java.lang.Object"/>
                         <Column editable="false" title="Year" type="java.lang.Object"/>
                         <Column editable="false" title="Month" type="java.lang.Object"/>
-                        <Column editable="false" title="Paid Fee" type="java.lang.Object"/>
-                        <Column editable="false" title="Payment Method" type="java.lang.Object"/>
+                        <Column editable="true" title="Paid Fee" type="java.lang.Object"/>
+                        <Column editable="true" title="Payment Method" type="java.lang.Object"/>
                         <Column editable="false" title="Cheque Status" type="java.lang.Object"/>
                       </Table>
                     </Property>

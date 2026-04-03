@@ -48,7 +48,7 @@ public class Dashboard extends javax.swing.JFrame {
         studentManagement = new Student_Management();
         register_Courses = new Register_Course();
         fees_Management = new Fees_Management(username, role);
-        cheque_Handling = new Cheque_Handling();
+        cheque_Handling = new Cheque_Handling(username, role);
        // course_enrolment = new Course_enrolment();
 
         // ADD PANEL TO CARDLAYOUT (ONLY ONCE)

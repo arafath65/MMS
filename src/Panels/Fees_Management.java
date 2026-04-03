@@ -350,7 +350,7 @@ public class Fees_Management extends javax.swing.JPanel {
         }
     }
 
-    public void loadMonthlyTable(int enrollmentId, JTable table) {
+    public static void loadMonthlyTable(int enrollmentId, JTable table) {
 
         StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
         StudentFeeInstallmentsDAO.MonthDataDTO data = dao.getMonthData(enrollmentId);
@@ -371,25 +371,27 @@ public class Fees_Management extends javax.swing.JPanel {
             String monthName = java.time.Month.of(m).name().substring(0, 3);
 
             // ✅ GET EXACT AMOUNT FROM MAP
-            int paidFee = data.monthAmountMap.getOrDefault(full, 0);
+            int paidFee = data.monthAmountMap.getOrDefault(full, -1); // -1 → month not in DB
 
-            String status = paidFee > 0 ? "PAID" : "";
+            String status = "";
+            if (paidFee > 0) {
+                status = "PAID"; // normal payment
+            } else if (paidFee == 0) {
+                // month exists in DB with 0 payment → still mark as PAID
+                status = "PAID";
+            } else {
+                // month not in DB → leave blank
+                paidFee = 0; // show empty in table
+            }
 
             model.addRow(new Object[]{
                 rowNo++,
                 y,
                 monthName,
-                paidFee,
+                paidFee > 0 || paidFee == 0 ? paidFee : "", // show empty if not saved
                 status,
                 full
             });
-//            model.addRow(new Object[]{
-//                rowNo++, // 0
-//                y, // 1
-//                monthName, // 2
-//                paidFee, // 3 (visible)
-//                full // 4 (yyyy-MM → needed for renderer)
-//            });
 
             if (y == data.endYear && m == data.endMonth) {
                 break;
@@ -407,6 +409,65 @@ public class Fees_Management extends javax.swing.JPanel {
         );
     }
 
+    // ************ Working code without summing same year+month *************************
+//    public void loadMonthlyTable(int enrollmentId, JTable table) {
+//
+//        StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
+//        StudentFeeInstallmentsDAO.MonthDataDTO data = dao.getMonthData(enrollmentId);
+//
+//        DefaultTableModel model = (DefaultTableModel) table.getModel();
+//        model.setRowCount(0);
+//
+//        int rowNo = 1;
+//
+//        int y = data.startYear;
+//        int m = data.startMonth;
+//
+//        while (true) {
+//
+//            String monthStr = String.format("%02d", m);
+//            String full = y + "-" + monthStr;
+//
+//            String monthName = java.time.Month.of(m).name().substring(0, 3);
+//
+//            // ✅ GET EXACT AMOUNT FROM MAP
+//            int paidFee = data.monthAmountMap.getOrDefault(full, 0);
+//
+//            String status = paidFee > 0 ? "PAID" : "";
+//
+//            model.addRow(new Object[]{
+//                rowNo++,
+//                y,
+//                monthName,
+//                paidFee,
+//                status,
+//                full
+//            });
+    ////            model.addRow(new Object[]{
+////                rowNo++, // 0
+////                y, // 1
+////                monthName, // 2
+////                paidFee, // 3 (visible)
+////                full // 4 (yyyy-MM → needed for renderer)
+////            });
+//
+//            if (y == data.endYear && m == data.endMonth) {
+//                break;
+//            }
+//
+//            m++;
+//            if (m > 12) {
+//                m = 1;
+//                y++;
+//            }
+//        }
+//
+//        table.getColumnModel().getColumn(3).setCellRenderer(
+//                new MonthlyFeeIconRenderer(data.chequeStatusMap)
+//        );
+//    }
+
+    // ************************* VERY OLD ****************************************
 //    public void loadMonthlyTable(int enrollmentId, JTable table) {
 //
 //        StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
@@ -818,10 +879,9 @@ public class Fees_Management extends javax.swing.JPanel {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
 
-      //  int admiFee = GeneralMethods.parseCommaNumber(fm_fees_course_table.getValueAt(fm_fees_course_table.getSelectedRow(), 6).toString());
-
+        //  int admiFee = GeneralMethods.parseCommaNumber(fm_fees_course_table.getValueAt(fm_fees_course_table.getSelectedRow(), 6).toString());
         Admission_Fee_Payment dialog = new Admission_Fee_Payment(parentFrame, selectedStudentId, this, selectedStudentIds, selectedEnrollmentId, admis_Fees, username, role);
-        System.out.println("CLICK ADMI - "+admis_Fees);
+        System.out.println("CLICK ADMI - " + admis_Fees);
 
         GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
 

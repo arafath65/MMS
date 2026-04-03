@@ -2,6 +2,8 @@ package Panels;
 
 import Classes.GeneralMethods;
 import Classes.HibernateConfig;
+import Classes.LedgerHelper;
+import Classes.LogHelper;
 import Classes.TableGradientCell;
 import Classes.styleDateChooser;
 import JPA_DAO.Accounts.Cheque_Dao;
@@ -33,8 +35,12 @@ public class Cheque_Handling extends javax.swing.JPanel {
     private File selectedImageFile;
 
     private int selectedStudentId;
+    String username;
+    String role;
 
-    public Cheque_Handling() {
+    public Cheque_Handling(String username, String role) {
+        this.username = username;
+        this.role = role;
         initComponents();
 
         chq_handling_cheq_details_table.setDefaultRenderer(Object.class, new TableGradientCell());
@@ -350,6 +356,29 @@ public class Cheque_Handling extends javax.swing.JPanel {
                                 .setParameter(1, paymentId)
                                 .executeUpdate();
 
+                        // Ledger entry for cleared cheque
+                        LedgerHelper.saveLedger(em,
+                                chequeAmount,
+                                "CREDIT",
+                                "Cheque cleared - " + chequeNo + " | Bank: " + bankBranch,
+                                "STUDENT_PAYMENT",
+                                paymentId,
+                                "CHEQUE",
+                                "MONTHLY_FEE",
+                                username
+                        );
+
+                        // Log
+                        LogHelper.saveLog(em,
+                                "STUDENT_PAYMENT",
+                                paymentId,
+                                "CLEARED",
+                                chequeAmount,
+                                "CHEQUE",
+                                "Cheque cleared - " + chequeNo + " | Bank: " + bankBranch,
+                                username
+                        );
+
                     } // ============================
                     // CASE 2: CLEARED → PENDING (REVERSE)
                     // ============================
@@ -374,6 +403,30 @@ public class Cheque_Handling extends javax.swing.JPanel {
                         )
                                 .setParameter(1, paymentId)
                                 .executeUpdate();
+
+                        // Ledger deduction
+                        LedgerHelper.saveLedger(em,
+                                chequeAmount,
+                                "DEBIT",
+                                "Cheque " + action + " - " + chequeNo + " | Bank: " + bankBranch,
+                                "STUDENT_PAYMENT",
+                                paymentId,
+                                "CHEQUE",
+                                "MONTHLY_FEE",
+                                username
+                        );
+
+                        // Log
+                        LogHelper.saveLog(em,
+                                "STUDENT_PAYMENT",
+                                paymentId,
+                                action.toUpperCase(),
+                                chequeAmount,
+                                "CHEQUE",
+                                "Cheque " + action + " - " + chequeNo + " | Bank: " + bankBranch,
+                                username
+                        );
+
                     } // ============================
                     // CASE 3: RETURNED / BOUNCED / CANCELLED → PENDING
                     // Only status update, no money impact
@@ -383,6 +436,15 @@ public class Cheque_Handling extends javax.swing.JPanel {
                             || filterStatus.equalsIgnoreCase("CANCELLED"))
                             && action.equalsIgnoreCase("PENDING")) {
                         // Nothing to do, status already updated above
+                        LogHelper.saveLog(em,
+                                "STUDENT_PAYMENT",
+                                paymentId,
+                                action.toUpperCase(),
+                                chequeAmount,
+                                "CHEQUE",
+                                "Pending cheque " + action + " - " + chequeNo + " | Bank: " + bankBranch,
+                                username
+                        );
                     }
                 }
             }

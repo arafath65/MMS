@@ -26,9 +26,9 @@ import javax.swing.event.PopupMenuListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.PlainDocument;
 
-public class Admission_Fee_Payment extends javax.swing.JDialog {
+public class Miscellanous_Payments extends javax.swing.JDialog {
 
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Admission_Fee_Payment.class.getName());
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Miscellanous_Payments.class.getName());
     java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd-MM-yyyy");
 
     styleDateChooser styleDateChooser = new styleDateChooser();
@@ -46,7 +46,7 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
     String username;
     String role;
 
-    public Admission_Fee_Payment(Window parent, int studentId, Fees_Management parentForm, int selectedStudentIds, int selectedEnrollmentId, int admiFee, String username, String role) {
+    public Miscellanous_Payments(Window parent, int studentId, Fees_Management parentForm, int selectedStudentIds, int selectedEnrollmentId, int admiFee, String username, String role) {
         super(parent, ModalityType.APPLICATION_MODAL);
         this.studentId = studentId;
         this.parentForm = parentForm;
@@ -1048,8 +1048,8 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
 
             JFrame frame = new JFrame();
 
-            Admission_Fee_Payment dialog
-                    = new Admission_Fee_Payment(frame, 0, null, 0, 0, 0, "", "");
+            Miscellanous_Payments dialog
+                    = new Miscellanous_Payments(frame, 0, null, 0, 0, 0, "", "");
 
             dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
             dialog.setVisible(true);

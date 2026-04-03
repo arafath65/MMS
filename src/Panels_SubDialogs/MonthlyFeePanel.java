@@ -5,6 +5,8 @@ import Classes.ChequeNumberFormatter;
 import Classes.GeneralMethods;
 import Classes.GradientButton;
 import Classes.HibernateConfig;
+import Classes.LedgerHelper;
+import Classes.LogHelper;
 import Classes.ModernDialog;
 import Classes.NumberOnlyFilter;
 import Classes.styleDateChooser;
@@ -19,7 +21,13 @@ import java.awt.Window;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.text.SimpleDateFormat;
+import java.time.Month;
+import java.time.format.TextStyle;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.swing.ComboBoxModel;
@@ -250,317 +258,2584 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
             JTextField monthlyFeeField,
             String paymentMethod
     ) {
-
         EntityManager em = HibernateConfig.getEntityManager();
 
         try {
-
             if (table.isEditing()) {
                 table.getCellEditor().stopCellEditing();
             }
 
             DefaultTableModel model = (DefaultTableModel) table.getModel();
-
             int rowCount = model.getRowCount();
-            int monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
-            int payingFee = GeneralMethods.parseCommaNumber(
-                    mm_fees_Monthly_total_paid_Textfield.getText().trim()
-            );
 
+            int monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
+            int payingFee = GeneralMethods.parseCommaNumber(mm_fees_Monthly_total_paid_Textfield.getText().trim());
+            int balanceFee = GeneralMethods.parseCommaNumber(mm_fees_Monthly_tot_pending_balancee_Textfield.getText());
             String note = mm_fees_Monthly_fee_note_Textarea.getText().trim();
 
-            // ============================
-            // 🔥 VALIDATION
-            // ============================
-            if (payingFee <= 0) {
-                JOptionPane.showMessageDialog(null, "Enter valid payment amount!");
+            // =====================================================
+            // VALIDATION
+            // =====================================================
+            if (payingFee < 0) {
+                JOptionPane.showMessageDialog(null, "Invalid payment amount!");
                 return;
             }
 
-            // ✅ LESS THAN MONTHLY → REQUIRE NOTE
-            if (payingFee < monthlyFee) {
-
-                if (note == null || note.isEmpty()) {
-                    JOptionPane.showMessageDialog(
-                            null,
-                            "You are paying less than monthly fee.\nPlease enter a note!"
-                    );
-                    return;
-                }
-
-            } // ❌ GREATER BUT NOT MULTIPLE → BLOCK
-            else if (payingFee % monthlyFee != 0) {
-
-                JOptionPane.showMessageDialog(
-                        null,
-                        "Amount must be multiple of monthly fee!"
-                );
+            if (payingFee > balanceFee) {
+                JOptionPane.showMessageDialog(null, "Cannot exceeded total balance!");
                 return;
             }
 
-            // ============================
-            // DISTRIBUTE
-            // ============================
-            distributeMonthlyPayment(
-                    table,
-                    mm_fees_Monthly_total_paid_Textfield,
-                    mm_fees_Monthly_total_fee_Textfield
-            );
-
-            // ============================
-            // CALCULATE TOTALS
-            // ============================
-            int totalFee = rowCount * monthlyFee;
-
-            int totalPaid = 0;
-            for (int i = 0; i < rowCount; i++) {
-                Object val = model.getValueAt(i, 3);
-                if (val != null && !val.toString().trim().isEmpty()) {
-                    totalPaid += GeneralMethods.parseCommaNumber(val.toString());
-                }
+            if (payingFee == 0 && (note == null || note.trim().isEmpty())) {
+                JOptionPane.showMessageDialog(null, "Zero payment requires remarks!");
+                return;
             }
 
-            int balance = totalFee - totalPaid;
-            String paymentStatus = (balance == 0) ? "COMPLETED" : "ACTIVE";
-
-            // ============================
-            // TRANSACTION START
-            // ============================
             em.getTransaction().begin();
 
-            // ============================
-            // UPDATE MASTER
-            // ============================
-            Query update = em.createNativeQuery(
-                    "UPDATE student_fee_payments SET "
-                    + "total_paid = ?, "
-                    + "total_balance = ?, "
-                    + "payment_type = ?, "
-                    + "payment_status = ?, "
-                    + "last_mofidied = NOW() "
-                    + "WHERE enrollment_id = ? AND status = 1"
-            );
-
-            update.setParameter(1, totalPaid);
-            update.setParameter(2, balance);
-            update.setParameter(3, paymentMethod);
-            update.setParameter(4, paymentStatus);
-            update.setParameter(5, enrollmentId);
-
-            update.executeUpdate();
-
-            // ============================
-            // GET PAYMENT ID
-            // ============================
             int paymentId = ((Number) em.createNativeQuery(
-                    "SELECT student_fee_payments_id "
-                    + "FROM student_fee_payments "
+                    "SELECT student_fee_payments_id FROM student_fee_payments "
                     + "WHERE enrollment_id = ? AND status = 1"
             ).setParameter(1, enrollmentId).getSingleResult()).intValue();
 
-            // ============================
-            // GET LAST INSTALLMENT NO
-            // ============================
             Object lastNoObj = em.createNativeQuery(
                     "SELECT MAX(installment_no) FROM student_fee_installments WHERE enrollment_id = ?"
             ).setParameter(1, enrollmentId).getSingleResult();
 
             int installmentNo = (lastNoObj != null) ? ((Number) lastNoObj).intValue() : 0;
 
-            // ============================
-            // INSERT INSTALLMENTS
-            // ============================
-            for (int i = 0; i < rowCount; i++) {
+            int remainingAmount = payingFee;
 
-                int year = Integer.parseInt(model.getValueAt(i, 1).toString());
-                String month = model.getValueAt(i, 2).toString();
+            // =====================================================
+            // DEBUG: FIND MONTHS WITH REMARKS
+            // =====================================================
+            System.out.println("===== DEBUG: PARTIAL MONTHS WITH REMARKS =====");
 
-                Object paidObj = model.getValueAt(i, 3);
-                Object statusObj = model.getValueAt(i, 4);
+            List<Object[]> debugList = em.createNativeQuery(
+                    "SELECT month_for, COALESCE(SUM(amount_paid),0), GROUP_CONCAT(remarks) "
+                    + "FROM student_fee_installments "
+                    + "WHERE enrollment_id=? AND status=1 "
+                    + "GROUP BY month_for"
+            )
+                    .setParameter(1, enrollmentId)
+                    .getResultList();
 
-                int paid = 0;
-                if (paidObj != null && !paidObj.toString().trim().isEmpty()) {
-                    paid = GeneralMethods.parseCommaNumber(paidObj.toString());
-                }
+            Set<String> skipMonths = new HashSet<>();
 
-                String status = (statusObj != null) ? statusObj.toString() : "";
+            for (Object[] row : debugList) {
+                String m = row[0].toString();
+                int paid = ((Number) row[1]).intValue();
+                String remarks = row[2] != null ? row[2].toString() : "";
 
-                if (paid > 0 && status.equalsIgnoreCase("Now Paid")) {
-
-                    installmentNo++;
-
-                    int monthNum = GeneralMethods.getMonthNumber(month);
-                    String monthFor = year + "-" + String.format("%02d", monthNum);
-
-                    Query insert = em.createNativeQuery(
-                            "INSERT INTO student_fee_installments ("
-                            + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
-                            + "payment_date, payment_method, payment_type, month_for, remarks, status"
-                            + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
-                    );
-
-                    insert.setParameter(1, paymentId);
-                    insert.setParameter(2, enrollmentId);
-                    insert.setParameter(3, installmentNo);
-                    insert.setParameter(4, paid);
-                    insert.setParameter(5, paymentMethod);
-                    insert.setParameter(6, "MONTHLY");
-                    insert.setParameter(7, monthFor);
-                    insert.setParameter(8, note.isEmpty() ? "MONTHLY FEE" : note);
-
-                    insert.executeUpdate();
+                if (remarks != null && !remarks.trim().isEmpty() && paid < monthlyFee) {
+                    System.out.println("⛔ SKIP MONTH (remarks exist): " + m + " | Paid: " + paid + " | Remarks: " + remarks);
+                    skipMonths.add(m);
                 }
             }
+
+            // =====================================================
+            // ZERO PAYMENT
+            // =====================================================
+            if (payingFee == 0) {
+
+                List<Object[]> lastPaidRows = em.createNativeQuery(
+                        "SELECT month_for FROM student_fee_installments "
+                        + "WHERE enrollment_id=? AND status=1 "
+                        + "ORDER BY month_for DESC"
+                ).setParameter(1, enrollmentId).setMaxResults(1).getResultList();
+
+                String targetMonth;
+
+                if (!lastPaidRows.isEmpty()) {
+                    String lastMonth = lastPaidRows.get(0)[0].toString();
+
+                    String[] parts = lastMonth.split("-");
+                    int year = Integer.parseInt(parts[0]);
+                    int month = Integer.parseInt(parts[1]);
+
+                    month++;
+                    if (month > 12) {
+                        month = 1;
+                        year++;
+                    }
+
+                    targetMonth = String.format("%04d-%02d", year, month);
+                } else {
+                    targetMonth = model.getValueAt(0, 1) + "-"
+                            + String.format("%02d", GeneralMethods.getMonthNumber(model.getValueAt(0, 2).toString()));
+                }
+
+                installmentNo++;
+
+                em.createNativeQuery(
+                        "INSERT INTO student_fee_installments "
+                        + "(student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+                        + "payment_date, payment_method, payment_type, month_for, remarks, status) "
+                        + "VALUES (?, ?, ?, 0, NOW(), ?, ?, ?, ?, 1)"
+                )
+                        .setParameter(1, paymentId)
+                        .setParameter(2, enrollmentId)
+                        .setParameter(3, installmentNo)
+                        .setParameter(4, paymentMethod)
+                        .setParameter(5, "MONTHLY")
+                        .setParameter(6, targetMonth)
+                        .setParameter(7, note)
+                        .executeUpdate();
+
+                int installmentId = ((Number) em.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult()).intValue();
+
+                // ✅ LEDGER
+                LedgerHelper.saveLedger(
+                        em,
+                        0,
+                        "CREDIT",
+                        "Zero payment for month " + targetMonth,
+                        "STUDENT_FEES",
+                        installmentId,
+                        paymentMethod,
+                        "MONTHLY_FEE",
+                        username
+                );
+
+                // ✅ LOG
+                LogHelper.saveLog(
+                        em,
+                        "STUDENT_FEES",
+                        installmentId,
+                        "INSERT",
+                        0,
+                        paymentMethod,
+                        "Zero payment for " + targetMonth + " | " + note,
+                        username
+                );
+
+                em.getTransaction().commit();
+                JOptionPane.showMessageDialog(null, "Zero payment saved for " + targetMonth);
+                return;
+            }
+
+            // =====================================================
+            // LESS THAN MONTH VALIDATION
+            // =====================================================
+            if (payingFee < monthlyFee && (note == null || note.trim().isEmpty())) {
+                JOptionPane.showMessageDialog(null, "Remarks required!");
+                return;
+            }
+
+            Set<String> filledMonths = new HashSet<>();
+
+            // =====================================================
+            // FILL PREVIOUS PARTIAL (NO REMARKS ONLY)
+            // =====================================================
+            List<Object[]> partialMonths = em.createNativeQuery(
+                    "SELECT month_for, COALESCE(SUM(amount_paid),0) "
+                    + "FROM student_fee_installments "
+                    + "WHERE enrollment_id=? AND status=1 "
+                    + "GROUP BY month_for "
+                    + "HAVING SUM(amount_paid) < ? "
+                    + "ORDER BY month_for ASC"
+            )
+                    .setParameter(1, enrollmentId)
+                    .setParameter(2, monthlyFee)
+                    .getResultList();
+
+            for (Object[] row : partialMonths) {
+
+                if (remainingAmount <= 0) {
+                    break;
+                }
+
+                String monthFor = row[0].toString();
+                int paidSoFar = ((Number) row[1]).intValue();
+
+                if (skipMonths.contains(monthFor)) {
+                    continue;
+                }
+                if (filledMonths.contains(monthFor)) {
+                    continue;
+                }
+
+                int balance = monthlyFee - paidSoFar;
+                if (balance <= 0) {
+                    continue;
+                }
+
+                int payNow = Math.min(balance, remainingAmount);
+
+                installmentNo++;
+
+                em.createNativeQuery(
+                        "INSERT INTO student_fee_installments VALUES (NULL,?,?,?,?,NOW(),?,?,?, ?,1)"
+                )
+                        .setParameter(1, paymentId)
+                        .setParameter(2, enrollmentId)
+                        .setParameter(3, installmentNo)
+                        .setParameter(4, payNow)
+                        .setParameter(5, paymentMethod)
+                        .setParameter(6, "MONTHLY")
+                        .setParameter(7, monthFor)
+                        .setParameter(8, note)
+                        .executeUpdate();
+
+                int installmentId = ((Number) em.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult()).intValue();
+                // ✅ LEDGER
+                LedgerHelper.saveLedger(
+                        em,
+                        payNow,
+                        "CREDIT",
+                        "Fee payment for " + monthFor,
+                        "STUDENT_FEES",
+                        installmentId,
+                        paymentMethod,
+                        "MONTHLY_FEE",
+                        username
+                );
+
+                // ✅ LOG
+                LogHelper.saveLog(
+                        em,
+                        "STUDENT_FEES",
+                        installmentId,
+                        "INSERT",
+                        payNow,
+                        paymentMethod,
+                        "Partial payment for " + monthFor,
+                        username
+                );
+
+                remainingAmount -= payNow;
+                filledMonths.add(monthFor);
+            }
+
+            // =====================================================
+            // DISTRIBUTE TO TABLE MONTHS
+            // =====================================================
+            for (int i = 0; i < rowCount && remainingAmount > 0; i++) {
+
+                int year = Integer.parseInt(model.getValueAt(i, 1).toString());
+                String monthName = model.getValueAt(i, 2).toString();
+                String ym = String.format("%04d-%02d", year, GeneralMethods.getMonthNumber(monthName));
+
+                int paid = GeneralMethods.parseCommaNumber(
+                        model.getValueAt(i, 3).toString().isEmpty() ? "0" : model.getValueAt(i, 3).toString()
+                );
+
+                if (skipMonths.contains(ym)) {
+                    continue;
+                }
+                if (filledMonths.contains(ym)) {
+                    continue;
+                }
+                if (paid >= monthlyFee) {
+                    continue;
+                }
+
+                int payNow = Math.min(monthlyFee - paid, remainingAmount);
+
+                installmentNo++;
+
+                em.createNativeQuery(
+                        "INSERT INTO student_fee_installments VALUES (NULL,?,?,?,?,NOW(),?,?,?, ?,1)"
+                )
+                        .setParameter(1, paymentId)
+                        .setParameter(2, enrollmentId)
+                        .setParameter(3, installmentNo)
+                        .setParameter(4, payNow)
+                        .setParameter(5, paymentMethod)
+                        .setParameter(6, "MONTHLY")
+                        .setParameter(7, ym)
+                        .setParameter(8, note)
+                        .executeUpdate();
+
+                int installmentId = ((Number) em.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult()).intValue();
+
+                // ✅ LEDGER
+                LedgerHelper.saveLedger(
+                        em,
+                        payNow,
+                        "CREDIT",
+                        "Fee payment for " + ym,
+                        "STUDENT_FEES",
+                        installmentId,
+                        paymentMethod,
+                        "MONTHLY_FEE",
+                        username
+                );
+
+                // ✅ LOG
+                LogHelper.saveLog(
+                        em,
+                        "STUDENT_FEES",
+                        installmentId,
+                        "INSERT",
+                        payNow,
+                        paymentMethod,
+                        "Payment applied to " + ym,
+                        username
+                );
+
+                remainingAmount -= payNow;
+                filledMonths.add(ym);
+            }
+
+            // =====================================================
+            // UPDATE MASTER
+            // =====================================================
+            int totalPaid = ((Number) em.createNativeQuery(
+                    "SELECT COALESCE(SUM(amount_paid),0) FROM student_fee_installments WHERE enrollment_id=?"
+            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+
+            int totalFee = rowCount * monthlyFee;
+
+            em.createNativeQuery(
+                    "UPDATE student_fee_payments SET total_paid=?, total_balance=?, payment_status=? WHERE enrollment_id=?"
+            )
+                    .setParameter(1, totalPaid)
+                    .setParameter(2, totalFee - totalPaid)
+                    .setParameter(3, totalPaid == totalFee ? "COMPLETED" : "ACTIVE")
+                    .setParameter(4, enrollmentId)
+                    .executeUpdate();
 
             em.getTransaction().commit();
 
             JOptionPane.showMessageDialog(null, "Monthly Payment Saved Successfully!");
 
         } catch (Exception e) {
-            em.getTransaction().rollback();
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Error saving payment!");
         } finally {
             em.close();
         }
     }
 
+//    public void saveMonthlyFullPayment(
+//            int enrollmentId,
+//            JTable table,
+//            JTextField monthlyFeeField,
+//            String paymentMethod
+//    ) {
+//        EntityManager em = HibernateConfig.getEntityManager();
+//
+//        try {
+//            if (table.isEditing()) {
+//                table.getCellEditor().stopCellEditing();
+//            }
+//
+//            DefaultTableModel model = (DefaultTableModel) table.getModel();
+//            int rowCount = model.getRowCount();
+//
+//            int monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
+//            int payingFee = GeneralMethods.parseCommaNumber(mm_fees_Monthly_total_paid_Textfield.getText().trim());
+//            String note = mm_fees_Monthly_fee_note_Textarea.getText().trim();
+//
+//            // =====================================================
+//            // 🔥 VALIDATION
+//            // =====================================================
+//            if (payingFee < 0) {
+//                JOptionPane.showMessageDialog(null, "Invalid payment amount!");
+//                return;
+//            }
+//
+//            if (payingFee == 0 && (note == null || note.trim().isEmpty())) {
+//                JOptionPane.showMessageDialog(null, "Zero payment requires remarks!");
+//                return;
+//            }
+//
+//            em.getTransaction().begin();
+//
+//            // 🔹 Get payment id
+//            int paymentId = ((Number) em.createNativeQuery(
+//                    "SELECT student_fee_payments_id FROM student_fee_payments "
+//                    + "WHERE enrollment_id = ? AND status = 1"
+//            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+//
+//            // 🔹 Get last installment number
+//            Object lastNoObj = em.createNativeQuery(
+//                    "SELECT MAX(installment_no) FROM student_fee_installments WHERE enrollment_id = ?"
+//            ).setParameter(1, enrollmentId).getSingleResult();
+//            int installmentNo = (lastNoObj != null) ? ((Number) lastNoObj).intValue() : 0;
+//
+//            int remainingAmount = payingFee;
+//
+//            // =====================================================
+//            // 🔥 ZERO PAYMENT LOGIC
+//            // =====================================================
+//            if (payingFee == 0) {
+//                // 1️⃣ Get last paid month with amount > 0 OR remarks
+//                List<Object[]> lastPaidRows = em.createNativeQuery(
+//                        "SELECT month_for, COALESCE(SUM(amount_paid),0) as paid_sum, "
+//                        + "MAX(remarks) "
+//                        + "FROM student_fee_installments "
+//                        + "WHERE enrollment_id=? AND status=1 "
+//                        + "GROUP BY month_for "
+//                        + "ORDER BY month_for DESC"
+//                ).setParameter(1, enrollmentId).getResultList();
+//
+//                String targetMonth = null;
+//
+//                if (!lastPaidRows.isEmpty()) {
+//                    Object[] lastRow = lastPaidRows.get(0);
+//                    String lastMonthDB = (String) lastRow[0]; // e.g., "2026-11"
+//                    int lastPaid = ((Number) lastRow[1]).intValue();
+//                    String lastRemarks = lastRow[2] != null ? lastRow[2].toString() : "";
+//
+//                    // Check if last month partially paid without remarks
+//                    if (lastPaid < monthlyFee && lastRemarks.isEmpty()) {
+//                        int confirm = JOptionPane.showConfirmDialog(
+//                                null,
+//                                "Your last month (" + lastMonthDB + ") has remaining balance: "
+//                                + lastPaid + "/" + monthlyFee + ".\nDo you want to continue with 0 for next month?",
+//                                "Confirm",
+//                                JOptionPane.YES_NO_OPTION
+//                        );
+//                        if (confirm == JOptionPane.NO_OPTION) {
+//                            em.getTransaction().rollback();
+//                            return;
+//                        }
+//                    }
+//
+//                    // Always pay 0 for next month
+//                    String[] parts = lastMonthDB.split("-"); // [year, month]
+//                    int year = Integer.parseInt(parts[0]);
+//                    int month = Integer.parseInt(parts[1]);
+//
+//                    month++;
+//                    if (month > 12) {
+//                        month = 1;
+//                        year++;
+//                    }
+//
+//                    targetMonth = String.format("%04d-%02d", year, month);
+//
+//                } else if (rowCount > 0) {
+//                    // No prior payments, pick first month from table (numeric)
+//                    targetMonth = model.getValueAt(0, 1).toString() + "-" + GeneralMethods.getMonthNumber(model.getValueAt(0, 2).toString());
+//                } else {
+//                    // fallback: current month
+//                    java.time.LocalDate now = java.time.LocalDate.now();
+//                    targetMonth = String.format("%04d-%02d", now.getYear(), now.getMonthValue());
+//                }
+//
+//                installmentNo++;
+//                Query insert = em.createNativeQuery(
+//                        "INSERT INTO student_fee_installments ("
+//                        + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+//                        + "payment_date, payment_method, payment_type, month_for, remarks, status"
+//                        + ") VALUES (?, ?, ?, 0, NOW(), ?, ?, ?, ?, 1)"
+//                );
+//                insert.setParameter(1, paymentId);
+//                insert.setParameter(2, enrollmentId);
+//                insert.setParameter(3, installmentNo);
+//                insert.setParameter(4, paymentMethod);
+//                insert.setParameter(5, "MONTHLY");
+//                insert.setParameter(6, targetMonth);
+//                insert.setParameter(7, note);
+//                insert.executeUpdate();
+//                em.getTransaction().commit();
+//
+//                JOptionPane.showMessageDialog(null, "Zero payment saved for month " + targetMonth + "!");
+//                return;
+//            }
+//
+//            // =====================================================
+//            // 🔥 LESS THAN MONTHLY VALIDATION
+//            // =====================================================
+//            if (payingFee < monthlyFee && (note == null || note.trim().isEmpty())) {
+//                JOptionPane.showMessageDialog(null, "Remarks required for payment less than monthly fee!");
+//                return;
+//            }
+//
+//            // =====================================================
+//            // 🔹 Track months already filled
+//            // =====================================================
+//            Set<String> filledMonths = new HashSet<>();
+//
+//            // =====================================================
+    //// 🔹 GET PARTIAL MONTHS + REMARK CHECK (STRICT)
+//// =====================================================
+//            List<Object[]> partialMonths = em.createNativeQuery(
+//                    "SELECT s.month_for, "
+//                    + "COALESCE(SUM(s.amount_paid),0) as total_paid, "
+//                    + "SUM(CASE WHEN TRIM(COALESCE(s.remarks,'')) <> '' THEN 1 ELSE 0 END) as remark_count "
+//                    + "FROM student_fee_installments s "
+//                    + "WHERE s.enrollment_id=? AND s.status=1 "
+//                    + "GROUP BY s.month_for "
+//                    + "HAVING total_paid < ? "
+//                    + "ORDER BY s.month_for ASC"
+//            )
+//                    .setParameter(1, enrollmentId)
+//                    .setParameter(2, monthlyFee)
+//                    .getResultList();
+//
+//// =====================================================
+//// 🔹 FILL ONLY VALID MONTHS
+//// =====================================================
+//            for (Object[] row : partialMonths) {
+//
+//                if (remainingAmount <= 0) {
+//                    break;
+//                }
+//
+//                String monthFor = row[0].toString();
+//                int paidSoFar = ((Number) row[1]).intValue();
+//                int remarkCount = ((Number) row[2]).intValue();
+//
+//                // ❌ CRITICAL RULE
+//                // If remarks exist → NEVER fill this month
+//                if (remarkCount > 0) {
+//                    continue;
+//                }
+//
+//                // ❌ avoid duplicate fill
+//                if (filledMonths.contains(monthFor)) {
+//                    continue;
+//                }
+//
+//                int balance = monthlyFee - paidSoFar;
+//
+//                // if already fully paid skip
+//                if (balance <= 0) {
+//                    continue;
+//                }
+//
+//                int payNow = Math.min(balance, remainingAmount);
+//
+//                installmentNo++;
+//
+//                Query insert = em.createNativeQuery(
+//                        "INSERT INTO student_fee_installments ("
+//                        + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+//                        + "payment_date, payment_method, payment_type, month_for, remarks, status"
+//                        + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
+//                );
+//
+//                insert.setParameter(1, paymentId);
+//                insert.setParameter(2, enrollmentId);
+//                insert.setParameter(3, installmentNo);
+//                insert.setParameter(4, payNow);
+//                insert.setParameter(5, paymentMethod);
+//                insert.setParameter(6, "MONTHLY");
+//                insert.setParameter(7, monthFor);
+//                insert.setParameter(8, note);
+//
+//                insert.executeUpdate();
+//
+//                remainingAmount -= payNow;
+//                filledMonths.add(monthFor);
+//            }
+////            List<Object[]> partialMonths = em.createNativeQuery(
+////                    "SELECT month_for, COALESCE(SUM(amount_paid),0) as total_paid, "
+////                    + "SUM(CASE WHEN remarks IS NOT NULL AND remarks<>'' THEN 1 ELSE 0 END) as remark_count "
+////                    + "FROM student_fee_installments "
+////                    + "WHERE enrollment_id=? AND status=1 "
+////                    + "GROUP BY month_for "
+////                    + "HAVING total_paid < ? "
+////                    + "ORDER BY month_for ASC"
+////            )
+////                    .setParameter(1, enrollmentId)
+////                    .setParameter(2, monthlyFee)
+////                    .getResultList();
+//
+//            for (Object[] row : partialMonths) {
+//
+//                if (remainingAmount <= 0) {
+//                    break;
+//                }
+//
+//                String monthFor = row[0].toString();
+//                int paidSoFar = ((Number) row[1]).intValue();
+//                int remarkCount = ((Number) row[2]).intValue();
+//
+//                // ❌ IF remarks exist → SKIP this month
+//                if (remarkCount > 0) {
+//                    continue;
+//                }
+//
+//                // ❌ avoid double fill
+//                if (filledMonths.contains(monthFor)) {
+//                    continue;
+//                }
+//
+//                int balance = monthlyFee - paidSoFar;
+//                int payNow = Math.min(balance, remainingAmount);
+//
+//                installmentNo++;
+//
+//                Query insert = em.createNativeQuery(
+//                        "INSERT INTO student_fee_installments ("
+//                        + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+//                        + "payment_date, payment_method, payment_type, month_for, remarks, status"
+//                        + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
+//                );
+//
+//                insert.setParameter(1, paymentId);
+//                insert.setParameter(2, enrollmentId);
+//                insert.setParameter(3, installmentNo);
+//                insert.setParameter(4, payNow);
+//                insert.setParameter(5, paymentMethod);
+//                insert.setParameter(6, "MONTHLY");
+//                insert.setParameter(7, monthFor);
+//                insert.setParameter(8, note);
+//
+//                insert.executeUpdate();
+//
+//                remainingAmount -= payNow;
+//                filledMonths.add(monthFor);
+//            }
+////            List<Object[]> partialMonths = em.createNativeQuery(
+////                    "SELECT month_for, COALESCE(SUM(amount_paid),0) as total_paid "
+////                    + "FROM student_fee_installments "
+////                    + "WHERE enrollment_id=? AND status=1 "
+////                    + "GROUP BY month_for "
+////                    + "HAVING total_paid < ? AND SUM(CASE WHEN remarks IS NOT NULL AND remarks<>'' THEN 1 ELSE 0 END)=0 "
+////                    + "ORDER BY month_for ASC"
+////            )
+////                    .setParameter(1, enrollmentId)
+////                    .setParameter(2, monthlyFee)
+////                    .getResultList();
+////
+////            for (Object[] row : partialMonths) {
+////                if (remainingAmount <= 0) {
+////                    break;
+////                }
+////
+////                String monthFor = row[0].toString();
+////                if (filledMonths.contains(monthFor)) {
+////                    continue;
+////                }
+////
+////                int paidSoFar = ((Number) row[1]).intValue();
+////                int balance = monthlyFee - paidSoFar;
+////                int payNow = Math.min(balance, remainingAmount);
+////
+////                installmentNo++;
+////                Query insert = em.createNativeQuery(
+////                        "INSERT INTO student_fee_installments ("
+////                        + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+////                        + "payment_date, payment_method, payment_type, month_for, remarks, status"
+////                        + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
+////                );
+////                insert.setParameter(1, paymentId);
+////                insert.setParameter(2, enrollmentId);
+////                insert.setParameter(3, installmentNo);
+////                insert.setParameter(4, payNow);
+////                insert.setParameter(5, paymentMethod);
+////                insert.setParameter(6, "MONTHLY");
+////                insert.setParameter(7, monthFor);
+////                insert.setParameter(8, note);
+////                insert.executeUpdate();
+////
+////                remainingAmount -= payNow;
+////                filledMonths.add(monthFor);
+////            }
+//
+//            // =====================================================
+//            // 🔹 DISTRIBUTE REMAINING PAYMENT TO OTHER MONTHS
+//            // =====================================================
+//            for (int i = 0; i < rowCount && remainingAmount > 0; i++) {
+//                int year = Integer.parseInt(model.getValueAt(i, 1).toString());
+//                String monthName = model.getValueAt(i, 2).toString();
+//                String yearMonth = String.format("%04d-%02d", year, GeneralMethods.getMonthNumber(monthName));
+//
+//                int alreadyPaid = GeneralMethods.parseCommaNumber(
+//                        model.getValueAt(i, 3).toString().trim().isEmpty() ? "0" : model.getValueAt(i, 3).toString()
+//                );
+//                String remarksVal = model.getValueAt(i, 4) != null ? model.getValueAt(i, 4).toString().trim() : "";
+//
+//                // Skip month if fully paid, 0-paid-with-remarks, or already filled
+//                if (alreadyPaid >= monthlyFee || (alreadyPaid == 0 && !remarksVal.isEmpty()) || filledMonths.contains(yearMonth)) {
+//                    continue;
+//                }
+//
+//                int payNow = Math.min(monthlyFee - alreadyPaid, remainingAmount);
+//
+//                installmentNo++;
+//                Query insert = em.createNativeQuery(
+//                        "INSERT INTO student_fee_installments ("
+//                        + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+//                        + "payment_date, payment_method, payment_type, month_for, remarks, status"
+//                        + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
+//                );
+//                insert.setParameter(1, paymentId);
+//                insert.setParameter(2, enrollmentId);
+//                insert.setParameter(3, installmentNo);
+//                insert.setParameter(4, payNow);
+//                insert.setParameter(5, paymentMethod);
+//                insert.setParameter(6, "MONTHLY");
+//                insert.setParameter(7, yearMonth);
+//                insert.setParameter(8, note);
+//                insert.executeUpdate();
+//
+//                remainingAmount -= payNow;
+//                filledMonths.add(yearMonth);
+//            }
+//
+//            // =====================================================
+//            // 🔹 UPDATE MASTER TABLE
+//            // =====================================================
+//            int totalPaid = ((Number) em.createNativeQuery(
+//                    "SELECT COALESCE(SUM(amount_paid),0) FROM student_fee_installments WHERE enrollment_id=?"
+//            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+//
+//            int totalFee = rowCount * monthlyFee;
+//            int balance = totalFee - totalPaid;
+//
+//            Query update = em.createNativeQuery(
+//                    "UPDATE student_fee_payments SET total_paid=?, total_balance=?, payment_status=? WHERE enrollment_id=?"
+//            );
+//            update.setParameter(1, totalPaid);
+//            update.setParameter(2, balance);
+//            update.setParameter(3, balance == 0 ? "COMPLETED" : "ACTIVE");
+//            update.setParameter(4, enrollmentId);
+//            update.executeUpdate();
+//
+//            em.getTransaction().commit();
+//            JOptionPane.showMessageDialog(null, "Monthly Payment Saved Successfully!");
+//
+//        } catch (Exception e) {
+//            if (em.getTransaction().isActive()) {
+//                em.getTransaction().rollback();
+//            }
+//            e.printStackTrace();
+//        } finally {
+//            em.close();
+//        }
+//    }
+
+//    public void saveMonthlyFullPayment(
+//            int enrollmentId,
+//            JTable table,
+//            JTextField monthlyFeeField,
+//            String paymentMethod
+//    ) {
+//        EntityManager em = HibernateConfig.getEntityManager();
+//
+//        try {
+//            if (table.isEditing()) {
+//                table.getCellEditor().stopCellEditing();
+//            }
+//
+//            DefaultTableModel model = (DefaultTableModel) table.getModel();
+//            int rowCount = model.getRowCount();
+//
+//            int monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
+//            int payingFee = GeneralMethods.parseCommaNumber(mm_fees_Monthly_total_paid_Textfield.getText().trim());
+//            String note = mm_fees_Monthly_fee_note_Textarea.getText().trim();
+//
+//            // =====================================================
+//            // 🔥 VALIDATION
+//            // =====================================================
+//            if (payingFee < 0) {
+//                JOptionPane.showMessageDialog(null, "Invalid payment amount!");
+//                return;
+//            }
+//
+//            if (payingFee == 0 && (note == null || note.trim().isEmpty())) {
+//                JOptionPane.showMessageDialog(null, "Zero payment requires remarks!");
+//                return;
+//            }
+//
+//            // =====================================================
+//            // 🔥 FIND LAST MONTH FROM DB
+//            // =====================================================
+//            String lastMonth = (String) em.createNativeQuery(
+//                    "SELECT MAX(month_for) FROM student_fee_installments "
+//                    + "WHERE enrollment_id=? AND status=1 "
+//                    + "AND (amount_paid > 0 OR (remarks IS NOT NULL AND remarks<>''))"
+//            ).setParameter(1, enrollmentId).getSingleResult();
+//
+//            int lastMonthPaid = 0;
+//            if (lastMonth != null) {
+//                lastMonthPaid = ((Number) em.createNativeQuery(
+//                        "SELECT COALESCE(SUM(amount_paid),0) FROM student_fee_installments "
+//                        + "WHERE enrollment_id=? AND month_for=?"
+//                ).setParameter(1, enrollmentId)
+//                        .setParameter(2, lastMonth)
+//                        .getSingleResult()).intValue();
+//            }
+//
+//            boolean lastMonthNotFull = (lastMonthPaid < monthlyFee);
+//
+//            int remainingAmount = payingFee;
+//
+//            em.getTransaction().begin();
+//
+//            // 🔹 get payment id
+//            int paymentId = ((Number) em.createNativeQuery(
+//                    "SELECT student_fee_payments_id FROM student_fee_payments "
+//                    + "WHERE enrollment_id = ? AND status = 1"
+//            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+//
+//            Object lastNoObj = em.createNativeQuery(
+//                    "SELECT MAX(installment_no) FROM student_fee_installments WHERE enrollment_id = ?"
+//            ).setParameter(1, enrollmentId).getSingleResult();
+//
+//            int installmentNo = (lastNoObj != null) ? ((Number) lastNoObj).intValue() : 0;
+//
+//            // =====================================================
+    //// 🔥 ZERO PAYMENT LOGIC FIXED
+//// =====================================================
+//            if (payingFee == 0) {
+//
+//                // 1️⃣ Get last paid month with amount > 0 OR remarks
+//                List<Object[]> lastPaidRows = em.createNativeQuery(
+//                        "SELECT month_for, COALESCE(SUM(amount_paid),0) as paid_sum, "
+//                        + "MAX(remarks) "
+//                        + "FROM student_fee_installments "
+//                        + "WHERE enrollment_id=? AND status=1 "
+//                        + "GROUP BY month_for "
+//                        + "ORDER BY month_for DESC"
+//                ).setParameter(1, enrollmentId).getResultList();
+//
+//                String targetMonth = null;
+//
+//                if (!lastPaidRows.isEmpty()) {
+//                    Object[] lastRow = lastPaidRows.get(0);
+//                    String lastMonthDB = (String) lastRow[0]; // e.g., "2026-11"
+//                    int lastPaid = ((Number) lastRow[1]).intValue();
+//                    String lastRemarks = lastRow[2] != null ? lastRow[2].toString() : "";
+//
+//                    // check if last month partially paid
+//                    if (lastPaid < monthlyFee && lastRemarks.isEmpty()) {
+//                        int confirm = JOptionPane.showConfirmDialog(
+//                                null,
+//                                "Your last month (" + lastMonthDB + ") has remaining balance: "
+//                                + lastPaid + "/" + monthlyFee + ".\nDo you want to continue with 0 for next month?",
+//                                "Confirm",
+//                                JOptionPane.YES_NO_OPTION
+//                        );
+//                        if (confirm == JOptionPane.NO_OPTION) {
+//                            em.getTransaction().rollback();
+//                            return;
+//                        }
+//                    }
+//
+//                    // always pay 0 for next month
+//                    String[] parts = lastMonthDB.split("-"); // [year, month]
+//                    int year = Integer.parseInt(parts[0]);
+//                    int month = Integer.parseInt(parts[1]);
+//
+//                    month++; // next month
+//                    if (month > 12) {
+//                        month = 1;
+//                        year++;
+//                    }
+//
+//                    targetMonth = String.format("%04d-%02d", year, month);
+//
+//                } else if (rowCount > 0) {
+//                    // No prior payments, pick first month from table (numeric)
+//                    targetMonth = model.getValueAt(0, 1).toString() + "-" + model.getValueAt(0, 2).toString();
+//                } else {
+//                    // fallback: current month
+//                    java.time.LocalDate now = java.time.LocalDate.now();
+//                    targetMonth = String.format("%04d-%02d", now.getYear(), now.getMonthValue());
+//                }
+//
+//                installmentNo++;
+//
+//                Query insert = em.createNativeQuery(
+//                        "INSERT INTO student_fee_installments ("
+//                        + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+//                        + "payment_date, payment_method, payment_type, month_for, remarks, status"
+//                        + ") VALUES (?, ?, ?, 0, NOW(), ?, ?, ?, ?, 1)"
+//                );
+//
+//                insert.setParameter(1, paymentId);
+//                insert.setParameter(2, enrollmentId);
+//                insert.setParameter(3, installmentNo);
+//                insert.setParameter(4, paymentMethod);
+//                insert.setParameter(5, "MONTHLY");
+//                insert.setParameter(6, targetMonth);
+//                insert.setParameter(7, note);
+//
+//                insert.executeUpdate();
+//                em.getTransaction().commit();
+//
+//                JOptionPane.showMessageDialog(null, "Zero payment saved for month " + targetMonth + "!");
+//                return;
+//            }
+//
+//            // =====================================================
+//            // 🔥 LESS THAN MONTHLY VALIDATION
+//            // =====================================================
+//            if (payingFee < monthlyFee) {
+//                if (lastMonthNotFull) {
+//                    int confirm = JOptionPane.showConfirmDialog(
+//                            null,
+//                            "Last month has balance. Complete it?",
+//                            "Confirm",
+//                            JOptionPane.YES_NO_OPTION
+//                    );
+//                    if (confirm == JOptionPane.NO_OPTION && (note == null || note.trim().isEmpty())) {
+//                        JOptionPane.showMessageDialog(null, "Please enter remarks!");
+//                        return;
+//                    }
+//                } else if (note == null || note.trim().isEmpty()) {
+//                    JOptionPane.showMessageDialog(null, "Remarks required!");
+//                    return;
+//                }
+//            }
+//
+//            // =====================================================
+//            // 🔹 FILL LAST MONTH IF PARTIALLY PAID
+//            // =====================================================
+//            if (lastMonth != null && remainingAmount > 0 && lastMonthPaid < monthlyFee) {
+//
+//                int remarksCount = ((Number) em.createNativeQuery(
+//                        "SELECT COUNT(*) FROM student_fee_installments "
+//                        + "WHERE enrollment_id=? AND month_for=? "
+//                        + "AND remarks IS NOT NULL AND remarks<>''"
+//                ).setParameter(1, enrollmentId)
+//                        .setParameter(2, lastMonth)
+//                        .getSingleResult()).intValue();
+//
+//                if (remarksCount == 0) {
+//                    int balance = monthlyFee - lastMonthPaid;
+//                    int payNow = Math.min(balance, remainingAmount);
+//
+//                    installmentNo++;
+//
+//                    Query insert = em.createNativeQuery(
+//                            "INSERT INTO student_fee_installments ("
+//                            + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+//                            + "payment_date, payment_method, payment_type, month_for, remarks, status"
+//                            + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
+//                    );
+//
+//                    insert.setParameter(1, paymentId);
+//                    insert.setParameter(2, enrollmentId);
+//                    insert.setParameter(3, installmentNo);
+//                    insert.setParameter(4, payNow);
+//                    insert.setParameter(5, paymentMethod);
+//                    insert.setParameter(6, "MONTHLY");
+//                    insert.setParameter(7, lastMonth);
+//                    insert.setParameter(8, "");
+//
+//                    insert.executeUpdate();
+//                    remainingAmount -= payNow;
+//                }
+//            }
+//
+//            // =====================================================
+//            // 🔹 DISTRIBUTE REMAINING PAYMENT
+//            // =====================================================
+//            for (int i = 0; i < rowCount && remainingAmount > 0; i++) {
+//
+//                String yearMonth = model.getValueAt(i, 1).toString() + "-" + model.getValueAt(i, 2).toString();
+//                int alreadyPaid = GeneralMethods.parseCommaNumber(model.getValueAt(i, 3).toString());
+//
+//                if (alreadyPaid >= monthlyFee) {
+//                    continue;
+//                }
+//
+//                int payNow = Math.min(monthlyFee - alreadyPaid, remainingAmount);
+//
+//                installmentNo++;
+//
+//                Query insert = em.createNativeQuery(
+//                        "INSERT INTO student_fee_installments ("
+//                        + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+//                        + "payment_date, payment_method, payment_type, month_for, remarks, status"
+//                        + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
+//                );
+//
+//                insert.setParameter(1, paymentId);
+//                insert.setParameter(2, enrollmentId);
+//                insert.setParameter(3, installmentNo);
+//                insert.setParameter(4, payNow);
+//                insert.setParameter(5, paymentMethod);
+//                insert.setParameter(6, "MONTHLY");
+//                insert.setParameter(7, yearMonth);
+//                insert.setParameter(8, note);
+//
+//                insert.executeUpdate();
+//                remainingAmount -= payNow;
+//            }
+//
+//            // =====================================================
+//            // 🔹 UPDATE MASTER TABLE
+//            // =====================================================
+//            int totalPaid = ((Number) em.createNativeQuery(
+//                    "SELECT COALESCE(SUM(amount_paid),0) FROM student_fee_installments WHERE enrollment_id=?"
+//            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+//
+//            int totalFee = rowCount * monthlyFee;
+//            int balance = totalFee - totalPaid;
+//
+//            Query update = em.createNativeQuery(
+//                    "UPDATE student_fee_payments SET total_paid=?, total_balance=?, payment_status=? WHERE enrollment_id=?"
+//            );
+//
+//            update.setParameter(1, totalPaid);
+//            update.setParameter(2, balance);
+//            update.setParameter(3, balance == 0 ? "COMPLETED" : "ACTIVE");
+//            update.setParameter(4, enrollmentId);
+//
+//            update.executeUpdate();
+//            em.getTransaction().commit();
+//
+//            JOptionPane.showMessageDialog(null, "Monthly Payment Saved Successfully!");
+//
+//        } catch (Exception e) {
+//            if (em.getTransaction().isActive()) {
+//                em.getTransaction().rollback();
+//            }
+//            e.printStackTrace();
+//        } finally {
+//            em.close();
+//        }
+//    }
+
+    /**
+     * Returns the next month string in format YYYY-MMM (e.g., 2026-FEB →
+     * 2026-MAR)
+     */
+    public String getNextMonthString(String currentMonthStr) {
+        // currentMonthStr format: "YYYY-MMM", e.g., "2026-FEB"
+        try {
+            String[] parts = currentMonthStr.split("-");
+            if (parts.length != 2) {
+                return null;
+            }
+
+            int year = Integer.parseInt(parts[0].trim());
+            String monthPart = parts[1].trim().toUpperCase();
+
+            Month monthEnum = Month.valueOf(monthPart); // e.g., "FEB" -> Month.FEBRUARY
+
+            Month nextMonthEnum = monthEnum.plus(1); // increment month
+            int nextYear = year;
+            if (monthEnum == Month.DECEMBER) {
+                nextYear += 1; // handle year change
+            }
+
+            // Format back to "YYYY-MMM"
+            String nextMonthStr = nextYear + "-" + nextMonthEnum.getDisplayName(TextStyle.SHORT, Locale.ENGLISH).toUpperCase();
+            return nextMonthStr;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+    //    public void saveMonthlyFullPayment(
+    //            int enrollmentId,
+    //            JTable table,
+    //            JTextField monthlyFeeField,
+    //            String paymentMethod
+    //    ) {
+    //        EntityManager em = HibernateConfig.getEntityManager();
+    //
+    //        try {
+    //            if (table.isEditing()) {
+    //                table.getCellEditor().stopCellEditing();
+    //            }
+    //
+    //            DefaultTableModel model = (DefaultTableModel) table.getModel();
+    //            int rowCount = model.getRowCount();
+    //
+    //            int monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
+    //            int payingFee = GeneralMethods.parseCommaNumber(mm_fees_Monthly_total_paid_Textfield.getText().trim());
+    //            String note = mm_fees_Monthly_fee_note_Textarea.getText().trim();
+    //
+    //            // =====================================================
+    //            // 🔥 VALIDATION
+    //            // =====================================================
+    //            // ❌ NEGATIVE BLOCK
+    //            if (payingFee < 0) {
+    //                JOptionPane.showMessageDialog(null, "Invalid payment amount!");
+    //                return;
+    //            }
+    //
+    //            // ============================
+    //            // FIND LAST MONTH FROM DB
+    //            // ============================
+    //            String lastMonth = (String) em.createNativeQuery(
+    //                    "SELECT MAX(month_for) FROM student_fee_installments WHERE enrollment_id=? AND status=1"
+    //            ).setParameter(1, enrollmentId).getSingleResult();
+    //
+    //            int lastMonthPaid = 0;
+    //
+    //            if (lastMonth != null) {
+    //                lastMonthPaid = ((Number) em.createNativeQuery(
+    //                        "SELECT COALESCE(SUM(amount_paid),0) FROM student_fee_installments WHERE enrollment_id=? AND month_for=?"
+    //                ).setParameter(1, enrollmentId)
+    //                        .setParameter(2, lastMonth)
+    //                        .getSingleResult()).intValue();
+    //            }
+    //
+    //            boolean lastMonthNotFull = (lastMonthPaid > 0 && lastMonthPaid < monthlyFee);
+    //
+    //            // ============================
+    //            // ZERO PAYMENT
+    //            // ============================
+    //            if (payingFee == 0) {
+    //
+    //                if (note == null || note.trim().isEmpty()) {
+    //                    JOptionPane.showMessageDialog(null,
+    //                            "Zero payment requires remarks (e.g., Holiday / Pandemic)");
+    //                    return;
+    //                }
+    //
+    //                em.getTransaction().begin();
+    //
+    //                int paymentId = ((Number) em.createNativeQuery(
+    //                        "SELECT student_fee_payments_id FROM student_fee_payments WHERE enrollment_id = ? AND status = 1"
+    //                ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+    //
+    //                Object lastNoObj = em.createNativeQuery(
+    //                        "SELECT MAX(installment_no) FROM student_fee_installments WHERE enrollment_id = ?"
+    //                ).setParameter(1, enrollmentId).getSingleResult();
+    //
+    //                int installmentNo = (lastNoObj != null) ? ((Number) lastNoObj).intValue() : 0;
+    //
+    //                // save zero entry to FIRST unpaid month
+    //                for (int i = 0; i < rowCount; i++) {
+    //
+    //                    int alreadyPaid = GeneralMethods.parseCommaNumber(model.getValueAt(i, 3).toString());
+    //
+    //                    if (alreadyPaid == 0) {
+    //
+    //                        installmentNo++;
+    //
+    //                        String monthFor = model.getValueAt(i, 5).toString();
+    //
+    //                        Query insert = em.createNativeQuery(
+    //                                "INSERT INTO student_fee_installments ("
+    //                                + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+    //                                + "payment_date, payment_method, payment_type, month_for, remarks, status"
+    //                                + ") VALUES (?, ?, ?, 0, NOW(), ?, ?, ?, ?, 1)"
+    //                        );
+    //
+    //                        insert.setParameter(1, paymentId);
+    //                        insert.setParameter(2, enrollmentId);
+    //                        insert.setParameter(3, installmentNo);
+    //                        insert.setParameter(4, paymentMethod);
+    //                        insert.setParameter(5, "MONTHLY");
+    //                        insert.setParameter(6, monthFor);
+    //                        insert.setParameter(7, note);
+    //
+    //                        insert.executeUpdate();
+    //                        break;
+    //                    }
+    //                }
+    //
+    //                em.getTransaction().commit();
+    //
+    //                JOptionPane.showMessageDialog(null, "Zero payment saved!");
+    //                return;
+    //            }
+    //
+    //            // ============================
+    //            // LESS THAN MONTHLY
+    //            // ============================
+    //            if (payingFee < monthlyFee) {
+    //
+    //                if (lastMonthNotFull) {
+    //
+    //                    int confirm = JOptionPane.showConfirmDialog(
+    //                            null,
+    //                            "Last month has remaining balance.\nDo you want to complete it?",
+    //                            "Confirm",
+    //                            JOptionPane.YES_NO_OPTION
+    //                    );
+    //
+    //                    if (confirm == JOptionPane.NO_OPTION) {
+    //                        if (note == null || note.trim().isEmpty()) {
+    //                            JOptionPane.showMessageDialog(null,
+    //                                    "Please enter remarks if not completing previous month.");
+    //                            return;
+    //                        }
+    //                    }
+    //
+    //                } else {
+    //                    if (note == null || note.trim().isEmpty()) {
+    //                        JOptionPane.showMessageDialog(null,
+    //                                "Remarks required for partial payment.");
+    //                        return;
+    //                    }
+    //                }
+    //            }
+    //
+    //            int remainingAmount = payingFee;
+    //
+    //            em.getTransaction().begin();
+    //
+    //            int paymentId = ((Number) em.createNativeQuery(
+    //                    "SELECT student_fee_payments_id FROM student_fee_payments WHERE enrollment_id = ? AND status = 1"
+    //            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+    //
+    //            Object lastNoObj = em.createNativeQuery(
+    //                    "SELECT MAX(installment_no) FROM student_fee_installments WHERE enrollment_id = ?"
+    //            ).setParameter(1, enrollmentId).getSingleResult();
+    //
+    //            int installmentNo = (lastNoObj != null) ? ((Number) lastNoObj).intValue() : 0;
+    //
+    //            // =====================================================
+    //            // 🔥 STEP 1: FILL LAST MONTH IF NEEDED
+    //            // =====================================================
+    //            if (lastMonth != null && remainingAmount > 0 && lastMonthPaid < monthlyFee) {
+    //
+    //                int remarksCount = ((Number) em.createNativeQuery(
+    //                        "SELECT COUNT(*) FROM student_fee_installments "
+    //                        + "WHERE enrollment_id=? AND month_for=? AND remarks IS NOT NULL AND remarks<>''"
+    //                ).setParameter(1, enrollmentId)
+    //                        .setParameter(2, lastMonth)
+    //                        .getSingleResult()).intValue();
+    //
+    //                if (remarksCount == 0) {
+    //
+    //                    int balance = monthlyFee - lastMonthPaid;
+    //                    int payNow = Math.min(balance, remainingAmount);
+    //
+    //                    installmentNo++;
+    //
+    //                    Query insert = em.createNativeQuery(
+    //                            "INSERT INTO student_fee_installments ("
+    //                            + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+    //                            + "payment_date, payment_method, payment_type, month_for, remarks, status"
+    //                            + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
+    //                    );
+    //
+    //                    insert.setParameter(1, paymentId);
+    //                    insert.setParameter(2, enrollmentId);
+    //                    insert.setParameter(3, installmentNo);
+    //                    insert.setParameter(4, payNow);
+    //                    insert.setParameter(5, paymentMethod);
+    //                    insert.setParameter(6, "MONTHLY");
+    //                    insert.setParameter(7, lastMonth);
+    //                    insert.setParameter(8, "BALANCE FILL");
+    //
+    //                    insert.executeUpdate();
+    //                    em.flush();
+    //
+    //                    remainingAmount -= payNow;
+    //
+    //                    // JTable update
+    //                    for (int i = 0; i < rowCount; i++) {
+    //                        if (model.getValueAt(i, 5).toString().equals(lastMonth)) {
+    //                            int old = GeneralMethods.parseCommaNumber(model.getValueAt(i, 3).toString());
+    //                            int newVal = old + payNow;
+    //                            model.setValueAt(newVal, i, 3);
+    //                            model.setValueAt(newVal >= monthlyFee ? "Paid" : "Now Paid", i, 4);
+    //                            break;
+    //                        }
+    //                    }
+    //                }
+    //            }
+    //
+    //            // =====================================================
+    //            // 🔥 STEP 2: NORMAL DISTRIBUTION
+    //            // =====================================================
+    //            for (int i = 0; i < rowCount && remainingAmount > 0; i++) {
+    //
+    //                String monthFor = model.getValueAt(i, 5).toString();
+    //                int alreadyPaid = GeneralMethods.parseCommaNumber(model.getValueAt(i, 3).toString());
+    //
+    //                if (alreadyPaid >= monthlyFee) {
+    //                    continue;
+    //                }
+    //
+    //                int toFill = monthlyFee - alreadyPaid;
+    //                int payNow = Math.min(toFill, remainingAmount);
+    //
+    //                installmentNo++;
+    //
+    //                Query insert = em.createNativeQuery(
+    //                        "INSERT INTO student_fee_installments ("
+    //                        + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+    //                        + "payment_date, payment_method, payment_type, month_for, remarks, status"
+    //                        + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
+    //                );
+    //
+    //                insert.setParameter(1, paymentId);
+    //                insert.setParameter(2, enrollmentId);
+    //                insert.setParameter(3, installmentNo);
+    //                insert.setParameter(4, payNow);
+    //                insert.setParameter(5, paymentMethod);
+    //                insert.setParameter(6, "MONTHLY");
+    //                insert.setParameter(7, monthFor);
+    //                insert.setParameter(8, note.isEmpty() ? "MONTHLY FEE" : note);
+    //
+    //                insert.executeUpdate();
+    //                em.flush();
+    //
+    //                int newPaid = alreadyPaid + payNow;
+    //                model.setValueAt(newPaid, i, 3);
+    //                model.setValueAt(newPaid >= monthlyFee ? "Paid" : "Now Paid", i, 4);
+    //
+    //                remainingAmount -= payNow;
+    //            }
+    //
+    //            // =====================================================
+    //            // UPDATE MASTER
+    //            // =====================================================
+    //            int totalPaid = ((Number) em.createNativeQuery(
+    //                    "SELECT COALESCE(SUM(amount_paid),0) FROM student_fee_installments WHERE enrollment_id=?"
+    //            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+    //
+    //            int totalFee = rowCount * monthlyFee;
+    //            int balance = totalFee - totalPaid;
+    //
+    //            Query update = em.createNativeQuery(
+    //                    "UPDATE student_fee_payments SET total_paid=?, total_balance=?, payment_status=? WHERE enrollment_id=?"
+    //            );
+    //
+    //            update.setParameter(1, totalPaid);
+    //            update.setParameter(2, balance);
+    //            update.setParameter(3, balance == 0 ? "COMPLETED" : "ACTIVE");
+    //            update.setParameter(4, enrollmentId);
+    //
+    //            update.executeUpdate();
+    //
+    //            em.getTransaction().commit();
+    //
+    //            JOptionPane.showMessageDialog(null, "Monthly Payment Saved Successfully!");
+    //
+    //        } catch (Exception e) {
+    //            if (em.getTransaction().isActive()) {
+    //                em.getTransaction().rollback();
+    //            }
+    //            e.printStackTrace();
+    //        } finally {
+    //            em.close();
+    //        }
+    //    }
+    // ********************************* FULL WORKING CODE **************************
+    //    public void saveMonthlyFullPayment(
+    //            int enrollmentId,
+    //            JTable table,
+    //            JTextField monthlyFeeField,
+    //            String paymentMethod
+    //    ) {
+    //        EntityManager em = HibernateConfig.getEntityManager();
+    //
+    //        try {
+    //            if (table.isEditing()) {
+    //                table.getCellEditor().stopCellEditing();
+    //            }
+    //
+    //            DefaultTableModel model = (DefaultTableModel) table.getModel();
+    //            int rowCount = model.getRowCount();
+    //
+    //            int monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
+    //            int payingFee = GeneralMethods.parseCommaNumber(mm_fees_Monthly_total_paid_Textfield.getText().trim());
+    //            String note = mm_fees_Monthly_fee_note_Textarea.getText().trim();
+    //
+    //            if (payingFee <= 0) {
+    //                JOptionPane.showMessageDialog(null, "Enter valid payment amount!");
+    //                return;
+    //            }
+    //
+    //            int remainingAmount = payingFee;
+    //
+    //            em.getTransaction().begin();
+    //
+    //            int paymentId = ((Number) em.createNativeQuery(
+    //                    "SELECT student_fee_payments_id FROM student_fee_payments WHERE enrollment_id = ? AND status = 1"
+    //            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+    //
+    //            Object lastNoObj = em.createNativeQuery(
+    //                    "SELECT MAX(installment_no) FROM student_fee_installments WHERE enrollment_id = ?"
+    //            ).setParameter(1, enrollmentId).getSingleResult();
+    //
+    //            int installmentNo = (lastNoObj != null) ? ((Number) lastNoObj).intValue() : 0;
+    //
+    //            // =====================================================
+    //            // 🔥 STEP 1: FIND LAST PAID MONTH
+    //            // =====================================================
+    //            String lastMonth = (String) em.createNativeQuery(
+    //                    "SELECT MAX(month_for) FROM student_fee_installments WHERE enrollment_id=? AND status=1"
+    //            ).setParameter(1, enrollmentId).getSingleResult();
+    //
+    //            if (lastMonth != null && remainingAmount > 0) {
+    //
+    //                // total paid for last month
+    //                int lastMonthPaid = ((Number) em.createNativeQuery(
+    //                        "SELECT COALESCE(SUM(amount_paid),0) FROM student_fee_installments WHERE enrollment_id=? AND month_for=?"
+    //                ).setParameter(1, enrollmentId)
+    //                        .setParameter(2, lastMonth)
+    //                        .getSingleResult()).intValue();
+    //
+    //                System.out.println("DEBUG LastMonth=" + lastMonth + " Paid=" + lastMonthPaid);
+    //
+    //                // 🔥 IF PARTIAL MONTH
+    //                if (lastMonthPaid < monthlyFee) {
+    //
+    //                    // check remarks exists
+    //                    int remarksCount = ((Number) em.createNativeQuery(
+    //                            "SELECT COUNT(*) FROM student_fee_installments "
+    //                            + "WHERE enrollment_id=? AND month_for=? AND remarks IS NOT NULL AND remarks<>''"
+    //                    ).setParameter(1, enrollmentId)
+    //                            .setParameter(2, lastMonth)
+    //                            .getSingleResult()).intValue();
+    //
+    //                    System.out.println("DEBUG RemarksCount=" + remarksCount);
+    //
+    //                    // ✅ ONLY fill if NO remarks
+    //                    if (remarksCount == 0) {
+    //
+    //                        int balance = monthlyFee - lastMonthPaid;
+    //                        int payNow = Math.min(balance, remainingAmount);
+    //
+    //                        installmentNo++;
+    //
+    //                        Query insert = em.createNativeQuery(
+    //                                "INSERT INTO student_fee_installments ("
+    //                                + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+    //                                + "payment_date, payment_method, payment_type, month_for, remarks, status"
+    //                                + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
+    //                        );
+    //
+    //                        insert.setParameter(1, paymentId);
+    //                        insert.setParameter(2, enrollmentId);
+    //                        insert.setParameter(3, installmentNo);
+    //                        insert.setParameter(4, payNow);
+    //                        insert.setParameter(5, paymentMethod);
+    //                        insert.setParameter(6, "MONTHLY");
+    //                        insert.setParameter(7, lastMonth);
+    //                        insert.setParameter(8, "BALANCE FILL");
+    //                        insert.executeUpdate();
+    //                        em.flush();
+    //
+    //                        remainingAmount -= payNow;
+    //
+    //                        // 🔥 UPDATE JTable
+    //                        for (int i = 0; i < rowCount; i++) {
+    //                            String rowMonth = model.getValueAt(i, 5).toString();
+    //                            if (rowMonth.equals(lastMonth)) {
+    //                                int old = GeneralMethods.parseCommaNumber(model.getValueAt(i, 3).toString());
+    //                                int newVal = old + payNow;
+    //                                model.setValueAt(newVal, i, 3);
+    //                                model.setValueAt(newVal >= monthlyFee ? "Paid" : "Now Paid", i, 4);
+    //                                break;
+    //                            }
+    //                        }
+    //
+    //                        System.out.println("DEBUG Filled last month " + payNow + " Remaining=" + remainingAmount);
+    //                    }
+    //                }
+    //            }
+    //
+    //            // =====================================================
+    //            // 🔥 STEP 2: NORMAL DISTRIBUTION
+    //            // =====================================================
+    //            for (int i = 0; i < rowCount && remainingAmount > 0; i++) {
+    //
+    //                String monthFor = model.getValueAt(i, 5).toString();
+    //                int alreadyPaid = GeneralMethods.parseCommaNumber(
+    //                        model.getValueAt(i, 3).toString()
+    //                );
+    //
+    //                if (alreadyPaid >= monthlyFee) {
+    //                    continue;
+    //                }
+    //
+    //                int toFill = monthlyFee - alreadyPaid;
+    //                int payNow = Math.min(toFill, remainingAmount);
+    //
+    //                installmentNo++;
+    //
+    //                Query insert = em.createNativeQuery(
+    //                        "INSERT INTO student_fee_installments ("
+    //                        + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+    //                        + "payment_date, payment_method, payment_type, month_for, remarks, status"
+    //                        + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
+    //                );
+    //
+    //                insert.setParameter(1, paymentId);
+    //                insert.setParameter(2, enrollmentId);
+    //                insert.setParameter(3, installmentNo);
+    //                insert.setParameter(4, payNow);
+    //                insert.setParameter(5, paymentMethod);
+    //                insert.setParameter(6, "MONTHLY");
+    //                insert.setParameter(7, monthFor);
+    //                insert.setParameter(8, note.isEmpty() ? "MONTHLY FEE" : note);
+    //                insert.executeUpdate();
+    //                em.flush();
+    //
+    //                int newPaid = alreadyPaid + payNow;
+    //                model.setValueAt(newPaid, i, 3);
+    //                model.setValueAt(newPaid >= monthlyFee ? "Paid" : "Now Paid", i, 4);
+    //
+    //                remainingAmount -= payNow;
+    //
+    //                System.out.println("DEBUG Normal pay " + payNow + " Month=" + monthFor + " Remaining=" + remainingAmount);
+    //            }
+    //
+    //            // =====================================================
+    //            // UPDATE MASTER
+    //            // =====================================================
+    //            int totalPaid = ((Number) em.createNativeQuery(
+    //                    "SELECT COALESCE(SUM(amount_paid),0) FROM student_fee_installments WHERE enrollment_id=?"
+    //            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+    //
+    //            int totalFee = rowCount * monthlyFee;
+    //            int balance = totalFee - totalPaid;
+    //
+    //            Query update = em.createNativeQuery(
+    //                    "UPDATE student_fee_payments SET total_paid=?, total_balance=?, payment_status=? WHERE enrollment_id=?"
+    //            );
+    //            update.setParameter(1, totalPaid);
+    //            update.setParameter(2, balance);
+    //            update.setParameter(3, balance == 0 ? "COMPLETED" : "ACTIVE");
+    //            update.setParameter(4, enrollmentId);
+    //            update.executeUpdate();
+    //
+    //            em.getTransaction().commit();
+    //
+    //            JOptionPane.showMessageDialog(null, "Monthly Payment Saved Successfully!");
+    //
+    //        } catch (Exception e) {
+    //            em.getTransaction().rollback();
+    //            e.printStackTrace();
+    //        } finally {
+    //            em.close();
+    //        }
+    //    }
+    //    public void saveMonthlyFullPayment(
+    //            int enrollmentId,
+    //            JTable table,
+    //            JTextField monthlyFeeField,
+    //            String paymentMethod
+    //    ) {
+    //        EntityManager em = HibernateConfig.getEntityManager();
+    //
+    //        try {
+    //            if (table.isEditing()) {
+    //                table.getCellEditor().stopCellEditing();
+    //            }
+    //
+    //            DefaultTableModel model = (DefaultTableModel) table.getModel();
+    //            int rowCount = model.getRowCount();
+    //            int monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
+    //            int payingFee = GeneralMethods.parseCommaNumber(mm_fees_Monthly_total_paid_Textfield.getText().trim());
+    //            String note = mm_fees_Monthly_fee_note_Textarea.getText().trim();
+    //
+    //            // 🔥 VALIDATION
+    //            if (payingFee <= 0) {
+    //                JOptionPane.showMessageDialog(null, "Enter valid payment amount!");
+    //                return;
+    //            }
+    //            if (payingFee < monthlyFee && (note == null || note.isEmpty())) {
+    //                JOptionPane.showMessageDialog(null, "You are paying less than monthly fee. Please enter a note!");
+    //                return;
+    //            }
+    //
+    //            int remainingAmount = payingFee;
+    //
+    //            // ============================
+    //            // TRANSACTION START
+    //            // ============================
+    //            em.getTransaction().begin();
+    //
+    //            // ============================
+    //            // GET PAYMENT ID
+    //            // ============================
+    //            int paymentId = ((Number) em.createNativeQuery(
+    //                    "SELECT student_fee_payments_id FROM student_fee_payments WHERE enrollment_id = ? AND status = 1"
+    //            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+    //
+    //            // ============================
+    //            // GET LAST INSTALLMENT NO
+    //            // ============================
+    //            Object lastNoObj = em.createNativeQuery(
+    //                    "SELECT MAX(installment_no) FROM student_fee_installments WHERE enrollment_id = ?"
+    //            ).setParameter(1, enrollmentId).getSingleResult();
+    //            int installmentNo = (lastNoObj != null) ? ((Number) lastNoObj).intValue() : 0;
+    //
+    //            // ============================
+    //            // LOOP TABLE AND DISTRIBUTE PAYMENT
+    //            // ============================
+    //            for (int i = 0; i < rowCount && remainingAmount > 0; i++) {
+    //
+    //                int year = Integer.parseInt(model.getValueAt(i, 1).toString());
+    //                String month = model.getValueAt(i, 2).toString();
+    //
+    //                Object paidObj = model.getValueAt(i, 3);
+    //                int alreadyPaid = 0;
+    //                if (paidObj != null && !paidObj.toString().trim().isEmpty()) {
+    //                    alreadyPaid = GeneralMethods.parseCommaNumber(paidObj.toString());
+    //                }
+    //
+    //                int toFill = monthlyFee - alreadyPaid;
+    //                if (toFill <= 0) {
+    //                    continue; // skip fully paid months
+    //                }
+    //                int payNow = Math.min(toFill, remainingAmount);
+    //
+    //                installmentNo++;
+    //                int monthNum = GeneralMethods.getMonthNumber(month);
+    //                String monthFor = year + "-" + String.format("%02d", monthNum);
+    //
+    //                // ============================
+    //                // INSERT INTO DATABASE
+    //                // ============================
+    //                Query insert = em.createNativeQuery(
+    //                        "INSERT INTO student_fee_installments ("
+    //                        + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+    //                        + "payment_date, payment_method, payment_type, month_for, remarks, status"
+    //                        + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
+    //                );
+    //                insert.setParameter(1, paymentId);
+    //                insert.setParameter(2, enrollmentId);
+    //                insert.setParameter(3, installmentNo);
+    //                insert.setParameter(4, payNow);
+    //                insert.setParameter(5, paymentMethod);
+    //                insert.setParameter(6, "MONTHLY");
+    //                insert.setParameter(7, monthFor);
+    //                insert.setParameter(8, note.isEmpty() ? "MONTHLY FEE" : note);
+    //                insert.executeUpdate();
+    //                em.flush();
+    //
+    //                // ============================
+    //                // UPDATE JTable
+    //                // ============================
+    //                int newPaid = alreadyPaid + payNow;
+    //                model.setValueAt(newPaid, i, 3);
+    //                if (newPaid >= monthlyFee) {
+    //                    model.setValueAt("Paid", i, 4);
+    //                } else {
+    //                    model.setValueAt("Now Paid", i, 4);
+    //                }
+    //
+    //                remainingAmount -= payNow;
+    //                System.out.println("DEBUG Inserted " + payNow + " for month " + monthFor + " | Remaining=" + remainingAmount);
+    //            }
+    //
+    //            // ============================
+    //            // IF REMAINING AMOUNT LEFT
+    //            // Add to next available months
+    //            // ============================
+    //            for (int i = 0; i < rowCount && remainingAmount > 0; i++) {
+    //                int year = Integer.parseInt(model.getValueAt(i, 1).toString());
+    //                String month = model.getValueAt(i, 2).toString();
+    //
+    //                Object paidObj = model.getValueAt(i, 3);
+    //                int alreadyPaid = 0;
+    //                if (paidObj != null && !paidObj.toString().trim().isEmpty()) {
+    //                    alreadyPaid = GeneralMethods.parseCommaNumber(paidObj.toString());
+    //                }
+    //
+    //                if (alreadyPaid >= monthlyFee) {
+    //                    continue;
+    //                }
+    //
+    //                int toFill = monthlyFee - alreadyPaid;
+    //                int payNow = Math.min(toFill, remainingAmount);
+    //
+    //                installmentNo++;
+    //                int monthNum = GeneralMethods.getMonthNumber(month);
+    //                String monthFor = year + "-" + String.format("%02d", monthNum);
+    //
+    //                Query insert = em.createNativeQuery(
+    //                        "INSERT INTO student_fee_installments ("
+    //                        + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+    //                        + "payment_date, payment_method, payment_type, month_for, remarks, status"
+    //                        + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
+    //                );
+    //                insert.setParameter(1, paymentId);
+    //                insert.setParameter(2, enrollmentId);
+    //                insert.setParameter(3, installmentNo);
+    //                insert.setParameter(4, payNow);
+    //                insert.setParameter(5, paymentMethod);
+    //                insert.setParameter(6, "MONTHLY");
+    //                insert.setParameter(7, monthFor);
+    //                insert.setParameter(8, note.isEmpty() ? "MONTHLY FEE" : note);
+    //                insert.executeUpdate();
+    //                em.flush();
+    //
+    //                int newPaid = alreadyPaid + payNow;
+    //                model.setValueAt(newPaid, i, 3);
+    //                if (newPaid >= monthlyFee) {
+    //                    model.setValueAt("Paid", i, 4);
+    //                } else {
+    //                    model.setValueAt("Now Paid", i, 4);
+    //                }
+    //
+    //                remainingAmount -= payNow;
+    //                System.out.println("DEBUG Extra Insert " + payNow + " for month " + monthFor + " | Remaining=" + remainingAmount);
+    //            }
+    //
+    //            // ============================
+    //            // UPDATE MASTER
+    //            // ============================
+    //            int totalPaid = ((Number) em.createNativeQuery(
+    //                    "SELECT COALESCE(SUM(amount_paid),0) FROM student_fee_installments WHERE enrollment_id = ?"
+    //            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+    //
+    //            int totalFee = rowCount * monthlyFee;
+    //            int balance = totalFee - totalPaid;
+    //            String paymentStatus = (balance == 0) ? "COMPLETED" : "ACTIVE";
+    //
+    //            Query update = em.createNativeQuery(
+    //                    "UPDATE student_fee_payments SET total_paid = ?, total_balance = ?, payment_type = ?, payment_status = ?, last_mofidied = NOW() "
+    //                    + "WHERE enrollment_id = ? AND status = 1"
+    //            );
+    //            update.setParameter(1, totalPaid);
+    //            update.setParameter(2, balance);
+    //            update.setParameter(3, paymentMethod);
+    //            update.setParameter(4, paymentStatus);
+    //            update.setParameter(5, enrollmentId);
+    //            update.executeUpdate();
+    //
+    //            em.getTransaction().commit();
+    //            JOptionPane.showMessageDialog(null, "Monthly Payment Saved Successfully!");
+    //
+    //        } catch (Exception e) {
+    //            em.getTransaction().rollback();
+    //            e.printStackTrace();
+    //            JOptionPane.showMessageDialog(null, "Error saving payment!");
+    //        } finally {
+    //            em.close();
+    //        }
+    //    }
+    //    public void saveMonthlyFullPayment(
+    //            int enrollmentId,
+    //            JTable table,
+    //            JTextField monthlyFeeField,
+    //            String paymentMethod
+    //    ) {
+    //        EntityManager em = HibernateConfig.getEntityManager();
+    //
+    //        try {
+    //            if (table.isEditing()) {
+    //                table.getCellEditor().stopCellEditing();
+    //            }
+    //
+    //            DefaultTableModel model = (DefaultTableModel) table.getModel();
+    //            int rowCount = model.getRowCount();
+    //            int monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
+    //            int payingFee = GeneralMethods.parseCommaNumber(mm_fees_Monthly_total_paid_Textfield.getText().trim());
+    //            String note = mm_fees_Monthly_fee_note_Textarea.getText().trim();
+    //
+    //            // 🔥 VALIDATION
+    //            if (payingFee <= 0) {
+    //                JOptionPane.showMessageDialog(null, "Enter valid payment amount!");
+    //                return;
+    //            }
+    //            if (payingFee < monthlyFee && (note == null || note.isEmpty())) {
+    //                JOptionPane.showMessageDialog(null, "You are paying less than monthly fee. Please enter a note!");
+    //                return;
+    //            }
+    //
+    //            // ============================
+    //            // DISTRIBUTE PAYMENT
+    //            // ============================
+    //            int remainingAmount = payingFee;
+    //
+    //            // ============================
+    //            // TRANSACTION START
+    //            // ============================
+    //            em.getTransaction().begin();
+    //
+    //            // ============================
+    //            // GET PAYMENT ID
+    //            // ============================
+    //            int paymentId = ((Number) em.createNativeQuery(
+    //                    "SELECT student_fee_payments_id FROM student_fee_payments WHERE enrollment_id = ? AND status = 1"
+    //            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+    //
+    //            // ============================
+    //            // GET LAST INSTALLMENT NO
+    //            // ============================
+    //            Object lastNoObj = em.createNativeQuery(
+    //                    "SELECT MAX(installment_no) FROM student_fee_installments WHERE enrollment_id = ?"
+    //            ).setParameter(1, enrollmentId).getSingleResult();
+    //            int installmentNo = (lastNoObj != null) ? ((Number) lastNoObj).intValue() : 0;
+    //
+    //            // ============================
+    //            // INSERT INSTALLMENTS
+    //            // ============================
+    //            for (int i = 0; i < rowCount && remainingAmount > 0; i++) {
+    //
+    //                int year = Integer.parseInt(model.getValueAt(i, 1).toString());
+    //                String month = model.getValueAt(i, 2).toString();
+    //
+    //                Object paidObj = model.getValueAt(i, 3);
+    //                int alreadyPaid = 0;
+    //                if (paidObj != null && !paidObj.toString().trim().isEmpty()) {
+    //                    alreadyPaid = GeneralMethods.parseCommaNumber(paidObj.toString());
+    //                }
+    //
+    //                int toFill = monthlyFee - alreadyPaid;
+    //                if (toFill <= 0) {
+    //                    continue; // skip fully paid months
+    //                }
+    //                int payNow = Math.min(toFill, remainingAmount);
+    //
+    //                installmentNo++;
+    //                int monthNum = GeneralMethods.getMonthNumber(month);
+    //                String monthFor = year + "-" + String.format("%02d", monthNum);
+    //
+    //                Query insert = em.createNativeQuery(
+    //                        "INSERT INTO student_fee_installments ("
+    //                        + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+    //                        + "payment_date, payment_method, payment_type, month_for, remarks, status"
+    //                        + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
+    //                );
+    //
+    //                insert.setParameter(1, paymentId);
+    //                insert.setParameter(2, enrollmentId);
+    //                insert.setParameter(3, installmentNo);
+    //                insert.setParameter(4, payNow);
+    //                insert.setParameter(5, paymentMethod);
+    //                insert.setParameter(6, "MONTHLY");
+    //                insert.setParameter(7, monthFor);
+    //                insert.setParameter(8, note.isEmpty() ? "MONTHLY FEE" : note);
+    //
+    //                insert.executeUpdate();
+    //                em.flush();
+    //
+    //                System.out.println("DEBUG Inserted " + payNow + " for month " + monthFor + " | Remaining=" + (remainingAmount - payNow));
+    //
+    //                remainingAmount -= payNow;
+    //            }
+    //
+    //            // ============================
+    //            // UPDATE MASTER
+    //            // ============================
+    //            int totalPaid = ((Number) em.createNativeQuery(
+    //                    "SELECT COALESCE(SUM(amount_paid),0) FROM student_fee_installments WHERE enrollment_id = ?"
+    //            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+    //
+    //            int totalFee = rowCount * monthlyFee;
+    //            int balance = totalFee - totalPaid;
+    //            String paymentStatus = (balance == 0) ? "COMPLETED" : "ACTIVE";
+    //
+    //            Query update = em.createNativeQuery(
+    //                    "UPDATE student_fee_payments SET total_paid = ?, total_balance = ?, payment_type = ?, payment_status = ?, last_mofidied = NOW() "
+    //                    + "WHERE enrollment_id = ? AND status = 1"
+    //            );
+    //            update.setParameter(1, totalPaid);
+    //            update.setParameter(2, balance);
+    //            update.setParameter(3, paymentMethod);
+    //            update.setParameter(4, paymentStatus);
+    //            update.setParameter(5, enrollmentId);
+    //            update.executeUpdate();
+    //
+    //            em.getTransaction().commit();
+    //            JOptionPane.showMessageDialog(null, "Monthly Payment Saved Successfully!");
+    //
+    //        } catch (Exception e) {
+    //            em.getTransaction().rollback();
+    //            e.printStackTrace();
+    //            JOptionPane.showMessageDialog(null, "Error saving payment!");
+    //        } finally {
+    //            em.close();
+    //        }
+    //    }
+    // *************** FIRST WORKING METHOD ********************
+    //    public void saveMonthlyFullPayment(
+    //            int enrollmentId,
+    //            JTable table,
+    //            JTextField monthlyFeeField,
+    //            String paymentMethod
+    //    ) {
+    //
+    //        EntityManager em = HibernateConfig.getEntityManager();
+    //
+    //        try {
+    //
+    //            if (table.isEditing()) {
+    //                table.getCellEditor().stopCellEditing();
+    //            }
+    //
+    //            DefaultTableModel model = (DefaultTableModel) table.getModel();
+    //
+    //            int rowCount = model.getRowCount();
+    //            int monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
+    //            int payingFee = GeneralMethods.parseCommaNumber(
+    //                    mm_fees_Monthly_total_paid_Textfield.getText().trim()
+    //            );
+    //
+    //            String note = mm_fees_Monthly_fee_note_Textarea.getText().trim();
+    //
+    //            // ============================
+    //            // 🔥 VALIDATION
+    //            // ============================
+    //            if (payingFee <= 0) {
+    //                JOptionPane.showMessageDialog(null, "Enter valid payment amount!");
+    //                return;
+    //            }
+    //
+    //            // ✅ LESS THAN MONTHLY → REQUIRE NOTE
+    //            if (payingFee < monthlyFee) {
+    //
+    //                if (note == null || note.isEmpty()) {
+    //                    JOptionPane.showMessageDialog(
+    //                            null,
+    //                            "You are paying less than monthly fee.\nPlease enter a note!"
+    //                    );
+    //                    return;
+    //                }
+    //
+    //            } // ❌ GREATER BUT NOT MULTIPLE → BLOCK
+    //            else if (payingFee % monthlyFee != 0) {
+    //
+    //                JOptionPane.showMessageDialog(
+    //                        null,
+    //                        "Amount must be multiple of monthly fee!"
+    //                );
+    //                return;
+    //            }
+    //
+    //            // ============================
+    //            // DISTRIBUTE
+    //            // ============================
+    //            distributeMonthlyPayment(
+    //                    table,
+    //                    mm_fees_Monthly_total_paid_Textfield,
+    //                    mm_fees_Monthly_total_fee_Textfield
+    //            );
+    //
+    //            // ============================
+    //            // CALCULATE TOTALS
+    //            // ============================
+    //            int totalFee = rowCount * monthlyFee;
+    //
+    //            int totalPaid = 0;
+    //            for (int i = 0; i < rowCount; i++) {
+    //                Object val = model.getValueAt(i, 3);
+    //                if (val != null && !val.toString().trim().isEmpty()) {
+    //                    totalPaid += GeneralMethods.parseCommaNumber(val.toString());
+    //                }
+    //            }
+    //
+    //            int balance = totalFee - totalPaid;
+    //            String paymentStatus = (balance == 0) ? "COMPLETED" : "ACTIVE";
+    //
+    //            // ============================
+    //            // TRANSACTION START
+    //            // ============================
+    //            em.getTransaction().begin();
+    //
+    //            // ============================
+    //            // UPDATE MASTER
+    //            // ============================
+    //            Query update = em.createNativeQuery(
+    //                    "UPDATE student_fee_payments SET "
+    //                    + "total_paid = ?, "
+    //                    + "total_balance = ?, "
+    //                    + "payment_type = ?, "
+    //                    + "payment_status = ?, "
+    //                    + "last_mofidied = NOW() "
+    //                    + "WHERE enrollment_id = ? AND status = 1"
+    //            );
+    //
+    //            update.setParameter(1, totalPaid);
+    //            update.setParameter(2, balance);
+    //            update.setParameter(3, paymentMethod);
+    //            update.setParameter(4, paymentStatus);
+    //            update.setParameter(5, enrollmentId);
+    //
+    //            update.executeUpdate();
+    //
+    //            // ============================
+    //            // GET PAYMENT ID
+    //            // ============================
+    //            int paymentId = ((Number) em.createNativeQuery(
+    //                    "SELECT student_fee_payments_id "
+    //                    + "FROM student_fee_payments "
+    //                    + "WHERE enrollment_id = ? AND status = 1"
+    //            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+    //
+    //            // ============================
+    //            // GET LAST INSTALLMENT NO
+    //            // ============================
+    //            Object lastNoObj = em.createNativeQuery(
+    //                    "SELECT MAX(installment_no) FROM student_fee_installments WHERE enrollment_id = ?"
+    //            ).setParameter(1, enrollmentId).getSingleResult();
+    //
+    //            int installmentNo = (lastNoObj != null) ? ((Number) lastNoObj).intValue() : 0;
+    //
+    //            // ============================
+    //            // INSERT INSTALLMENTS
+    //            // ============================
+    //            for (int i = 0; i < rowCount; i++) {
+    //
+    //                int year = Integer.parseInt(model.getValueAt(i, 1).toString());
+    //                String month = model.getValueAt(i, 2).toString();
+    //
+    //                Object paidObj = model.getValueAt(i, 3);
+    //                Object statusObj = model.getValueAt(i, 4);
+    //
+    //                int paid = 0;
+    //                if (paidObj != null && !paidObj.toString().trim().isEmpty()) {
+    //                    paid = GeneralMethods.parseCommaNumber(paidObj.toString());
+    //                }
+    //
+    //                String status = (statusObj != null) ? statusObj.toString() : "";
+    //
+    //                if (paid > 0 && status.equalsIgnoreCase("Now Paid")) {
+    //
+    //                    installmentNo++;
+    //
+    //                    int monthNum = GeneralMethods.getMonthNumber(month);
+    //                    String monthFor = year + "-" + String.format("%02d", monthNum);
+    //
+    //                    Query insert = em.createNativeQuery(
+    //                            "INSERT INTO student_fee_installments ("
+    //                            + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+    //                            + "payment_date, payment_method, payment_type, month_for, remarks, status"
+    //                            + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
+    //                    );
+    //
+    //                    insert.setParameter(1, paymentId);
+    //                    insert.setParameter(2, enrollmentId);
+    //                    insert.setParameter(3, installmentNo);
+    //                    insert.setParameter(4, paid);
+    //                    insert.setParameter(5, paymentMethod);
+    //                    insert.setParameter(6, "MONTHLY");
+    //                    insert.setParameter(7, monthFor);
+    //                    insert.setParameter(8, note.isEmpty() ? "MONTHLY FEE" : note);
+    //
+    //                    insert.executeUpdate();
+    //                }
+    //            }
+    //
+    //            em.getTransaction().commit();
+    //
+    //            JOptionPane.showMessageDialog(null, "Monthly Payment Saved Successfully!");
+    //
+    //        } catch (Exception e) {
+    //            em.getTransaction().rollback();
+    //            e.printStackTrace();
+    //            JOptionPane.showMessageDialog(null, "Error saving payment!");
+    //        } finally {
+    //            em.close();
+    //        }
+    //    }
+
     public void saveMonthlyChequePayment(
             int enrollmentId,
             JTable table,
-            String chequeNo,
-            String bank,
-            String branch,
-            Date chequeDate,
-            int chequeAmount
+            JTextField monthlyFeeField
     ) {
-
         EntityManager em = HibernateConfig.getEntityManager();
 
         try {
-
             if (table.isEditing()) {
                 table.getCellEditor().stopCellEditing();
             }
 
             DefaultTableModel model = (DefaultTableModel) table.getModel();
+            int rowCount = model.getRowCount();
+
+            int monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
+            int chequeAmount = GeneralMethods.parseCommaNumber(mm_fees_cheq_cheque_amount.getText().trim());
+
+            String chequeNo = mm_fees_cheq_cheque_number.getText();
+            String bank = mm_fees_cheq_cheque_bank.getEditor().getItem().toString();
+            String branch = mm_fees_cheq_cheque_branch.getText();
+            Date chequeDate = mm_fees_cheq_cheque_date.getDate();
+            String note = mm_fees_Monthly_fee_note_Textarea.getText().trim();
+
+            // =====================================================
+            // VALIDATION: ZERO AND PARTIAL PAYMENTS
+            // =====================================================
+            if (chequeAmount < 0) {
+                JOptionPane.showMessageDialog(null, "Invalid cheque amount!");
+                return;
+            }
+
+            if (chequeAmount == 0 && (note == null || note.trim().isEmpty())) {
+                JOptionPane.showMessageDialog(null, "Zero payment requires remarks!");
+                return;
+            }
+
+            if (chequeAmount < monthlyFee && (note == null || note.trim().isEmpty())) {
+                JOptionPane.showMessageDialog(null, "Partial payment requires remarks!");
+                return;
+            }
 
             em.getTransaction().begin();
 
-            // ============================
-            // 1. GET PAYMENT ID
-            // ============================
             int paymentId = ((Number) em.createNativeQuery(
-                    "SELECT student_fee_payments_id "
-                    + "FROM student_fee_payments "
-                    + "WHERE enrollment_id = ? AND status = 1"
+                    "SELECT student_fee_payments_id FROM student_fee_payments WHERE enrollment_id=? AND status=1"
             ).setParameter(1, enrollmentId).getSingleResult()).intValue();
 
-            // ============================
-            // 2. GET LAST INSTALLMENT NO
-            // ============================
-            Object lastNoObj = em.createNativeQuery(
-                    "SELECT MAX(installment_no) FROM student_fee_installments WHERE enrollment_id = ?"
-            ).setParameter(1, enrollmentId).getSingleResult();
+            int installmentNo = ((Number) em.createNativeQuery(
+                    "SELECT COALESCE(MAX(installment_no),0) FROM student_fee_installments WHERE enrollment_id=?"
+            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
 
-            int installmentNo = (lastNoObj != null) ? ((Number) lastNoObj).intValue() : 0;
+            int remainingAmount = chequeAmount;
 
-            // ============================
-            // DISTRIBUTE
-            // ============================
-            distributeMonthlyPayment(
-                    table,
-                    mm_fees_cheq_cheque_amount,
-                    fm_fees_cheq_full_fees_Textfield
-            );
+            // =====================================================
+            // SKIP MONTHS WITH REMARKS
+            // =====================================================
+            List<Object[]> debugList = em.createNativeQuery(
+                    "SELECT month_for, COALESCE(SUM(amount_paid),0), GROUP_CONCAT(remarks) "
+                    + "FROM student_fee_installments WHERE enrollment_id=? AND status=1 GROUP BY month_for"
+            )
+                    .setParameter(1, enrollmentId)
+                    .getResultList();
 
-            // ============================
-            // 3. LOOP TABLE
-            // ============================
-            for (int i = 0; i < model.getRowCount(); i++) {
-
-                int year = Integer.parseInt(model.getValueAt(i, 1).toString());
-                String month = model.getValueAt(i, 2).toString();
-                Object paidObj = model.getValueAt(i, 3);
-                Object statusObj = model.getValueAt(i, 4);
-
-                int paid = 0;
-                if (paidObj != null && !paidObj.toString().trim().isEmpty()) {
-                    paid = GeneralMethods.parseCommaNumber(paidObj.toString());
-                }
-
-                String status = (statusObj != null) ? statusObj.toString() : "";
-
-                // 🔥 ONLY NEW PAID ROWS
-                if (paid > 0 && status.equalsIgnoreCase("Now Paid")) {
-
-                    installmentNo++;
-
-                    int monthNum = GeneralMethods.getMonthNumber(month);
-                    String monthFor = year + "-" + String.format("%02d", monthNum);
-
-                    // ============================
-                    // 4. INSERT INSTALLMENT
-                    // ============================
-                    Query insertInstallment = em.createNativeQuery(
-                            "INSERT INTO student_fee_installments ("
-                            + "student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
-                            + "payment_date, payment_method, payment_type, month_for, remarks, status"
-                            + ") VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, 1)"
-                    );
-
-                    insertInstallment.setParameter(1, paymentId);
-                    insertInstallment.setParameter(2, enrollmentId);
-                    insertInstallment.setParameter(3, installmentNo);
-                    insertInstallment.setParameter(4, paid);
-                    insertInstallment.setParameter(5, "CHEQUE");
-                    insertInstallment.setParameter(6, "MONTHLY");
-                    insertInstallment.setParameter(7, monthFor);
-                    insertInstallment.setParameter(8, "MONTHLY CHEQUE");
-
-                    insertInstallment.executeUpdate();
-
-                    // ============================
-                    // 5. GET LAST INSERTED ID
-                    // ============================
-                    int installmentId = ((Number) em.createNativeQuery(
-                            "SELECT LAST_INSERT_ID()"
-                    ).getSingleResult()).intValue();
-
-                    // ============================
-                    // 6. INSERT CHEQUE DETAILS
-                    // ============================
-                    Query insertCheque = em.createNativeQuery(
-                            "INSERT INTO student_fee_cheque_details ("
-                            + "student_fee_installments_id, cheque_no, bank, branch, "
-                            + "cheque_date, cheque_amount, cheque_status, status"
-                            + ") VALUES (?, ?, ?, ?, ?, ?, ?, 1)"
-                    );
-
-                    insertCheque.setParameter(1, installmentId);
-                    insertCheque.setParameter(2, chequeNo);
-                    insertCheque.setParameter(3, bank);
-                    insertCheque.setParameter(4, branch);
-                    insertCheque.setParameter(5, new java.sql.Date(chequeDate.getTime()));
-                    insertCheque.setParameter(6, paid);
-                    insertCheque.setParameter(7, "PENDING"); // or RECEIVED
-
-                    insertCheque.executeUpdate();
+            Set<String> skipMonths = new HashSet<>();
+            for (Object[] row : debugList) {
+                String m = row[0].toString();
+                int paid = ((Number) row[1]).intValue();
+                String remarks = row[2] != null ? row[2].toString() : "";
+                if (!remarks.trim().isEmpty() && paid < monthlyFee) {
+                    skipMonths.add(m);
                 }
             }
 
-            em.getTransaction().commit();
+            Set<String> filledMonths = new HashSet<>();
 
-            JOptionPane.showMessageDialog(null, "Cheque Payment Saved Successfully!");
+            // =====================================================
+            // ZERO PAYMENT SCENARIO
+            // =====================================================
+            if (chequeAmount == 0) {
+                // Determine next month
+                String targetMonth = model.getValueAt(0, 1).toString() + "-"
+                        + String.format("%02d", GeneralMethods.getMonthNumber(model.getValueAt(0, 2).toString()));
+
+                installmentNo++;
+
+                em.createNativeQuery(
+                        "INSERT INTO student_fee_installments "
+                        + "(student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+                        + "payment_date, payment_method, payment_type, month_for, remarks, status) "
+                        + "VALUES (?, ?, ?, 0, NOW(), ?, ?, ?, ?, 1)"
+                )
+                        .setParameter(1, paymentId)
+                        .setParameter(2, enrollmentId)
+                        .setParameter(3, installmentNo)
+                        .setParameter(4, "CHEQUE")
+                        .setParameter(5, "MONTHLY")
+                        .setParameter(6, targetMonth)
+                        .setParameter(7, note)
+                        .executeUpdate();
+
+                int installmentId = ((Number) em.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult()).intValue();
+
+//                // 🔹 LEDGER
+//                LedgerHelper.saveLedger(em,
+//                        0,
+//                        "CREDIT",
+//                        "Zero cheque entry for " + targetMonth + " | " + note,
+//                        "STUDENT_PAYMENT",
+//                        installmentId,
+//                        "CHEQUE",
+//                        "MONTHLY_FEE",
+//                        username
+//                );
+
+                // 🔹 LOG ONLY (NO LEDGER, NO CHEQUE TABLE)
+                LogHelper.saveLog(em,
+                        "STUDENT_PAYMENT",
+                        enrollmentId,
+                        "INSERT",
+                        0,
+                        "CHEQUE",
+                        "Zero cheque entry for " + targetMonth + " | " + note,
+                        username
+                );
+
+                em.getTransaction().commit();
+                JOptionPane.showMessageDialog(null, "Zero payment saved for " + targetMonth);
+                return; // Skip cheque details
+            }
+
+            // =====================================================
+            // FILL PARTIAL MONTHS WITHOUT REMARKS
+            // =====================================================
+            List<Object[]> partialMonths = em.createNativeQuery(
+                    "SELECT month_for, COALESCE(SUM(amount_paid),0) "
+                    + "FROM student_fee_installments WHERE enrollment_id=? AND status=1 "
+                    + "GROUP BY month_for HAVING SUM(amount_paid) < ? ORDER BY month_for ASC"
+            )
+                    .setParameter(1, enrollmentId)
+                    .setParameter(2, monthlyFee)
+                    .getResultList();
+
+            for (Object[] row : partialMonths) {
+                if (remainingAmount <= 0) {
+                    break;
+                }
+
+                String monthFor = row[0].toString();
+                int paidSoFar = ((Number) row[1]).intValue();
+
+                if (skipMonths.contains(monthFor) || filledMonths.contains(monthFor)) {
+                    continue;
+                }
+
+                int payNow = Math.min(monthlyFee - paidSoFar, remainingAmount);
+                installmentNo++;
+
+                // Insert installment
+                em.createNativeQuery(
+                        "INSERT INTO student_fee_installments VALUES (NULL,?,?,?,?,NOW(),?,?,?, ?,1)"
+                )
+                        .setParameter(1, paymentId)
+                        .setParameter(2, enrollmentId)
+                        .setParameter(3, installmentNo)
+                        .setParameter(4, payNow)
+                        .setParameter(5, "CHEQUE")
+                        .setParameter(6, "MONTHLY")
+                        .setParameter(7, monthFor)
+                        .setParameter(8, note)
+                        .executeUpdate();
+
+                int installmentId = ((Number) em.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult()).intValue();
+
+                // Insert cheque details
+                em.createNativeQuery(
+                        "INSERT INTO student_fee_cheque_details "
+                        + "(student_fee_installments_id, cheque_no, bank, branch, cheque_date, cheque_amount, cheque_status, status) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 1)"
+                )
+                        .setParameter(1, installmentId)
+                        .setParameter(2, chequeNo)
+                        .setParameter(3, bank)
+                        .setParameter(4, branch)
+                        .setParameter(5, chequeDate)
+                        .setParameter(6, payNow)
+                        .executeUpdate();
+
+//                // 🔹 LEDGER
+//                LedgerHelper.saveLedger(em,
+//                        payNow,
+//                        "CREDIT",
+//                        "Cheque pending - " + monthFor,
+//                        "STUDENT_PAYMENT",
+//                        installmentId,
+//                        "CHEQUE",
+//                        "MONTHLY_FEE",
+//                        username
+//                );
+
+                // 🔹 LOG
+                LogHelper.saveLog(em,
+                        "STUDENT_PAYMENT",
+                        installmentId,
+                        "INSERT",
+                        payNow,
+                        "CHEQUE",
+                        "Cheque saved (partial) for " + monthFor,
+                        username
+                );
+
+                remainingAmount -= payNow;
+                filledMonths.add(monthFor);
+            }
+
+            // =====================================================
+            // DISTRIBUTE TO NEW MONTHS IN TABLE
+            // =====================================================
+            for (int i = 0; i < rowCount && remainingAmount > 0; i++) {
+                int year = Integer.parseInt(model.getValueAt(i, 1).toString());
+                String monthName = model.getValueAt(i, 2).toString();
+                String ym = String.format("%04d-%02d", year, GeneralMethods.getMonthNumber(monthName));
+
+                int paid = GeneralMethods.parseCommaNumber(
+                        model.getValueAt(i, 3).toString().isEmpty() ? "0" : model.getValueAt(i, 3).toString()
+                );
+
+                if (skipMonths.contains(ym) || filledMonths.contains(ym) || paid >= monthlyFee) {
+                    continue;
+                }
+
+                int payNow = Math.min(monthlyFee - paid, remainingAmount);
+                installmentNo++;
+
+                // Insert installment
+                em.createNativeQuery(
+                        "INSERT INTO student_fee_installments VALUES (NULL,?,?,?,?,NOW(),?,?,?, ?,1)"
+                )
+                        .setParameter(1, paymentId)
+                        .setParameter(2, enrollmentId)
+                        .setParameter(3, installmentNo)
+                        .setParameter(4, payNow)
+                        .setParameter(5, "CHEQUE")
+                        .setParameter(6, "MONTHLY")
+                        .setParameter(7, ym)
+                        .setParameter(8, note)
+                        .executeUpdate();
+
+                int installmentId = ((Number) em.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult()).intValue();
+
+                // Insert cheque details
+                em.createNativeQuery(
+                        "INSERT INTO student_fee_cheque_details "
+                        + "(student_fee_installments_id, cheque_no, bank, branch, cheque_date, cheque_amount, cheque_status, status) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 1)"
+                )
+                        .setParameter(1, installmentId)
+                        .setParameter(2, chequeNo)
+                        .setParameter(3, bank)
+                        .setParameter(4, branch)
+                        .setParameter(5, chequeDate)
+                        .setParameter(6, payNow)
+                        .executeUpdate();
+
+//                // ledger
+//                LedgerHelper.saveLedger(em,
+//                        payNow,
+//                        "CREDIT",
+//                        "Cheque pending - " + ym,
+//                        "STUDENT_PAYMENT",
+//                        installmentId,
+//                        "CHEQUE",
+//                        "MONTHLY_FEE",
+//                        username
+//                );
+
+                // log
+                LogHelper.saveLog(em,
+                        "STUDENT_PAYMENT",
+                        installmentId,
+                        "INSERT",
+                        payNow,
+                        "CHEQUE",
+                        "Cheque saved for " + ym,
+                        username
+                );
+
+                remainingAmount -= payNow;
+                filledMonths.add(ym);
+            }
+
+            em.getTransaction().commit();
+            JOptionPane.showMessageDialog(null, "Cheque saved as PENDING!");
 
         } catch (Exception e) {
-            em.getTransaction().rollback();
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Error saving cheque payment!");
         } finally {
             em.close();
         }
     }
+
+//    public void saveMonthlyChequePayment(
+//            int enrollmentId,
+//            JTable table,
+//            JTextField monthlyFeeField
+//    ) {
+//        EntityManager em = HibernateConfig.getEntityManager();
+//
+//        try {
+//            if (table.isEditing()) {
+//                table.getCellEditor().stopCellEditing();
+//            }
+//
+//            DefaultTableModel model = (DefaultTableModel) table.getModel();
+//            int rowCount = model.getRowCount();
+//
+//            int monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
+//            int chequeAmount = GeneralMethods.parseCommaNumber(mm_fees_cheq_cheque_amount.getText().trim());
+//
+//            String chequeNo = mm_fees_cheq_cheque_number.getText();
+//            String bank = mm_fees_cheq_cheque_bank.getEditor().getItem().toString();
+//            String branch = mm_fees_cheq_cheque_branch.getText();
+//            Date chequeDate = mm_fees_cheq_cheque_date.getDate();
+//            String note = mm_fees_Monthly_fee_note_Textarea.getText().trim();
+//
+//            // =====================================================
+//            // VALIDATION: ZERO AND PARTIAL PAYMENTS
+//            // =====================================================
+//            if (chequeAmount < 0) {
+//                JOptionPane.showMessageDialog(null, "Invalid cheque amount!");
+//                return;
+//            }
+//            
+//            // Zero payment must have remarks
+//            if (chequeAmount == 0 && (note == null || note.trim().isEmpty())) {
+//                JOptionPane.showMessageDialog(null, "Zero payment requires remarks!");
+//                return;
+//            }
+//
+    //// ❗ Partial payment must have remarks
+//            if (chequeAmount < monthlyFee && (note == null || note.trim().isEmpty())) {
+//                JOptionPane.showMessageDialog(null, "Partial payment requires remarks!");
+//                return;
+//            }
+//
+//
+//
+//            em.getTransaction().begin();
+//
+//            int paymentId = ((Number) em.createNativeQuery(
+//                    "SELECT student_fee_payments_id FROM student_fee_payments WHERE enrollment_id=? AND status=1"
+//            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+//
+//            int installmentNo = ((Number) em.createNativeQuery(
+//                    "SELECT COALESCE(MAX(installment_no),0) FROM student_fee_installments WHERE enrollment_id=?"
+//            ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+//
+//            int remainingAmount = chequeAmount;
+//
+//            // =====================================================
+//            // SKIP MONTHS WITH REMARKS
+//            // =====================================================
+//            List<Object[]> debugList = em.createNativeQuery(
+//                    "SELECT month_for, COALESCE(SUM(amount_paid),0), GROUP_CONCAT(remarks) "
+//                    + "FROM student_fee_installments WHERE enrollment_id=? AND status=1 GROUP BY month_for"
+//            )
+//                    .setParameter(1, enrollmentId)
+//                    .getResultList();
+//
+//            Set<String> skipMonths = new HashSet<>();
+//            for (Object[] row : debugList) {
+//                String m = row[0].toString();
+//                int paid = ((Number) row[1]).intValue();
+//                String remarks = row[2] != null ? row[2].toString() : "";
+//                if (remarks != null && !remarks.trim().isEmpty() && paid < monthlyFee) {
+//                    skipMonths.add(m);
+//                }
+//            }
+//
+//            Set<String> filledMonths = new HashSet<>();
+//
+//            // =====================================================
+//            // FILL PARTIAL MONTHS WITHOUT REMARKS
+//            // =====================================================
+//            List<Object[]> partialMonths = em.createNativeQuery(
+//                    "SELECT month_for, COALESCE(SUM(amount_paid),0) "
+//                    + "FROM student_fee_installments WHERE enrollment_id=? AND status=1 "
+//                    + "GROUP BY month_for HAVING SUM(amount_paid) < ? ORDER BY month_for ASC"
+//            )
+//                    .setParameter(1, enrollmentId)
+//                    .setParameter(2, monthlyFee)
+//                    .getResultList();
+//
+//            for (Object[] row : partialMonths) {
+//                if (remainingAmount <= 0) {
+//                    break;
+//                }
+//
+//                String monthFor = row[0].toString();
+//                int paidSoFar = ((Number) row[1]).intValue();
+//
+//                if (skipMonths.contains(monthFor)) {
+//                    continue;
+//                }
+//                if (filledMonths.contains(monthFor)) {
+//                    continue;
+//                }
+//
+//                int balance = monthlyFee - paidSoFar;
+//                if (balance <= 0) {
+//                    continue;
+//                }
+//
+//                int payNow = Math.min(balance, remainingAmount);
+//                installmentNo++;
+//
+//                // Insert installment
+//                em.createNativeQuery(
+//                        "INSERT INTO student_fee_installments VALUES (NULL,?,?,?,?,NOW(),?,?,?, ?,1)"
+//                )
+//                        .setParameter(1, paymentId)
+//                        .setParameter(2, enrollmentId)
+//                        .setParameter(3, installmentNo)
+//                        .setParameter(4, payNow)
+//                        .setParameter(5, "CHEQUE")
+//                        .setParameter(6, "MONTHLY")
+//                        .setParameter(7, monthFor)
+//                        .setParameter(8, note)
+//                        .executeUpdate();
+//
+//                int installmentId = ((Number) em.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult()).intValue();
+//
+//                // Insert cheque details
+//                em.createNativeQuery(
+//                        "INSERT INTO student_fee_cheque_details "
+//                        + "(student_fee_installments_id, cheque_no, bank, branch, cheque_date, cheque_amount, cheque_status, status) "
+//                        + "VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 1)"
+//                )
+//                        .setParameter(1, installmentId)
+//                        .setParameter(2, chequeNo)
+//                        .setParameter(3, bank)
+//                        .setParameter(4, branch)
+//                        .setParameter(5, chequeDate)
+//                        .setParameter(6, payNow)
+//                        .executeUpdate();
+//
+//                remainingAmount -= payNow;
+//                filledMonths.add(monthFor);
+//            }
+//
+//            // =====================================================
+//            // DISTRIBUTE TO NEW MONTHS IN TABLE
+//            // =====================================================
+//            for (int i = 0; i < rowCount && remainingAmount > 0; i++) {
+//                int year = Integer.parseInt(model.getValueAt(i, 1).toString());
+//                String monthName = model.getValueAt(i, 2).toString();
+//                String ym = String.format("%04d-%02d", year, GeneralMethods.getMonthNumber(monthName));
+//
+//                int paid = GeneralMethods.parseCommaNumber(
+//                        model.getValueAt(i, 3).toString().isEmpty() ? "0" : model.getValueAt(i, 3).toString()
+//                );
+//
+//                if (skipMonths.contains(ym)) {
+//                    continue;
+//                }
+//                if (filledMonths.contains(ym)) {
+//                    continue;
+//                }
+//                if (paid >= monthlyFee) {
+//                    continue;
+//                }
+//
+//                int payNow = Math.min(monthlyFee - paid, remainingAmount);
+//                installmentNo++;
+//
+//                // Insert installment
+//                em.createNativeQuery(
+//                        "INSERT INTO student_fee_installments VALUES (NULL,?,?,?,?,NOW(),?,?,?, ?,1)"
+//                )
+//                        .setParameter(1, paymentId)
+//                        .setParameter(2, enrollmentId)
+//                        .setParameter(3, installmentNo)
+//                        .setParameter(4, payNow)
+//                        .setParameter(5, "CHEQUE")
+//                        .setParameter(6, "MONTHLY")
+//                        .setParameter(7, ym)
+//                        .setParameter(8, note)
+//                        .executeUpdate();
+//
+//                int installmentId = ((Number) em.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult()).intValue();
+//
+//                // Insert cheque details
+//                em.createNativeQuery(
+//                        "INSERT INTO student_fee_cheque_details "
+//                        + "(student_fee_installments_id, cheque_no, bank, branch, cheque_date, cheque_amount, cheque_status, status) "
+//                        + "VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 1)"
+//                )
+//                        .setParameter(1, installmentId)
+//                        .setParameter(2, chequeNo)
+//                        .setParameter(3, bank)
+//                        .setParameter(4, branch)
+//                        .setParameter(5, chequeDate)
+//                        .setParameter(6, payNow)
+//                        .executeUpdate();
+//
+//                remainingAmount -= payNow;
+//                filledMonths.add(ym);
+//            }
+//
+//            em.getTransaction().commit();
+//            JOptionPane.showMessageDialog(null, "Cheque saved as PENDING!");
+//
+//        } catch (Exception e) {
+//            if (em.getTransaction().isActive()) {
+//                em.getTransaction().rollback();
+//            }
+//            e.printStackTrace();
+//        } finally {
+//            em.close();
+//        }
+//    }
+
 
     public void updateMonthlySummaryFields(
             int enrollmentId,
@@ -621,7 +2896,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
 
         // 🔥 TOTAL PAID (CASH + CHEQUE)
         mm_fees_Monthly_tot_totPaid_Textfield.setText(
-                GeneralMethods.formatWithComma(totalPaidAmount + pendingCheque)
+                GeneralMethods.formatWithComma(totalPaidAmount)
         );
 
         pendingMonthsField.setText(String.valueOf(pendingMonths));
@@ -631,8 +2906,10 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
         );
 
         mm_fees_Monthly_tot_pending_balancee_Textfield.setText(
-                GeneralMethods.formatWithComma(pendingMonths * month_fee)
+                GeneralMethods.formatWithComma((pendingMonths + paidMonths) * month_fee - totalPaidAmount)
         );
+
+        mm_fees_Monthly_total_balance_Textfield.setText(GeneralMethods.formatWithComma(pendingMonths * month_fee));
         System.out.println("pendingMonths * month_fee = " + pendingMonths * month_fee);
     }
 
@@ -1087,7 +3364,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false
+                false, false, false, true, true, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -1504,7 +3781,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
             int en_id = Fees_Management.selectedEnrollmentId;
 
             // Check if user entered amount
-            if (mm_fees_Monthly_total_paid_Textfield.getText().equalsIgnoreCase("") || mm_fees_Monthly_total_paid_Textfield.getText().equalsIgnoreCase("0")) {
+            if (mm_fees_Monthly_total_paid_Textfield.getText().equalsIgnoreCase("")) {
                 JOptionPane.showMessageDialog(null, "Paying amount cannot be empty or 0", "Not Found", JOptionPane.WARNING_MESSAGE);
                 return;
             }
@@ -1518,6 +3795,9 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                     mm_fees_Monthly_payment_method_combo.getSelectedItem().toString()
             );
 
+            Fees_Management.updateMasterTableRows(st_id);
+            Fees_Management.loadMonthlyTable(en_id, mm_fees_monthly_table);
+
             updateMonthlySummaryFields(
                     selectedEnrollmentId,
                     MonthlyFeePanel.mm_fees_monthly_table,
@@ -1526,7 +3806,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                     MonthlyFeePanel.mm_fees_Monthly_tot_pending_months_Textfield
             );
 
-            Fees_Management.updateMasterTableRows(st_id);
+            mm_fees_Monthly_fee_note_Textarea.setText("");
 
 //            distributeMonthlyPayment(
 //                    mm_fees_monthly_table,
@@ -1547,15 +3827,14 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
         int en_id = Fees_Management.selectedEnrollmentId;
 
         // Check mandatory fields
-        if (fm_fees_cheq_full_fees_Textfield.getText().equals("")
-                || mm_fees_cheq_cheque_number.getText().equals("")
-                || mm_fees_cheq_cheque_bank.getEditor().getItem().toString().equals("")
-                || mm_fees_cheq_cheque_amount.getText().equalsIgnoreCase("")
-                || mm_fees_cheq_cheque_amount.getText().equalsIgnoreCase("0")) {
-            JOptionPane.showMessageDialog(null, "Fields cannot be empty or 0", "Not Found", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
+//        if (fm_fees_cheq_full_fees_Textfield.getText().equals("")
+//                || mm_fees_cheq_cheque_number.getText().equals("")
+//                || mm_fees_cheq_cheque_bank.getEditor().getItem().toString().equals("")
+//                || mm_fees_cheq_cheque_amount.getText().equalsIgnoreCase("")
+//                || mm_fees_cheq_cheque_amount.getText().equalsIgnoreCase("0")) {
+//            JOptionPane.showMessageDialog(null, "Fields cannot be empty or 0", "Not Found", JOptionPane.WARNING_MESSAGE);
+//            return;
+//        }
         if (mm_fees_cheq_cheque_date.getDate() == null) {
             JOptionPane.showMessageDialog(null, "Select cheque date", "Warning", JOptionPane.WARNING_MESSAGE);
             return;
@@ -1563,9 +3842,23 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
 
         int amount_paid = GeneralMethods.parseCommaNumber(mm_fees_cheq_cheque_amount.getText());
 
-        saveMonthlyChequePayment(en_id, mm_fees_monthly_table, mm_fees_cheq_cheque_number.getText(), mm_fees_cheq_cheque_bank.getEditor().getItem().toString(),
-                mm_fees_cheq_cheque_branch.getText(), mm_fees_cheq_cheque_date.getDate(), amount_paid);
+        saveMonthlyChequePayment(en_id, mm_fees_monthly_table, fm_fees_cheq_full_fees_Textfield);
 
+        Fees_Management.updateMasterTableRows(st_id);
+        Fees_Management.loadMonthlyTable(en_id, mm_fees_monthly_table);
+
+        updateMonthlySummaryFields(
+                selectedEnrollmentId,
+                MonthlyFeePanel.mm_fees_monthly_table,
+                MonthlyFeePanel.mm_fees_Monthly_tot_paid_months_Textfield,
+                MonthlyFeePanel.mm_fees_Monthly_tot_paid_amount_Textfield,
+                MonthlyFeePanel.mm_fees_Monthly_tot_pending_months_Textfield
+        );
+
+        mm_fees_Monthly_fee_note_Textarea.setText("");
+
+//        saveMonthlyChequePayment(en_id, mm_fees_monthly_table, mm_fees_cheq_cheque_number.getText(), mm_fees_cheq_cheque_bank.getEditor().getItem().toString(),
+//                mm_fees_cheq_cheque_branch.getText(), mm_fees_cheq_cheque_date.getDate(), amount_paid);
 
     }//GEN-LAST:event_buttonGradient3ActionPerformed
 
@@ -1679,8 +3972,8 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
 
             mm_fees_cheq_cheque_amount.setText(GeneralMethods.formatWithComma(month_fee * month_fee_cal));
 
-            fm_fees_cheq_full_fees_cal_Textfield.requestFocus();
-            fm_fees_cheq_full_fees_cal_Textfield.selectAll();
+            mm_fees_cheq_cheque_number.requestFocus();
+            mm_fees_cheq_cheque_number.selectAll();
 
         } catch (Exception e) {
             e.printStackTrace();

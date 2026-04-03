@@ -1127,7 +1127,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
 //                        dao.saveChequePayment(st_id, en_id, amount_paid,
 //                                paymentDate, chq_no, bank_name, bank_branch, chqPaymentDate, username);
                         instModel.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
-                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, "CHEQUE", "Student Management", username);
+                      //  ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, "CHEQUE", "Student Management", username);
                         break;
 
                     case 2:
@@ -1140,7 +1140,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                         dao.saveChequePayment(st_id, en_id, amount_paid, paymentDate, chq_no, bank_name, bank_branch, chqPaymentDate, username);
                         instModel.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
 
-                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentIds, "CHEQUE", "Student Management", username);
+                      //  ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentIds, "CHEQUE", "Student Management", username);
                         break;
 
                     default:
@@ -1156,7 +1156,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                 dao.saveChequePayment(st_id, en_id, amount_paid, paymentDate, chq_no, bank_name, bank_branch, chqPaymentDate, username);
                 instModel.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(amount_paid)});
 
-                ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentId, "CHEQUE", "Student Management", username);
+              //  ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentId, "CHEQUE", "Student Management", username);
             }
 
         } catch (Exception e) {
@@ -1484,7 +1484,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                         Fees_Management.updateMasterTableRows(st_id);
                         int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
                         model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
-                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, pay_method, "Student Management", username);
+                       // ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, pay_method, "Student Management", username);
                         break;
 
                     case 2:
@@ -1493,7 +1493,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                         Fees_Management.updateMasterTableRows(st_id);
                         int paymentIds = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
                         model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
-                        ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentIds, pay_method, "Student Management", username);
+                      //  ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentIds, pay_method, "Student Management", username);
                         break;
 
                     default:
@@ -1504,7 +1504,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                 Fees_Management.updateMasterTableRows(st_id);
                 int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
                 model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(amount_paid)});
-                ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentId, pay_method, "Student Management", username);
+             //   ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentId, pay_method, "Student Management", username);
             }
 
             List<Object[]> list = dao.getInstallments(en_id);
