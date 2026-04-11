@@ -62,11 +62,11 @@ public class StudentFeePayments implements Serializable {
     private CourseEnrollment enrollment;
 
     @Column(name = "total_fee")
-    private Integer totalFee;
+    private double totalFee;
     @Column(name = "total_paid")
-    private Integer totalPaid;
+    private double totalPaid;
     @Column(name = "total_balance")
-    private Integer totalBalance;
+    private double totalBalance;
     @Column(name = "payment_type")
     private String paymentType;
     @Column(name = "course_type")
@@ -101,27 +101,27 @@ public class StudentFeePayments implements Serializable {
         this.studentFeePaymentsId = studentFeePaymentsId;
     }
 
-    public Integer getTotalFee() {
+    public double getTotalFee() {
         return totalFee;
     }
 
-    public void setTotalFee(Integer totalFee) {
+    public void setTotalFee(double totalFee) {
         this.totalFee = totalFee;
     }
 
-    public Integer getTotalPaid() {
+    public double getTotalPaid() {
         return totalPaid;
     }
 
-    public void setTotalPaid(Integer totalPaid) {
+    public void setTotalPaid(double totalPaid) {
         this.totalPaid = totalPaid;
     }
 
-    public Integer getTotalBalance() {
+    public double getTotalBalance() {
         return totalBalance;
     }
 
-    public void setTotalBalance(Integer totalBalance) {
+    public void setTotalBalance(double totalBalance) {
         this.totalBalance = totalBalance;
     }
 

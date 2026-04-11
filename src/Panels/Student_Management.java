@@ -3,6 +3,7 @@ package Panels;
 import Classes.GeneralMethods;
 import Classes.GeneralMethods.StudentSearchType;
 import Classes.HibernateConfig;
+import Classes.LogHelper;
 import Classes.NICParser;
 import Classes.styleDateChooser;
 import Entities.Student_Management.Student;
@@ -38,29 +39,26 @@ import javax.swing.event.PopupMenuListener;
 public class Student_Management extends javax.swing.JPanel {
 
     GeneralMethods generalMethods = new GeneralMethods();
+    LogHelper logHelper = new LogHelper();
+
     styleDateChooser stDateChooser = new styleDateChooser();
 
     private File selectedImageFile;
 
     private int selectedStudentId;
 
-    public Student_Management() {
+    String username;
+    String role;
+
+    public Student_Management(String username, String role) {
+        this.username = username;
+        this.role = role;
         initComponents();
 
-//        styleDateChooser stChooser = new styleDateChooser();
-//        stChooser.styleDateChooser(jDateChooser1);
-//        
-//        JFormattedTextField dobField = createDateField();
-//        jTextField1.add(dobField);
 // Admission Date
         styleDateChooser.applyDarkTheme(stm_ad_admission_date);
         styleDateChooser.applyDarkTheme(stm_ad_student_dob);
 
-//        AutoSuggestor<Student> nameSuggestor = new AutoSuggestor<>(
-//                stm_ad_student_name_text,
-//                typed -> new StudentDAO().findByFullNameLikeAll(typed),
-//                selectedStudent -> loadStudentToFields(selectedStudent)
-//        );
         jComboPopulates();
 
         stm_ad_student_dob.addPropertyChangeListener("date", evt -> {
@@ -1274,6 +1272,7 @@ public class Student_Management extends javax.swing.JPanel {
         stm_ad_student_remarks_text = new javax.swing.JEditorPane();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
+        jButton3 = new javax.swing.JButton();
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "General Information", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
@@ -2014,6 +2013,15 @@ public class Student_Management extends javax.swing.JPanel {
             }
         });
 
+        jButton3.setBackground(new java.awt.Color(102, 102, 102));
+        jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/misc32.png"))); // NOI18N
+        jButton3.setToolTipText("Issue Miscellaneous Student Fees");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -2030,7 +2038,9 @@ public class Student_Management extends javax.swing.JPanel {
                                 .addGap(6, 6, 6)
                                 .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(0, 3, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -2048,7 +2058,8 @@ public class Student_Management extends javax.swing.JPanel {
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(42, 42, 42)
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
@@ -2158,7 +2169,6 @@ public class Student_Management extends javax.swing.JPanel {
     }//GEN-LAST:event_stm_ad_student_guardian_address_contactActionPerformed
 
     private void buttonGradient3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient3ActionPerformed
-        // --- Get data from your form fields ---
 
         if (stm_ad_admission_no_combo.getEditor().getItem().toString().equalsIgnoreCase("") || stm_ad_student_name_combo.getEditor().getItem().toString().equalsIgnoreCase("")) {
             JOptionPane.showMessageDialog(this, "Please enter student information!");
@@ -2304,6 +2314,19 @@ public class Student_Management extends javax.swing.JPanel {
 
                     student.setStudentParents(existingParent);
                     studentDAO.save(student);
+
+                    // ✅ LOG: Sibling added to existing parent
+                    logHelper.log(
+                            "STUDENT_MANAGEMENT",
+                            student.getStudentId(),
+                            "ADD_SIBLING",
+                            "Admission: " + student.getAdmissionNo(),
+                            0.0,
+                            String.format("Sibling Registered: %s. Linked to existing Parent ID: %d",
+                                    student.getFullName(), existingParent.getStudentParentsId()),
+                            username
+                    );
+
                     JOptionPane.showMessageDialog(this, "Sibling added successfully!");
                     return;
                 }
@@ -2336,6 +2359,18 @@ public class Student_Management extends javax.swing.JPanel {
             em.persist(student);
 
             em.getTransaction().commit();
+
+            // ✅ LOG: Full New Registration
+            logHelper.log(
+                    "STUDENT_MANAGEMENT",
+                    student.getStudentId(),
+                    "STUDENT CREATE",
+                    "Admission: " + student.getAdmissionNo(),
+                    0.0,
+                    String.format("New Admission: %s. Parent/Guardian: %s",
+                            student.getFullName(), parents.getMotherName()),
+                    username
+            );
 
             JOptionPane.showMessageDialog(
                     null,
@@ -2439,6 +2474,18 @@ public class Student_Management extends javax.swing.JPanel {
 
         updateStudentWithParents(selectedStudentId, student, parents, imageToSave);
 
+        // ✅ LOG: Student & Parent Update
+        logHelper.log(
+                "STUDENT_MANAGEMENT",
+                selectedStudentId,
+                "STUDENT UPDATE",
+                "Admission: " + student.getAdmissionNo(),
+                0.0,
+                String.format("Updated info for: %s (%s). Profile image updated: %b",
+                        student.getFullName(), student.getAdmissionNo(), (imageToSave != null)),
+                username
+        );
+
     }//GEN-LAST:event_buttonGradient1ActionPerformed
 
     private void buttonGradient4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient4ActionPerformed
@@ -2471,6 +2518,17 @@ public class Student_Management extends javax.swing.JPanel {
 
             dao.softDeleteByAdmissionNo(admissionNo);
 
+            // ✅ LOG: Student Deactivation
+            logHelper.log(
+                    "STUDENT_MANAGEMENT",
+                    student.getStudentId(),
+                    "STUDENT DELETE",
+                    "Admission: "+admissionNo,
+                    0.0,
+                    String.format("STUDENT DEACTIVATED: %s (Adm No: %s).", student.getFullName(), admissionNo),
+                    username
+            );
+
             JOptionPane.showMessageDialog(this, "Student deactivated successfully.");
         }
 
@@ -2484,7 +2542,7 @@ public class Student_Management extends javax.swing.JPanel {
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
 
-        Course_Enrollment dialog = new Course_Enrollment(parentFrame, false, selectedStudentId);
+        Course_Enrollment dialog = new Course_Enrollment(parentFrame, false, selectedStudentId, username, role);
         GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
 
     }//GEN-LAST:event_jButton2ActionPerformed
@@ -2538,6 +2596,10 @@ public class Student_Management extends javax.swing.JPanel {
 
     }//GEN-LAST:event_jButton1ActionPerformed
 
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton3ActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private Classes.ButtonGradient buttonGradient1;
@@ -2550,6 +2612,7 @@ public class Student_Management extends javax.swing.JPanel {
     private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;

@@ -25,6 +25,8 @@ import javax.swing.JOptionPane;
 
 public class StudentFeeInstallmentsDAO {
 
+    LogHelper logHelper = new LogHelper();
+
 //    public List<Object[]> getInstallments(int enrollmentId) {
 //
 //        EntityManager em = HibernateConfig.getEntityManager();
@@ -96,7 +98,7 @@ public class StudentFeeInstallmentsDAO {
     }
 
     // Check duplicate payment for same date & amount
-    public boolean isDuplicatePayment(int paymentId, Date paymentDate, int amount) {
+    public boolean isDuplicatePayment(int paymentId, Date paymentDate, double amount) {
         EntityManager em = HibernateConfig.getEntityManager();
 
         Long count = em.createQuery(
@@ -116,7 +118,7 @@ public class StudentFeeInstallmentsDAO {
     }
 
     // Save installment and update main payment
-    public void saveInstallment(int studentId, int enrollmentId, int amountPaid,
+    public void saveInstallment(int studentId, int enrollmentId, double amountPaid,
             Date paymentDate, String paymentMethod, String paymentType, String monthFor, String user) {
 
         EntityManager em = HibernateConfig.getEntityManager();
@@ -169,16 +171,6 @@ public class StudentFeeInstallmentsDAO {
 
             // ===== LOG + LEDGER (ONLY CASH/CARD) =====
             if (!paymentMethod.equalsIgnoreCase("CHEQUE")) {
-                // LOG
-                LogHelper.saveLog(em,
-                        "STUDENT_PAYMENT",
-                        ins.getStudentFeeInstallmentsId(),
-                        "INSERT",
-                        amountPaid,
-                        paymentMethod,
-                        "Installment payment saved for month " + monthFor,
-                        user
-                );
 
                 // LEDGER
                 LedgerHelper.saveLedger(em,
@@ -196,8 +188,8 @@ public class StudentFeeInstallmentsDAO {
             // ===== ONLY UPDATE MASTER IF NOT CHEQUE =====
             if (!paymentMethod.equalsIgnoreCase("CHEQUE")) {
 
-                int newPaid = payment.getTotalPaid() + amountPaid;
-                int newBalance = payment.getTotalFee() - newPaid;
+                double newPaid = payment.getTotalPaid() + amountPaid;
+                double newBalance = payment.getTotalFee() - newPaid;
 
                 payment.setTotalPaid(newPaid);
                 payment.setTotalBalance(newBalance);
@@ -244,7 +236,7 @@ public class StudentFeeInstallmentsDAO {
         return payment.getStudentFeePaymentsId();
     }
 
-    public void processRoundPayment(int studentId, int startEnrollmentId, int paidAmount,
+    public void processRoundPayment(int studentId, int startEnrollmentId, double paidAmount,
             Date paymentDate, String paymentMethod,
             String chequeNo, String bank, String branch, Date chequeDate,
             String user) {
@@ -256,7 +248,7 @@ public class StudentFeeInstallmentsDAO {
             tx.begin();
 
             boolean isCheque = paymentMethod.equalsIgnoreCase("CHEQUE");
-            int remainingAmount = paidAmount;
+            double remainingAmount = paidAmount;
 
             // =====================================================
             // CREATE ROUND MASTER
@@ -270,17 +262,16 @@ public class StudentFeeInstallmentsDAO {
             master.setUser(user);
             master.setStatus(1);
 
-            // 🔹 LOG - ROUND MASTER CREATED
-            LogHelper.saveLog(em,
-                    "ROUND_PAYMENT",
-                    master.getStudentFeeRoundPaymentMasterId(),
-                    "INSERT",
-                    paidAmount,
-                    paymentMethod,
-                    "Round payment initiated",
-                    user
-            );
-
+//            // 🔹 LOG - ROUND MASTER CREATED
+//            LogHelper.saveLog(em,
+//                    "ROUND_PAYMENT",
+//                    master.getStudentFeeRoundPaymentMasterId(),
+//                    "INSERT",
+//                    paidAmount,
+//                    paymentMethod,
+//                    "Round payment initiated",
+//                    user
+//            );
             // 🔹 LEDGER ONLY FOR CASH/CARD
             if (!isCheque) {
                 LedgerHelper.saveLedger(em,
@@ -308,14 +299,13 @@ public class StudentFeeInstallmentsDAO {
                     .setParameter("eid", startEnrollmentId)
                     .getSingleResult();
 
-            int usable = selectedPayment.getTotalBalance()
-                    - getPendingChequeAmountForCourse(em, startEnrollmentId);
+            double usable = selectedPayment.getTotalBalance() - getPendingChequeAmountForCourse(em, startEnrollmentId);
 
             if (usable < 0) {
                 usable = 0;
             }
 
-            int deduct = Math.min(usable, remainingAmount);
+            double deduct = Math.min(usable, remainingAmount);
 
             if (!isCheque) {
                 selectedPayment.setTotalPaid(selectedPayment.getTotalPaid() + deduct);
@@ -340,16 +330,15 @@ public class StudentFeeInstallmentsDAO {
             em.flush();
 
             // 🔹 LOG
-            LogHelper.saveLog(em,
-                    "STUDENT_PAYMENT",
-                    inst1.getStudentFeeInstallmentsId(),
-                    isCheque ? "CHEQUE_PENDING" : "INSERT",
-                    deduct,
-                    paymentMethod,
-                    "Round payment applied (selected course)",
-                    user
-            );
-
+//            LogHelper.saveLog(em,
+//                    "STUDENT_PAYMENT",
+//                    inst1.getStudentFeeInstallmentsId(),
+//                    isCheque ? "CHEQUE_PENDING" : "INSERT",
+//                    deduct,
+//                    paymentMethod,
+//                    "Round payment applied (selected course)",
+//                    user
+//            );
             // 🔹 LEDGER (ONLY CASH/CARD)
             if (!isCheque && deduct > 0) {
                 LedgerHelper.saveLedger(em,
@@ -403,12 +392,12 @@ public class StudentFeeInstallmentsDAO {
                 }
 
                 int enrollmentId = payment.getEnrollment().getEnrollmentId();
-                int usableBal = payment.getTotalBalance() - getPendingChequeAmountForCourse(em, enrollmentId);
+                double usableBal = payment.getTotalBalance() - getPendingChequeAmountForCourse(em, enrollmentId);
                 if (usableBal <= 0) {
                     continue;
                 }
 
-                int deductAmount = Math.min(usableBal, remainingAmount);
+                double deductAmount = Math.min(usableBal, remainingAmount);
                 String courseType = payment.getCourseType();
 
                 // =====================================================
@@ -432,8 +421,8 @@ public class StudentFeeInstallmentsDAO {
                     java.time.YearMonth end = java.time.YearMonth.of(compYear, compMonth);
                     int totalMonths = (int) java.time.temporal.ChronoUnit.MONTHS.between(start, end) + 1;
 
-                    int totalFee = payment.getTotalFee();
-                    int monthlyFee = totalMonths > 0 ? totalFee / totalMonths : totalFee;
+                    double totalFee = payment.getTotalFee();
+                    double monthlyFee = totalMonths > 0 ? totalFee / totalMonths : totalFee;
 
                     // GET PAID MONTHS
                     List<StudentFeeInstallments> installments = em.createQuery(
@@ -447,7 +436,7 @@ public class StudentFeeInstallmentsDAO {
 
                     for (StudentFeeInstallments inst : installments) {
                         java.time.YearMonth instMonth = java.time.YearMonth.parse(inst.getMonthFor());
-                        int instBalance = monthlyFee - inst.getAmountPaid();
+                        double instBalance = monthlyFee - inst.getAmountPaid();
                         if (instBalance > 0) {
                             nextMonth = instMonth;
                             break;
@@ -455,7 +444,7 @@ public class StudentFeeInstallmentsDAO {
                         nextMonth = instMonth.plusMonths(1);
                     }
 
-                    int remainingMonthly = deductAmount;
+                    double remainingMonthly = deductAmount;
 
                     while (remainingMonthly > 0 && !nextMonth.isAfter(end)) {
                         StudentFeeInstallments inst = null;
@@ -467,10 +456,10 @@ public class StudentFeeInstallmentsDAO {
                                 .setParameter("month", nextMonth.toString())
                                 .getResultList();
 
-                        int pay;
+                        double pay;
                         if (!existing.isEmpty()) {
                             inst = existing.get(0);
-                            int instBalance = monthlyFee - inst.getAmountPaid();
+                            double instBalance = monthlyFee - inst.getAmountPaid();
                             pay = Math.min(instBalance, remainingMonthly);
                             inst.setAmountPaid(inst.getAmountPaid() + pay);
                             em.merge(inst);
@@ -511,16 +500,15 @@ public class StudentFeeInstallmentsDAO {
                         em.persist(detailOther);
 
                         // 🔹 LOG
-                        LogHelper.saveLog(em,
-                                "STUDENT_PAYMENT",
-                                inst.getStudentFeeInstallmentsId(),
-                                isCheque ? "CHEQUE_PENDING" : "INSERT",
-                                pay,
-                                paymentMethod,
-                                "Round payment applied for month " + nextMonth,
-                                user
-                        );
-
+//                        LogHelper.saveLog(em,
+//                                "STUDENT_PAYMENT",
+//                                inst.getStudentFeeInstallmentsId(),
+//                                isCheque ? "CHEQUE_PENDING" : "INSERT",
+//                                pay,
+//                                paymentMethod,
+//                                "Round payment applied for month " + nextMonth,
+//                                user
+//                        );
                         // 🔹 LEDGER (ONLY CASH/CARD)
                         if (!isCheque && pay > 0) {
                             LedgerHelper.saveLedger(em,
@@ -541,7 +529,7 @@ public class StudentFeeInstallmentsDAO {
 
                     // UPDATE TOTALS ONLY FOR CASH/CARD
                     if (!isCheque) {
-                        int totalPaidThisRound = deductAmount - remainingMonthly;
+                        double totalPaidThisRound = deductAmount - remainingMonthly;
                         payment.setTotalPaid(payment.getTotalPaid() + totalPaidThisRound);
                         payment.setTotalBalance(payment.getTotalBalance() - totalPaidThisRound);
                         if (payment.getTotalBalance() <= 0) {
@@ -576,16 +564,15 @@ public class StudentFeeInstallmentsDAO {
                     em.flush();
 
                     // 🔹 LOG
-                    LogHelper.saveLog(em,
-                            "STUDENT_PAYMENT",
-                            inst.getStudentFeeInstallmentsId(),
-                            isCheque ? "CHEQUE_PENDING" : "INSERT",
-                            deductAmount,
-                            paymentMethod,
-                            "Round payment applied (normal course)",
-                            user
-                    );
-
+//                    LogHelper.saveLog(em,
+//                            "STUDENT_PAYMENT",
+//                            inst.getStudentFeeInstallmentsId(),
+//                            isCheque ? "CHEQUE_PENDING" : "INSERT",
+//                            deductAmount,
+//                            paymentMethod,
+//                            "Round payment applied (normal course)",
+//                            user
+//                    );
                     // 🔹 LEDGER
                     if (!isCheque && deductAmount > 0) {
                         LedgerHelper.saveLedger(em,
@@ -624,16 +611,15 @@ public class StudentFeeInstallmentsDAO {
                 remainingAmount -= deductAmount;
             }
 
-            LogHelper.saveLog(em,
-                    "ROUND_PAYMENT",
-                    master.getStudentFeeRoundPaymentMasterId(),
-                    "COMPLETED",
-                    paidAmount,
-                    paymentMethod,
-                    "Round payment fully processed",
-                    user
-            );
-
+//            LogHelper.saveLog(em,
+//                    "ROUND_PAYMENT",
+//                    master.getStudentFeeRoundPaymentMasterId(),
+//                    "COMPLETED",
+//                    paidAmount,
+//                    paymentMethod,
+//                    "Round payment fully processed",
+//                    user
+//            );
             tx.commit();
 
         } catch (Exception e) {
@@ -1878,28 +1864,60 @@ public class StudentFeeInstallmentsDAO {
         return pending == null ? 0 : pending.intValue();
     }
 
-    public int getPendingChequeAmountForCourse(int enrollmentId) {
-
+    public double getPendingChequeAmountForCourse(int enrollmentId) {
         EntityManager em = HibernateConfig.getEntityManager();
+        double totalPending = 0.0;
 
-        Long pending = em.createQuery(
-                "SELECT SUM(c.chequeAmount) "
-                + "FROM StudentFeeChequeDetails c, StudentFeeInstallments i "
-                + "WHERE c.studentFeeInstallmentsId = i.studentFeeInstallmentsId "
-                + "AND i.enrollmentId = :enrollmentId "
-                + "AND c.chequeStatus = 'PENDING' "
-                + "AND c.status = 1",
-                Long.class
-        )
-                .setParameter("enrollmentId", enrollmentId)
-                .getSingleResult();
+        try {
+            // 1. Use Double.class because SUM can return NULL
+            // 2. Query returns Double object
+            Double result = em.createQuery(
+                    "SELECT SUM(c.chequeAmount) "
+                    + "FROM StudentFeeChequeDetails c, StudentFeeInstallments i "
+                    + "WHERE c.studentFeeInstallmentsId = i.studentFeeInstallmentsId "
+                    + "AND i.enrollmentId = :enrollmentId "
+                    + "AND c.chequeStatus = 'PENDING' "
+                    + "AND c.status = 1",
+                    Double.class
+            )
+                    .setParameter("enrollmentId", enrollmentId)
+                    .getSingleResult();
 
-        em.close();
+            // Check if result is null before unboxing to primitive double
+            if (result != null) {
+                totalPending = result;
+            }
 
-        return pending == null ? 0 : pending.intValue();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
+
+        return totalPending;
     }
 
-    public void saveChequePayment(int studentId, int enrollmentId, int amount,
+//    public int getPendingChequeAmountForCourse(int enrollmentId) {
+//
+//        EntityManager em = HibernateConfig.getEntityManager();
+//
+//        Long pending = em.createQuery(
+//                "SELECT SUM(c.chequeAmount) "
+//                + "FROM StudentFeeChequeDetails c, StudentFeeInstallments i "
+//                + "WHERE c.studentFeeInstallmentsId = i.studentFeeInstallmentsId "
+//                + "AND i.enrollmentId = :enrollmentId "
+//                + "AND c.chequeStatus = 'PENDING' "
+//                + "AND c.status = 1",
+//                Long.class
+//        )
+//                .setParameter("enrollmentId", enrollmentId)
+//                .getSingleResult();
+//
+//        em.close();
+//
+//        return pending == null ? 0 : pending.intValue();
+//    }
+    public void saveChequePayment(int studentId, int enrollmentId, double amount,
             Date paymentDate, String chequeNo, String bank, String branch,
             Date chequeDate, String user) {
 
@@ -1936,16 +1954,15 @@ public class StudentFeeInstallmentsDAO {
             em.flush();
 
             // ===== LOG ENTRY =====
-            LogHelper.saveLog(em,
-                    "STUDENT_PAYMENT",
-                    installment.getStudentFeeInstallmentsId(),
-                    "INSERT",
-                    amount,
-                    "CHEQUE",
-                    "Cheque added: " + chequeNo + " | Bank: " + bank + " | Branch: " + branch,
-                    user
-            );
-
+//            LogHelper.saveLog(em,
+//                    "STUDENT_PAYMENT",
+//                    installment.getStudentFeeInstallmentsId(),
+//                    "INSERT",
+//                    amount,
+//                    "CHEQUE",
+//                    "Cheque added: " + chequeNo + " | Bank: " + bank + " | Branch: " + branch,
+//                    user
+//            );
             tx.commit();
 
         } catch (Exception e) {

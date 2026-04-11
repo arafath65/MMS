@@ -53,7 +53,7 @@ public class Fees_Management extends javax.swing.JPanel {
 
     public static int selectedStudentIds = 0;
     public static int selectedEnrollmentId = 0;
-    public static int admis_Fees = 0;
+    public static double admis_Fees = 0.0;
 
     GeneralMethods generalMethods = new GeneralMethods();
     styleDateChooser stDateChooser = new styleDateChooser();
@@ -71,7 +71,7 @@ public class Fees_Management extends javax.swing.JPanel {
         initComponents();
 
         oneTimeFeePanel = new OneTimeFeePanel(username, role);
-        monthlyFeePanel = new MonthlyFeePanel();
+        monthlyFeePanel = new MonthlyFeePanel(username, role);
 
         fm_fees_course_table.setDefaultRenderer(Object.class, new TableGradientCell());
         fm_fees_course_table.getTableHeader().putClientProperty(FlatClientProperties.STYLE, ""
@@ -230,7 +230,7 @@ public class Fees_Management extends javax.swing.JPanel {
                 MonthlyFeePanel.mm_fees_Monthly_tot_pending_balancee_Textfield.setText("");
                 MonthlyFeePanel.mm_fees_Monthly_fee_note_Textarea.setText("");
 
-                admis_Fees = 0;
+                admis_Fees = 0.0;
                 selectedStudentIds = 0;
                 selectedEnrollmentId = 0;
 
@@ -299,10 +299,10 @@ public class Fees_Management extends javax.swing.JPanel {
                 start, // Course start
                 complete, // Complete
                 row[6], // Payment mode
-                GeneralMethods.formatWithComma(Integer.parseInt(row[7].toString())), // Admission fee
-                GeneralMethods.formatWithComma(Integer.parseInt(row[8].toString())), // Total fee
-                GeneralMethods.formatWithComma(Integer.parseInt(row[9].toString())), // Total paid
-                GeneralMethods.formatWithComma(Integer.parseInt(row[10].toString())), // Balance
+                GeneralMethods.formatWithComma((GeneralMethods.parseCommaNumber(row[7].toString()))), // Admission fee
+                GeneralMethods.formatWithComma(GeneralMethods.parseCommaNumber(row[8].toString())), // Total fee
+                GeneralMethods.formatWithComma(GeneralMethods.parseCommaNumber(row[9].toString())), // Total paid
+                GeneralMethods.formatWithComma(GeneralMethods.parseCommaNumber(row[10].toString())), // Balance
                 row[11], // Enrollment id
                 row[12] // Student id
             });
@@ -713,12 +713,12 @@ public class Fees_Management extends javax.swing.JPanel {
             int st_id = Integer.parseInt(model.getValueAt(fm_fees_course_table.getSelectedRow(), 11).toString());
             int en_id = Integer.parseInt(model.getValueAt(fm_fees_course_table.getSelectedRow(), 10).toString());
 
-            int tot_fee = GeneralMethods.parseCommaNumber(model.getValueAt(fm_fees_course_table.getSelectedRow(), 7).toString());
-            int tot_bal = GeneralMethods.parseCommaNumber(model.getValueAt(fm_fees_course_table.getSelectedRow(), 9).toString());
+            double tot_fee = GeneralMethods.parseCommaNumber(model.getValueAt(fm_fees_course_table.getSelectedRow(), 7).toString());
+            double tot_bal = GeneralMethods.parseCommaNumber(model.getValueAt(fm_fees_course_table.getSelectedRow(), 9).toString());
 
             StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
 
-            int pendingCheque = dao.getPendingChequeAmountForCourse(en_id);
+            double pendingCheque = dao.getPendingChequeAmountForCourse(en_id);
 
             if (check.equalsIgnoreCase("ONE-TIME")) {
 
@@ -743,7 +743,7 @@ public class Fees_Management extends javax.swing.JPanel {
                     System.out.println("pendingCheque - " + pendingCheque);
 
                     // calculate remaining balance
-                    int balanceAfterCheque = tot_bal - pendingCheque;
+                    double balanceAfterCheque = tot_bal - pendingCheque;
 
                     if (balanceAfterCheque < 0) {
                         balanceAfterCheque = 0;
@@ -766,7 +766,7 @@ public class Fees_Management extends javax.swing.JPanel {
                     System.out.println("pendingCheque - " + pendingCheque);
 
                     // calculate remaining balance
-                    int balanceAfterCheque = tot_bal - pendingCheque;
+                    double balanceAfterCheque = tot_bal - pendingCheque;
 
                     if (balanceAfterCheque < 0) {
                         balanceAfterCheque = 0;
@@ -791,7 +791,7 @@ public class Fees_Management extends javax.swing.JPanel {
                     model2.addRow(new Object[]{
                         row[0],
                         sdf.format(row[1]),
-                        GeneralMethods.formatWithComma(Integer.parseInt(row[2].toString())),
+                        GeneralMethods.formatWithComma(GeneralMethods.parseCommaNumber(row[2].toString())),
                         paymentMethod,
                         chequeStatus
                     });
@@ -812,7 +812,7 @@ public class Fees_Management extends javax.swing.JPanel {
 
                     int rowCount = fee_install_table.getRowCount();
 
-                    int cal_sum = tot_fee / rowCount;
+                    double cal_sum = tot_fee / rowCount;
                     MonthlyFeePanel.mm_fees_Monthly_total_fee_Textfield.setText(GeneralMethods.formatWithComma(cal_sum));
                     MonthlyFeePanel.mm_fees_Monthly_total_balance_Textfield.setText(GeneralMethods.formatWithComma(tot_bal));
 
@@ -837,7 +837,7 @@ public class Fees_Management extends javax.swing.JPanel {
 
                     int rowCount = fee_install_table.getRowCount();
 
-                    int cal_sum = tot_fee / rowCount;
+                    double cal_sum = tot_fee / rowCount;
                     MonthlyFeePanel.fm_fees_cheq_full_fees_Textfield.setText(GeneralMethods.formatWithComma(cal_sum));
                     MonthlyFeePanel.mm_fees_cheq_cheque_remaining.setText(GeneralMethods.formatWithComma(tot_bal));
 

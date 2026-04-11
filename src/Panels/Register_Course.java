@@ -7,15 +7,23 @@ package Panels;
 import Classes.GeneralMethods;
 import Classes.TableGradientCell;
 import Classes.ButtonGradientRound;
+import Classes.LogHelper;
 import Entities.Settings.Course;
 import Entities.Settings.StudentClass;
 import JPA_DAO.Settings.ClassDAO;
 import JPA_DAO.Settings.CourseDAO;
 import com.formdev.flatlaf.FlatClientProperties;
 import java.awt.Dimension;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.List;
+import javax.swing.ComboBoxModel;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -25,8 +33,14 @@ import javax.swing.table.DefaultTableModel;
 public class Register_Course extends javax.swing.JPanel {
 
     GeneralMethods generalMethods = new GeneralMethods();
+    LogHelper logHelper = new LogHelper();
 
-    public Register_Course() {
+    String username;
+    String role;
+
+    public Register_Course(String username, String role) {
+        this.username = username;
+        this.role = role;
         initComponents();
 
 //        reg_course_CourseTable.setShowGrid(false);
@@ -47,6 +61,68 @@ public class Register_Course extends javax.swing.JPanel {
         loadCoursesToTable(reg_course_CourseTable);
         loadClassToTable(reg_course_ClassTable);
 
+        JComboPopulates();
+
+    }
+
+    private void JComboPopulates() {
+        // Medicine brand combo
+        reg_course_course_name_combo.getEditor().getEditorComponent().addKeyListener(new KeyAdapter() {
+            public void keyReleased(KeyEvent e) {
+                String input = reg_course_course_name_combo.getEditor().getItem().toString();
+                generalMethods.loadMatchingComboItems(reg_course_course_name_combo, "course_name", "course", input);
+            }
+
+        });
+        setupComboSelectionListener(reg_course_course_name_combo, reg_course_admission_fees_textfield);
+    }
+
+    private boolean itemSelectedByUser = false;
+
+    public void setupComboSelectionListener(JComboBox<String> comboBox, JComponent nextFocusComponent) {
+        comboBox.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                itemSelectedByUser = false;
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+                if (itemSelectedByUser) {
+                    Object selected = comboBox.getSelectedItem();
+                    if (selected != null) {
+                        String selectedValue = selected.toString().trim();
+                        if (!selectedValue.isEmpty() && isValueFromList(comboBox, selectedValue)) {
+                            nextFocusComponent.requestFocus();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+                itemSelectedByUser = false;
+            }
+        });
+
+        // Detect user selection from keyboard (Enter) or mouse (click)
+        comboBox.addActionListener(e -> {
+            if (comboBox.isPopupVisible()) {
+                itemSelectedByUser = true;
+            }
+        });
+
+    }
+
+    private boolean isValueFromList(JComboBox<String> comboBox, String value) {
+        ComboBoxModel<String> model = comboBox.getModel();
+        for (int i = 0; i < model.getSize(); i++) {
+            String item = model.getElementAt(i);
+            if (item.equalsIgnoreCase(value)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void loadCoursesToTable(JTable table) {
@@ -126,7 +202,7 @@ public class Register_Course extends javax.swing.JPanel {
         reg_course_comp_year_combo = new javax.swing.JComboBox<>();
         reg_course_fees_textfield = new javax.swing.JTextField();
         jLabel21 = new javax.swing.JLabel();
-        reg_course_payment_mode_combo = new javax.swing.JComboBox<>();
+        reg_course_payment_mode_comboo = new javax.swing.JComboBox<>();
         jLabel22 = new javax.swing.JLabel();
         jLabel23 = new javax.swing.JLabel();
         reg_course_admission_fees_textfield = new javax.swing.JTextField();
@@ -196,8 +272,8 @@ public class Register_Course extends javax.swing.JPanel {
         jLabel21.setForeground(new java.awt.Color(232, 232, 232));
         jLabel21.setText("Fee");
 
-        reg_course_payment_mode_combo.setEditable(true);
-        reg_course_payment_mode_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        reg_course_payment_mode_comboo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        reg_course_payment_mode_comboo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ONE-TIME", "MONTHLY", "FREE", "DONATION" }));
 
         jLabel22.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
         jLabel22.setForeground(new java.awt.Color(232, 232, 232));
@@ -245,7 +321,7 @@ public class Register_Course extends javax.swing.JPanel {
                     .addComponent(reg_course_comp_month_combo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(reg_course_payment_mode_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(reg_course_payment_mode_comboo, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel22))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -300,7 +376,7 @@ public class Register_Course extends javax.swing.JPanel {
                                         .addComponent(reg_course_fees_textfield, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addComponent(reg_course_admission_fees_textfield, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))))
                             .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                .addComponent(reg_course_payment_mode_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(reg_course_payment_mode_comboo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGroup(jPanel3Layout.createSequentialGroup()
                                     .addComponent(jLabel22, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addGap(41, 41, 41))))))
@@ -503,7 +579,7 @@ public class Register_Course extends javax.swing.JPanel {
             int co_monthNumber = generalMethods.getMonthNumber(comp_month);
             System.out.println("COMP MONTH-" + co_monthNumber + "Mon :" + comp_month);
 
-            String payment_mode = reg_course_payment_mode_combo.getEditor().getItem().toString();
+            String payment_mode = reg_course_payment_mode_comboo.getSelectedItem().toString();
             String admissionFee = reg_course_admission_fees_textfield.getText();
             String fee = reg_course_fees_textfield.getText();
 
@@ -560,15 +636,27 @@ public class Register_Course extends javax.swing.JPanel {
 
             new CourseDAO().save(c);
 
+            // ✅ LOG: Course Registration
+            logHelper.log(
+                    "COURSE_REGISTRATION",
+                    c.getCourseId(), // Assuming Course entity gets an ID after save
+                    "COURSE CREATE",
+                    batch + " / " + course,
+                    GeneralMethods.parseCommaNumber(fee),
+                    String.format("New course registered: %s (%s). Enrollment: %s %d. Admission Fee: %s",
+                            course, batch, enrol_month, enrol_year, admissionFee),
+                    username
+            );
+
             model.addRow(new Object[]{model.getRowCount() + 1, batch, course, enrol_year, enrol_month, comp_year, comp_month, payment_mode, admissionFee, fee});
-            
+
             reg_course_batch_combo.removeAllItems();
             reg_course_course_name_combo.removeAllItems();
             reg_course_enrol_year_combo.removeAllItems();
             reg_course_enrol_month_combo.removeAllItems();
             reg_course_comp_year_combo.removeAllItems();
             reg_course_comp_month_combo.removeAllItems();
-            reg_course_payment_mode_combo.removeAllItems();
+            reg_course_payment_mode_comboo.setSelectedIndex(0);
             reg_course_admission_fees_textfield.setText("");
             reg_course_fees_textfield.setText("");
             reg_course_batch_combo.requestFocus();
@@ -613,6 +701,17 @@ public class Register_Course extends javax.swing.JPanel {
             c.setStatus(true);
 
             new ClassDAO().save(c);
+
+            // ✅ LOG: Class Registration
+            logHelper.log(
+                    "CLASS_MANAGEMENT",
+                    c.getClassId(), // Assuming this is the generated ID
+                    "CLASS CREATE",
+                    text_class,
+                    0.0,
+                    "New class category created: " + text_class,
+                    username
+            );
 
             model.addRow(new Object[]{model.getRowCount() + 1, text_class});
             reg_course_class_textfield.setText("");
@@ -715,6 +814,20 @@ public class Register_Course extends javax.swing.JPanel {
             boolean deleted = dao.deleteCourse(batch, courseName, enrolYear, enrolMonth,
                     compYear, compMonth, paymentMode, admissionFee, fee);
 
+            if (deleted) {
+                // ✅ LOG: Course Deletion
+                logHelper.log(
+                        "COURSE_REGISTRATION",
+                        0, // Use 0 or a specific ID if the DAO can return it
+                        "COURSE DELETE",
+                        batch + " / " + courseName,
+                        (double) fee,
+                        String.format("DELETED: Course '%s' | Batch: %s | Enrollment: %d/%d | Mode: %s",
+                                courseName, batch, enrolMonth, enrolYear, paymentMode),
+                        username
+                );
+            }
+
 // remove row from table
             model.removeRow(selectedRow);
 
@@ -756,6 +869,19 @@ public class Register_Course extends javax.swing.JPanel {
 
             ClassDAO dao = new ClassDAO();
             boolean deleted = dao.deleteCourse(class_name);
+
+            if (deleted) {
+                // ✅ LOG: Class Deletion
+                logHelper.log(
+                        "CLASS_MANAGEMENT",
+                        0, // Module ID 0 as the record is being removed/inactivated
+                        "CLASS DELETE",
+                        class_name,
+                        0.0,
+                        "Deleted student class category: " + class_name,
+                        username
+                );
+            }
 
 // remove row from table
             model.removeRow(selectedRow);
@@ -802,6 +928,6 @@ public class Register_Course extends javax.swing.JPanel {
     private javax.swing.JComboBox<String> reg_course_enrol_month_combo;
     private javax.swing.JComboBox<String> reg_course_enrol_year_combo;
     private javax.swing.JTextField reg_course_fees_textfield;
-    private javax.swing.JComboBox<String> reg_course_payment_mode_combo;
+    private javax.swing.JComboBox<String> reg_course_payment_mode_comboo;
     // End of variables declaration//GEN-END:variables
 }

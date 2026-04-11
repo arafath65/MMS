@@ -118,7 +118,7 @@
                       </Group>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="reg_course_payment_mode_combo" alignment="0" min="-2" pref="109" max="-2" attributes="0"/>
+                          <Component id="reg_course_payment_mode_comboo" alignment="0" min="-2" pref="109" max="-2" attributes="0"/>
                           <Component id="jLabel22" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace pref="12" max="32767" attributes="0"/>
@@ -190,7 +190,7 @@
                                       </Group>
                                   </Group>
                                   <Group type="103" alignment="0" groupAlignment="1" attributes="0">
-                                      <Component id="reg_course_payment_mode_combo" alignment="1" min="-2" pref="35" max="-2" attributes="0"/>
+                                      <Component id="reg_course_payment_mode_comboo" alignment="1" min="-2" pref="35" max="-2" attributes="0"/>
                                       <Group type="102" alignment="1" attributes="0">
                                           <Component id="jLabel22" min="-2" pref="19" max="-2" attributes="0"/>
                                           <EmptySpace min="41" pref="41" max="-2" attributes="0"/>
@@ -404,14 +404,18 @@
                 <Property name="text" type="java.lang.String" value="Fee"/>
               </Properties>
             </Component>
-            <Component class="javax.swing.JComboBox" name="reg_course_payment_mode_combo">
+            <Component class="javax.swing.JComboBox" name="reg_course_payment_mode_comboo">
               <Properties>
-                <Property name="editable" type="boolean" value="true"/>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Light" size="14" style="0"/>
                 </Property>
                 <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                  <StringArray count="0"/>
+                  <StringArray count="4">
+                    <StringItem index="0" value="ONE-TIME"/>
+                    <StringItem index="1" value="MONTHLY"/>
+                    <StringItem index="2" value="FREE"/>
+                    <StringItem index="3" value="DONATION"/>
+                  </StringArray>
                 </Property>
               </Properties>
               <AuxValues>

@@ -111,40 +111,6 @@ public class GeneralMethods {
         }
     }
 
-//    public static int getMonthNumber(String month) {
-//        if (month == null) {
-//            return 0;
-//        }
-//
-//        switch (month.toLowerCase()) {
-//            case "january":
-//                return 1;
-//            case "february":
-//                return 2;
-//            case "march":
-//                return 3;
-//            case "april":
-//                return 4;
-//            case "may":
-//                return 5;
-//            case "june":
-//                return 6;
-//            case "july":
-//                return 7;
-//            case "august":
-//                return 8;
-//            case "september":
-//                return 9;
-//            case "october":
-//                return 10;
-//            case "november":
-//                return 11;
-//            case "december":
-//                return 12;
-//            default:
-//                return 0; // invalid
-//        }
-//    }
     public static String getMonthName(int month) {
         switch (month) {
             case 1:
@@ -371,17 +337,17 @@ public class GeneralMethods {
         dialog.setVisible(true);
     }
 
-    public static String formatWithComma(int amount) {
-        return String.format("%,d", amount);
+    public static String formatWithComma(double amount) {
+        return String.format("%,.2f", amount);
     }
 
-    public static int parseCommaNumber(String text) {
+    public static double parseCommaNumber(String text) {
 
         if (text == null || text.trim().isEmpty()) {
             return 0;
         }
 
-        return Integer.parseInt(text.replace(",", "").trim());
+        return Double.parseDouble(text.replace(",", "").trim());
     }
 
     public void setIntegerOnly(JTextField textField, int maxLength) {
@@ -426,7 +392,54 @@ public class GeneralMethods {
 
                 String sql = "SELECT DISTINCT " + column
                         + " FROM " + table
-                        + " WHERE " + column + " LIKE ?";
+                        + " WHERE status = 1 AND " + column + " LIKE ?";
+
+                List<String> results = em.createNativeQuery(sql)
+                        .setParameter(1, "%" + input + "%")
+                        .getResultList();
+
+                DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+                boolean found = false;
+
+                for (String value : results) {
+                    model.addElement(value);
+                    found = true;
+                }
+
+                comboBox.setModel(model);
+                comboBox.setSelectedItem(input);
+
+                if (found) {
+                    comboBox.setPopupVisible(true);
+                } else {
+                    comboBox.hidePopup();
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                em.close();
+            }
+
+        });
+    }
+
+    public void loadMatchingComboItemswithID(JComboBox<String> comboBox,
+            String idColumn,
+            String nameColumn,
+            String table,
+            String input) {
+
+        SwingUtilities.invokeLater(() -> {
+
+            EntityManager em = HibernateConfig.getEntityManager();
+
+            try {
+
+                String sql = "SELECT DISTINCT CONCAT(" + nameColumn + ", ' [', " + idColumn + ", ']') "
+                        + "FROM " + table + " "
+                        + "WHERE " + nameColumn + " LIKE ? "
+                        + "AND status = 1";
 
                 List<String> results = em.createNativeQuery(sql)
                         .setParameter(1, "%" + input + "%")

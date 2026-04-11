@@ -2,6 +2,7 @@ package Panels_SubDialogs;
 
 import Classes.GeneralMethods;
 import Classes.GradientButton;
+import Classes.LogHelper;
 import Classes.ModernDialog;
 import Classes.ModernMessage;
 import Classes.TableGradientCell;
@@ -54,13 +55,18 @@ public class Course_Enrollment extends javax.swing.JDialog {
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Course_Enrollment.class.getName());
 
     CourseDAO dao = new CourseDAO();
+    LogHelper logHelper = new LogHelper();
 
     int courseID = 0;
     private Integer studentId;
+    String username;
+    String role;
 
-    public Course_Enrollment(java.awt.Frame parent, boolean modal, int studentId) {
+    public Course_Enrollment(java.awt.Frame parent, boolean modal, int studentId, String username, String role) {
         super(parent, modal);
         this.studentId = studentId;
+        this.username = username;
+        this.role = role;
         initComponents();
 
         stm_ce_table.setDefaultRenderer(Object.class, new TableGradientCell());
@@ -591,7 +597,7 @@ public class Course_Enrollment extends javax.swing.JDialog {
 
             StudentFeePayments fp = new StudentFeePayments();
 
-            int totalFee = GeneralMethods.parseCommaNumber(fee);
+            double totalFee = GeneralMethods.parseCommaNumber(fee);
 
             fp.setStudent(s);
             fp.setEnrollment(ce);
@@ -613,6 +619,18 @@ public class Course_Enrollment extends javax.swing.JDialog {
             ce.setFeePayments(fp);
             new CourseEnrollmentDAO().save(ce);
 
+            // ✅ LOG: Course Enrollment
+            logHelper.log(
+                    "COURSE_ENROLLMENT",
+                    ce.getEnrollmentId(), // Assuming ID is generated after save
+                    "COURSE ENROLLMENT CREATE",
+                    "Admission: " + s.getAdmissionNo(),
+                    ce.getFee(),
+                    String.format("Enrolled student: %s into %s [%s]. Class: %s",
+                            s.getFullName(), courseName, batch, class_name),
+                    username
+            );
+
             model.addRow(new Object[]{
                 model.getRowCount() + 1,
                 batch,
@@ -623,8 +641,7 @@ public class Course_Enrollment extends javax.swing.JDialog {
                 payment_mode,
                 GeneralMethods.formatWithComma(GeneralMethods.parseCommaNumber(admissionFee)),
                 GeneralMethods.formatWithComma(GeneralMethods.parseCommaNumber(fee)),
-                "ACTIVE"
-            });
+                ce.getEnrollmentId(),});
 
             stm_ce_course_name_combo.removeAllItems();
             stm_ce_class_name_combo.setSelectedIndex(0);
@@ -648,8 +665,11 @@ public class Course_Enrollment extends javax.swing.JDialog {
 
         if (row != -1 && column == 8) { // Status column
 
-            int enrollmentId = Integer.parseInt(stm_ce_table.getModel().getValueAt(row, 10).toString());
+//            int enrollmentId = Integer.parseInt(stm_ce_table.getModel().getValueAt(row, 10).toString());
+//            String batch = stm_ce_table.getModel().getValueAt(row, 1).toString();
+//            String courseName = stm_ce_table.getModel().getValueAt(row, 2).toString();
             showEnrollmentActionDialog(row);
+
         }
     }//GEN-LAST:event_stm_ce_tableMouseClicked
 
@@ -678,7 +698,7 @@ public class Course_Enrollment extends javax.swing.JDialog {
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                Course_Enrollment dialog = new Course_Enrollment(new javax.swing.JFrame(), true, 0);
+                Course_Enrollment dialog = new Course_Enrollment(new javax.swing.JFrame(), true, 0, "", "");
                 dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                     @Override
                     public void windowClosing(java.awt.event.WindowEvent e) {
@@ -962,6 +982,18 @@ private void rearrangeTableSeq(JTable table) {
         // ===== DELETE ACTION =====
         deleteBtn.addActionListener(e -> {
             dao.softDelete(enrollmentId);
+
+            // ✅ LOG: Enrollment Deletion
+            logHelper.log(
+                    "COURSE_ENROLLMENT",
+                    enrollmentId,
+                    "COURSE ENROLLMENT DELETE",
+                    "Enrollment ID: " + enrollmentId,
+                    0.0,
+                    "Student removed from course enrollment (Soft Delete).",
+                    username
+            );
+
             ((DefaultTableModel) stm_ce_table.getModel()).removeRow(rowIndex);
             dialog.dispose();
         });
@@ -987,6 +1019,17 @@ private void rearrangeTableSeq(JTable table) {
             }
 
             dao.updateStatus(enrollmentId, newStatus);
+
+            // ✅ LOG: Status Change
+            logHelper.log(
+                    "COURSE_ENROLLMENT",
+                    enrollmentId,
+                    "COURSE ENROLLMENT STATUS_CHANGE",
+                    "New Status: " + newStatus,
+                    0.0,
+                    String.format("Enrollment status updated to: %s", newStatus),
+                    username
+            );
 
             dialog.dispose();
         });

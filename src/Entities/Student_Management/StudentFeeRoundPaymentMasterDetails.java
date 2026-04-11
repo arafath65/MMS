@@ -26,7 +26,7 @@ public class StudentFeeRoundPaymentMasterDetails implements Serializable {
     private Integer enrollmentId;
 
     @Column(name = "paid_amount")
-    private Integer paidAmount;
+    private double paidAmount;
 
     @Column(name = "status")
     private Integer status;
@@ -56,11 +56,11 @@ public class StudentFeeRoundPaymentMasterDetails implements Serializable {
         this.enrollmentId = enrollmentId;
     }
 
-    public Integer getPaidAmount() {
+    public double getPaidAmount() {
         return paidAmount;
     }
 
-    public void setPaidAmount(Integer paidAmount) {
+    public void setPaidAmount(double paidAmount) {
         this.paidAmount = paidAmount;
     }
 

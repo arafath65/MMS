@@ -30,7 +30,7 @@ public class StudentFeeChequeDetails implements Serializable {
     private Date chequeDate;
 
     @Column(name = "cheque_amount")
-    private Integer chequeAmount;
+    private double chequeAmount;
 
     @Column(name = "cheque_status")
     private String chequeStatus;
@@ -87,11 +87,11 @@ public class StudentFeeChequeDetails implements Serializable {
         this.chequeDate = chequeDate;
     }
 
-    public Integer getChequeAmount() {
+    public double getChequeAmount() {
         return chequeAmount;
     }
 
-    public void setChequeAmount(Integer chequeAmount) {
+    public void setChequeAmount(double chequeAmount) {
         this.chequeAmount = chequeAmount;
     }
 

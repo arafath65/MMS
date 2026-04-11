@@ -1,32 +1,39 @@
 package Classes;
 
+import Additional.SystemLog;
+import java.util.Date;
 import javax.persistence.EntityManager;
 
 public class LogHelper {
 
-    public static void saveLog(
-            EntityManager em,
-            String module, // STUDENT_PAYMENT, EXPENSE, EXAM, etc.
-            Integer moduleId, // can be null
-            String action, // INSERT, UPDATE, DELETE
-            int amount, // can be null
-            String paymentMethod,
-            String description,
-            String user
-    ) {
+    public void log(String module, int moduleId, String action,
+            String reference, double amount,
+            String description, String user) {
 
-        em.createNativeQuery(
-                "INSERT INTO system_logs "
-                + "(module, module_id, action, amount, payment_method, description, user, created_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, NOW())"
-        )
-                .setParameter(1, module)
-                .setParameter(2, moduleId)
-                .setParameter(3, action)
-                .setParameter(4, amount)
-                .setParameter(5, paymentMethod)
-                .setParameter(6, description)
-                .setParameter(7, user)
-                .executeUpdate();
+        EntityManager em = HibernateConfig.getEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            SystemLog log = new SystemLog();
+            log.setModule(module);
+            log.setModuleId(moduleId);
+            log.setAction(action);
+            log.setReferenceNo(reference);
+            log.setAmount(amount);
+            log.setDescription(description);
+            log.setUser(user);
+            log.setCreatedAt(new Date());
+            log.setStatus(1);
+
+            em.persist(log);
+
+            em.getTransaction().commit();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
     }
 }

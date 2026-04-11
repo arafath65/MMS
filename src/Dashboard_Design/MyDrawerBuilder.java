@@ -81,10 +81,13 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
             .subMenu("New Admission")
             .subMenu("Fees Handling")
             .subMenu("Reports"),
+            new Item("Inventory", "invetory.svg")
+            .subMenu("Add Inventory"),
             new Item("Accounts", "accountsvg.svg")
             .subMenu("Cheque Handling"),
             new Item("Settings", "settingssvg.svg")
-            .subMenu("Register Course"),};
+            .subMenu("Register Course")
+            .subMenu("Additional Payments"),};
 
         SimpleMenuOption simpleMenuOption = new SimpleMenuOption() {
             @Override
@@ -133,15 +136,29 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
                 // Accounts -> CHEQUE HANDLING
                 // Accounts -> CHEQUE HANDLING
                 if (index.length == 2 && index[0] == 2 && index[1] == 0) {
+                    dashboard.showPanel("INVENTORY");
+                    Dashboard.Dashboard.Main_Lable.setText("ADD INVENTORY");
+                    return;
+                }
+
+                // Accounts -> CHEQUE HANDLING
+                if (index.length == 2 && index[0] == 3 && index[1] == 0) {
                     dashboard.showPanel("CHEQUE_HANDLING");
                     Dashboard.Dashboard.Main_Lable.setText("CHEQUE HANDLING");
                     return;
                 }
 
                 // SETTINGS -> REGISTER COURSE
-                if (index.length == 2 && index[0] == 3 && index[1] == 0) {
+                if (index.length == 2 && index[0] == 4 && index[1] == 0) {
                     dashboard.showPanel("REGISTER_COURSE");
                     Dashboard.Dashboard.Main_Lable.setText("REGISTER COURSE");
+                    return;
+                }
+                
+                // SETTINGS -> ADDITIONAL PAYMENTS
+                if (index.length == 2 && index[0] == 4 && index[1] == 1) {
+                    dashboard.showPanel("ADDITIONAL_PAYMENTS");
+                    Dashboard.Dashboard.Main_Lable.setText("REGISTER ADDITIONAL PAYMENTS");
                     return;
                 }
 

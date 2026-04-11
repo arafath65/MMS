@@ -30,6 +30,7 @@ import javax.swing.table.TableRowSorter;
 public class Cheque_Handling extends javax.swing.JPanel {
 
     GeneralMethods generalMethods = new GeneralMethods();
+    LogHelper logHelper = new LogHelper();
     styleDateChooser stDateChooser = new styleDateChooser();
 
     private File selectedImageFile;
@@ -368,14 +369,14 @@ public class Cheque_Handling extends javax.swing.JPanel {
                                 username
                         );
 
-                        // Log
-                        LogHelper.saveLog(em,
-                                "STUDENT_PAYMENT",
+                        // ✅ LOG: Cheque Cleared
+                        logHelper.log(
+                                "CHEQUE_HANDLING",
                                 paymentId,
                                 "CLEARED",
-                                chequeAmount,
-                                "CHEQUE",
-                                "Cheque cleared - " + chequeNo + " | Bank: " + bankBranch,
+                                "CHQ-" + chequeNo,
+                                (double) chequeAmount,
+                                String.format("Cheque #%s CLEARED. Amount added to student balance. Bank: %s", chequeNo, bankBranch),
                                 username
                         );
 
@@ -416,14 +417,14 @@ public class Cheque_Handling extends javax.swing.JPanel {
                                 username
                         );
 
-                        // Log
-                        LogHelper.saveLog(em,
-                                "STUDENT_PAYMENT",
+                        // LOG: Cheque Reversed
+                        logHelper.log(
+                                "CHEQUE_HANDLING",
                                 paymentId,
-                                action.toUpperCase(),
-                                chequeAmount,
-                                "CHEQUE",
-                                "Cheque " + action + " - " + chequeNo + " | Bank: " + bankBranch,
+                                "REVERSED",
+                                "CHQ-" + chequeNo,
+                                (double) chequeAmount,
+                                String.format("REVERSAL: Cheque #%s moved back to PENDING. Amount deducted from student balance.", chequeNo),
                                 username
                         );
 
@@ -436,13 +437,14 @@ public class Cheque_Handling extends javax.swing.JPanel {
                             || filterStatus.equalsIgnoreCase("CANCELLED"))
                             && action.equalsIgnoreCase("PENDING")) {
                         // Nothing to do, status already updated above
-                        LogHelper.saveLog(em,
-                                "STUDENT_PAYMENT",
+                        // LOG: Status Change
+                        logHelper.log(
+                                "CHEQUE_HANDLING",
                                 paymentId,
                                 action.toUpperCase(),
-                                chequeAmount,
-                                "CHEQUE",
-                                "Pending cheque " + action + " - " + chequeNo + " | Bank: " + bankBranch,
+                                "CHQ-" + chequeNo,
+                                (double) chequeAmount,
+                                String.format("Status update for Cheque #%s: %s to %s", chequeNo, filterStatus, action),
                                 username
                         );
                     }
@@ -796,7 +798,7 @@ public class Cheque_Handling extends javax.swing.JPanel {
                     .addComponent(jLabel31)
                     .addComponent(jLabel37))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(chq_handling_chq_status_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(chq_handling_table_sorter_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))

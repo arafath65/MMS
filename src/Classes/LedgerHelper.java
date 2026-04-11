@@ -6,7 +6,7 @@ public class LedgerHelper {
 
     public static void saveLedger(
             EntityManager em,
-            int amount,
+            double amount,
             String entryType, // CREDIT / DEBIT
             String description,
             String module, // STUDENT_PAYMENT, EXPENSE, etc.

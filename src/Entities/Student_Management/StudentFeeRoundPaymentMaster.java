@@ -36,10 +36,10 @@ public class StudentFeeRoundPaymentMaster implements Serializable {
     private String paymentMode;
 
     @Column(name = "total_paid")
-    private Integer totalPaid;
+    private double totalPaid;
 
     @Column(name = "rounding_adjustment")
-    private Integer roundingAdjustment;
+    private double roundingAdjustment;
 
     @Column(name = "remarks")
     private String remarks;
@@ -86,19 +86,19 @@ public class StudentFeeRoundPaymentMaster implements Serializable {
         this.paymentMode = paymentMode;
     }
 
-    public Integer getTotalPaid() {
+    public double getTotalPaid() {
         return totalPaid;
     }
 
-    public void setTotalPaid(Integer totalPaid) {
+    public void setTotalPaid(double totalPaid) {
         this.totalPaid = totalPaid;
     }
 
-    public Integer getRoundingAdjustment() {
+    public double getRoundingAdjustment() {
         return roundingAdjustment;
     }
 
-    public void setRoundingAdjustment(Integer roundingAdjustment) {
+    public void setRoundingAdjustment(double roundingAdjustment) {
         this.roundingAdjustment = roundingAdjustment;
     }
 

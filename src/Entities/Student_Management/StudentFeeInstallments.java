@@ -44,7 +44,7 @@ public class StudentFeeInstallments implements Serializable {
     @Column(name = "installment_no")
     private int installmentNo;
     @Column(name = "amount_paid")
-    private Integer amountPaid;
+    private double amountPaid;
     @Column(name = "payment_date")
     @Temporal(TemporalType.DATE)
     private Date paymentDate;
@@ -89,11 +89,11 @@ public class StudentFeeInstallments implements Serializable {
         this.installmentNo = installmentNo;
     }
 
-    public Integer getAmountPaid() {
+    public double getAmountPaid() {
         return amountPaid;
     }
 
-    public void setAmountPaid(Integer amountPaid) {
+    public void setAmountPaid(double amountPaid) {
         this.amountPaid = amountPaid;
     }
 

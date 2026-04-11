@@ -47,11 +47,15 @@ import javax.swing.text.PlainDocument;
 public class MonthlyFeePanel extends javax.swing.JPanel {
 
     GeneralMethods generalMethods = new GeneralMethods();
+    LogHelper logHelper = new LogHelper();
     SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
 
-    String username = "";
+    String username;
+    String role;
 
-    public MonthlyFeePanel() {
+    public MonthlyFeePanel(String username, String role) {
+        this.username = username;
+        this.role = role;
         initComponents();
 
         mm_fees_monthly_table.getColumnModel().getColumn(5).setMinWidth(0);
@@ -178,8 +182,8 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
 
         try {
 
-            int totalPaid = GeneralMethods.parseCommaNumber(totalPaidField.getText().trim());
-            int monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
+            double totalPaid = GeneralMethods.parseCommaNumber(totalPaidField.getText().trim());
+            double monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
 
             if (monthlyFee <= 0) {
                 JOptionPane.showMessageDialog(null, "Monthly fee invalid!");
@@ -204,7 +208,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
             // ============================
             // 2. FULL MONTH DISTRIBUTION
             // ============================
-            int monthsToFill = totalPaid / monthlyFee;
+            double monthsToFill = totalPaid / monthlyFee;
             int count = 0;
 
             for (int i = 0; i < model.getRowCount(); i++) {
@@ -228,7 +232,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
             // ============================
             // 3. PARTIAL AMOUNT (REMAINING)
             // ============================
-            int remaining = totalPaid - (monthsToFill * monthlyFee);
+            double remaining = totalPaid - (monthsToFill * monthlyFee);
 
             if (remaining > 0) {
 
@@ -268,9 +272,9 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
             DefaultTableModel model = (DefaultTableModel) table.getModel();
             int rowCount = model.getRowCount();
 
-            int monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
-            int payingFee = GeneralMethods.parseCommaNumber(mm_fees_Monthly_total_paid_Textfield.getText().trim());
-            int balanceFee = GeneralMethods.parseCommaNumber(mm_fees_Monthly_tot_pending_balancee_Textfield.getText());
+            double monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
+            double payingFee = GeneralMethods.parseCommaNumber(mm_fees_Monthly_total_paid_Textfield.getText().trim());
+            double balanceFee = GeneralMethods.parseCommaNumber(mm_fees_Monthly_tot_pending_balancee_Textfield.getText());
             String note = mm_fees_Monthly_fee_note_Textarea.getText().trim();
 
             // =====================================================
@@ -304,7 +308,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
 
             int installmentNo = (lastNoObj != null) ? ((Number) lastNoObj).intValue() : 0;
 
-            int remainingAmount = payingFee;
+            double remainingAmount = payingFee;
 
             // =====================================================
             // DEBUG: FIND MONTHS WITH REMARKS
@@ -397,15 +401,14 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                         username
                 );
 
-                // ✅ LOG
-                LogHelper.saveLog(
-                        em,
-                        "STUDENT_FEES",
+                // LOG for Zero Payment
+                logHelper.log(
+                        "MONTHLY_FEES",
                         installmentId,
-                        "INSERT",
-                        0,
-                        paymentMethod,
-                        "Zero payment for " + targetMonth + " | " + note,
+                        "ZERO_PAYMENT",
+                        "ENR-" + enrollmentId,
+                        0.0,
+                        "Zero payment marked for month: " + targetMonth + " | Note: " + note,
                         username
                 );
 
@@ -455,12 +458,12 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                     continue;
                 }
 
-                int balance = monthlyFee - paidSoFar;
+                double balance = monthlyFee - paidSoFar;
                 if (balance <= 0) {
                     continue;
                 }
 
-                int payNow = Math.min(balance, remainingAmount);
+                double payNow = Math.min(balance, remainingAmount);
 
                 installmentNo++;
 
@@ -491,15 +494,14 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                         username
                 );
 
-                // ✅ LOG
-                LogHelper.saveLog(
-                        em,
-                        "STUDENT_FEES",
+                // LOG for Settling Arrears
+                logHelper.log(
+                        "MONTHLY_FEES",
                         installmentId,
-                        "INSERT",
+                        "FEE PAID",
+                        "ENR-" + enrollmentId,
                         payNow,
-                        paymentMethod,
-                        "Partial payment for " + monthFor,
+                        "Settled partial balance for month: " + monthFor + " via " + paymentMethod,
                         username
                 );
 
@@ -516,7 +518,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                 String monthName = model.getValueAt(i, 2).toString();
                 String ym = String.format("%04d-%02d", year, GeneralMethods.getMonthNumber(monthName));
 
-                int paid = GeneralMethods.parseCommaNumber(
+                double paid = GeneralMethods.parseCommaNumber(
                         model.getValueAt(i, 3).toString().isEmpty() ? "0" : model.getValueAt(i, 3).toString()
                 );
 
@@ -530,7 +532,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                     continue;
                 }
 
-                int payNow = Math.min(monthlyFee - paid, remainingAmount);
+                double payNow = Math.min(monthlyFee - paid, remainingAmount);
 
                 installmentNo++;
 
@@ -562,15 +564,14 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                         username
                 );
 
-                // ✅ LOG
-                LogHelper.saveLog(
-                        em,
-                        "STUDENT_FEES",
+                // LOG for Monthly Distribution
+                logHelper.log(
+                        "MONTHLY_FEES",
                         installmentId,
-                        "INSERT",
+                        "FEE PAID",
+                        "ENR-" + enrollmentId,
                         payNow,
-                        paymentMethod,
-                        "Payment applied to " + ym,
+                        "Monthly fee payment applied to: " + ym + " via " + paymentMethod,
                         username
                 );
 
@@ -585,7 +586,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                     "SELECT COALESCE(SUM(amount_paid),0) FROM student_fee_installments WHERE enrollment_id=?"
             ).setParameter(1, enrollmentId).getSingleResult()).intValue();
 
-            int totalFee = rowCount * monthlyFee;
+            double totalFee = rowCount * monthlyFee;
 
             em.createNativeQuery(
                     "UPDATE student_fee_payments SET total_paid=?, total_balance=?, payment_status=? WHERE enrollment_id=?"
@@ -2326,8 +2327,8 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
             DefaultTableModel model = (DefaultTableModel) table.getModel();
             int rowCount = model.getRowCount();
 
-            int monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
-            int chequeAmount = GeneralMethods.parseCommaNumber(mm_fees_cheq_cheque_amount.getText().trim());
+            double monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
+            double chequeAmount = GeneralMethods.parseCommaNumber(mm_fees_cheq_cheque_amount.getText().trim());
 
             String chequeNo = mm_fees_cheq_cheque_number.getText();
             String bank = mm_fees_cheq_cheque_bank.getEditor().getItem().toString();
@@ -2363,7 +2364,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                     "SELECT COALESCE(MAX(installment_no),0) FROM student_fee_installments WHERE enrollment_id=?"
             ).setParameter(1, enrollmentId).getSingleResult()).intValue();
 
-            int remainingAmount = chequeAmount;
+            double remainingAmount = chequeAmount;
 
             // =====================================================
             // SKIP MONTHS WITH REMARKS
@@ -2425,15 +2426,14 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
 //                        "MONTHLY_FEE",
 //                        username
 //                );
-
-                // 🔹 LOG ONLY (NO LEDGER, NO CHEQUE TABLE)
-                LogHelper.saveLog(em,
-                        "STUDENT_PAYMENT",
-                        enrollmentId,
-                        "INSERT",
-                        0,
-                        "CHEQUE",
-                        "Zero cheque entry for " + targetMonth + " | " + note,
+                // LOG for Zero Cheque Entry
+                logHelper.log(
+                        "MONTHLY_FEES",
+                        installmentId,
+                        "ZERO_PAYMENT",
+                        "ENR-" + enrollmentId,
+                        0.0,
+                        String.format("Zero cheque entry for %s | Note: %s", targetMonth, note),
                         username
                 );
 
@@ -2466,7 +2466,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                     continue;
                 }
 
-                int payNow = Math.min(monthlyFee - paidSoFar, remainingAmount);
+                double payNow = Math.min(monthlyFee - paidSoFar, remainingAmount);
                 installmentNo++;
 
                 // Insert installment
@@ -2510,15 +2510,14 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
 //                        "MONTHLY_FEE",
 //                        username
 //                );
-
-                // 🔹 LOG
-                LogHelper.saveLog(em,
-                        "STUDENT_PAYMENT",
+                // LOG for Partial Month Settlement via Cheque
+                logHelper.log(
+                        "MONTHLY_FEES",
                         installmentId,
-                        "INSERT",
+                        "FEE PAID",
+                        "ENR-" + enrollmentId,
                         payNow,
-                        "CHEQUE",
-                        "Cheque saved (partial) for " + monthFor,
+                        String.format("Pending Cheque #%s (%s) applied to partial month: %s", chequeNo, bank, monthFor),
                         username
                 );
 
@@ -2534,7 +2533,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                 String monthName = model.getValueAt(i, 2).toString();
                 String ym = String.format("%04d-%02d", year, GeneralMethods.getMonthNumber(monthName));
 
-                int paid = GeneralMethods.parseCommaNumber(
+                double paid = GeneralMethods.parseCommaNumber(
                         model.getValueAt(i, 3).toString().isEmpty() ? "0" : model.getValueAt(i, 3).toString()
                 );
 
@@ -2542,7 +2541,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                     continue;
                 }
 
-                int payNow = Math.min(monthlyFee - paid, remainingAmount);
+                double payNow = Math.min(monthlyFee - paid, remainingAmount);
                 installmentNo++;
 
                 // Insert installment
@@ -2586,15 +2585,14 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
 //                        "MONTHLY_FEE",
 //                        username
 //                );
-
-                // log
-                LogHelper.saveLog(em,
-                        "STUDENT_PAYMENT",
+                // LOG for Table Distribution via Cheque
+                logHelper.log(
+                        "MONTHLY_FEES",
                         installmentId,
-                        "INSERT",
+                        "FEE PAID",
+                        "ENR-" + enrollmentId,
                         payNow,
-                        "CHEQUE",
-                        "Cheque saved for " + ym,
+                        String.format("Pending Cheque #%s (%s) applied to: %s", chequeNo, bank, ym),
                         username
                 );
 
@@ -2901,7 +2899,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
 
         pendingMonthsField.setText(String.valueOf(pendingMonths));
 
-        int month_fee = GeneralMethods.parseCommaNumber(
+        double month_fee = GeneralMethods.parseCommaNumber(
                 mm_fees_Monthly_total_fee_Textfield.getText()
         );
 
@@ -3786,8 +3784,6 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                 return;
             }
 
-            StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
-
             saveMonthlyFullPayment(
                     selectedEnrollmentId,
                     mm_fees_monthly_table,
@@ -3840,7 +3836,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
             return;
         }
 
-        int amount_paid = GeneralMethods.parseCommaNumber(mm_fees_cheq_cheque_amount.getText());
+        double amount_paid = GeneralMethods.parseCommaNumber(mm_fees_cheq_cheque_amount.getText());
 
         saveMonthlyChequePayment(en_id, mm_fees_monthly_table, fm_fees_cheq_full_fees_Textfield);
 
@@ -3894,8 +3890,8 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                 return;
             }
 
-            int month_fee = GeneralMethods.parseCommaNumber(mm_fees_Monthly_total_fee_Textfield.getText());
-            int month_fee_cal = GeneralMethods.parseCommaNumber(mm_fees_Monthly_fee_cal_Textfield.getText());
+            double month_fee = GeneralMethods.parseCommaNumber(mm_fees_Monthly_total_fee_Textfield.getText());
+            double month_fee_cal = GeneralMethods.parseCommaNumber(mm_fees_Monthly_fee_cal_Textfield.getText());
 
             mm_fees_Monthly_total_paid_Textfield.setText(GeneralMethods.formatWithComma(month_fee * month_fee_cal));
 
@@ -3967,8 +3963,8 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                 return;
             }
 
-            int month_fee = GeneralMethods.parseCommaNumber(fm_fees_cheq_full_fees_Textfield.getText());
-            int month_fee_cal = GeneralMethods.parseCommaNumber(fm_fees_cheq_full_fees_cal_Textfield.getText());
+            double month_fee = GeneralMethods.parseCommaNumber(fm_fees_cheq_full_fees_Textfield.getText());
+            double month_fee_cal = GeneralMethods.parseCommaNumber(fm_fees_cheq_full_fees_cal_Textfield.getText());
 
             mm_fees_cheq_cheque_amount.setText(GeneralMethods.formatWithComma(month_fee * month_fee_cal));
 

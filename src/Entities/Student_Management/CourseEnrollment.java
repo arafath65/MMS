@@ -32,10 +32,10 @@ public class CourseEnrollment implements Serializable {
     private String className;
 
     @Column(name = "admission_fee")
-    private Integer admissionFee;
+    private double admissionFee;
 
     @Column(name = "fee")
-    private Integer fee;
+    private double fee;
 
     @Column(name = "course_status")
     private String courseStatus;
@@ -76,19 +76,19 @@ public class CourseEnrollment implements Serializable {
         this.className = className;
     }
 
-    public Integer getAdmissionFee() {
+    public double getAdmissionFee() {
         return admissionFee;
     }
 
-    public void setAdmissionFee(Integer admissionFee) {
+    public void setAdmissionFee(double admissionFee) {
         this.admissionFee = admissionFee;
     }
 
-    public Integer getFee() {
+    public double getFee() {
         return fee;
     }
 
-    public void setFee(Integer fee) {
+    public void setFee(double fee) {
         this.fee = fee;
     }
 

@@ -3,6 +3,7 @@ package Panels_SubDialogs;
 import Classes.ChequeNumberFormatter;
 import Classes.GeneralMethods;
 import Classes.HibernateConfig;
+import Classes.LogHelper;
 import Classes.NumberOnlyFilter;
 import Classes.styleDateChooser;
 import JPA_DAO.Settings.CourseDAO;
@@ -33,6 +34,7 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
 
     styleDateChooser styleDateChooser = new styleDateChooser();
     GeneralMethods generalMethods = new GeneralMethods();
+    LogHelper logHelper = new LogHelper();
 
     private Fees_Management parentForm;
 
@@ -42,11 +44,11 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
     private Integer studentId;
     private int selectedStudentIds;
     private int selectedEnrollmentId;
-    private int admiFee;
+    private double admiFee = 0.0;
     String username;
     String role;
 
-    public Admission_Fee_Payment(Window parent, int studentId, Fees_Management parentForm, int selectedStudentIds, int selectedEnrollmentId, int admiFee, String username, String role) {
+    public Admission_Fee_Payment(Window parent, int studentId, Fees_Management parentForm, int selectedStudentIds, int selectedEnrollmentId, double admiFee, String username, String role) {
         super(parent, ModalityType.APPLICATION_MODAL);
         this.studentId = studentId;
         this.parentForm = parentForm;
@@ -184,7 +186,7 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
             // ============================
             // 2. GET ENTERED AMOUNT
             // ============================
-            int paidAmount = GeneralMethods.parseCommaNumber(paymentAmont);
+            double paidAmount = GeneralMethods.parseCommaNumber(paymentAmont);
 
             // ============================
             // 🔥 VALIDATION
@@ -934,6 +936,17 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
         }
 
         deleteAdmissionFee(selectedEnrollmentId);
+
+        // ✅ LOG: Admission Fee Payment Deletion
+        logHelper.log(
+                "ADMISSION_PAYMENT",
+                selectedEnrollmentId,
+                "ADMISSION DELETE",
+                "ENROLL_ID: " + selectedEnrollmentId,
+                0.0,
+                "Admission payment record deleted/reset for Enrollment ID: " + selectedEnrollmentId,
+                username
+        );
         updateAdmissionStatusLabel(selectedEnrollmentId, firstName_label8);
 
     }//GEN-LAST:event_buttonGradient2ActionPerformed
@@ -994,34 +1007,59 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
         }
 
         deleteAdmissionFee(selectedEnrollmentId);
+
+        // ✅ LOG: Admission Cheque Deletion
+        logHelper.log(
+                "ADMISSION_PAYMENT",
+                selectedEnrollmentId,
+                "ADMISSION DELETE",
+                "ENROLL_ID: " + selectedEnrollmentId,
+                0.0,
+                "Cheque admission payment record was deleted/reversed for Enrollment ID: " + selectedEnrollmentId,
+                username
+        );
+
         updateAdmissionStatusLabel(selectedEnrollmentId, firstName_label8);
 
     }//GEN-LAST:event_buttonGradient3ActionPerformed
 
     private void buttonGradient4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient4ActionPerformed
 
-        int admiFee = GeneralMethods.parseCommaNumber(ad_admi_total_fee_Textfield.getText());
-        int admiPayFee = GeneralMethods.parseCommaNumber(ad_admi_total_paid_Textfield.getText());
-        
+        double admiFee = GeneralMethods.parseCommaNumber(ad_admi_total_fee_Textfield.getText());
+        double admiPayFee = GeneralMethods.parseCommaNumber(ad_admi_total_paid_Textfield.getText());
+
         if (admiPayFee < admiFee || admiPayFee > admiFee) {
             JOptionPane.showMessageDialog(null, "Admission Fee not matched", "Not Matched", JOptionPane.WARNING_MESSAGE);
             return;
         }
         saveAdmissionFee(ad_admi_payment_method_combo.getSelectedItem().toString(), ad_admi_total_paid_Textfield.getText());
+
+        // ✅ LOG: Admission Fee Payment
+        logHelper.log(
+                "ADMISSION_PAYMENT",
+                selectedEnrollmentId,
+                "ADMISSION PAID",
+                ad_admi_payment_method_combo.getSelectedItem().toString(), // Reference is the Mode
+                admiPayFee, // The actual amount paid
+                String.format("Admission payment received via %s. Total: %.2f",
+                        ad_admi_payment_method_combo.getSelectedItem().toString(), admiPayFee),
+                username
+        );
+
         updateAdmissionStatusLabel(selectedEnrollmentId, firstName_label8);
 
     }//GEN-LAST:event_buttonGradient4ActionPerformed
 
     private void buttonGradient5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient5ActionPerformed
 
-        int admiFee = GeneralMethods.parseCommaNumber(ad_admi_cheq_full_fees_Textfield.getText());
-        int admiPayFee = GeneralMethods.parseCommaNumber(ad_admi_cheq_cheque_amount.getText());
-        
+        double admiFee = GeneralMethods.parseCommaNumber(ad_admi_cheq_full_fees_Textfield.getText());
+        double admiPayFee = GeneralMethods.parseCommaNumber(ad_admi_cheq_cheque_amount.getText());
+
         if (admiPayFee < admiFee || admiPayFee > admiFee) {
             JOptionPane.showMessageDialog(null, "Admission Fee not matched", "Not Matched", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        
+
         // Check mandatory fields
         if (ad_admi_cheq_cheque_number.getText().equals("")
                 || ad_admi_cheq_cheque_bank.getEditor().getItem().toString().equals("")
@@ -1035,6 +1073,20 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
             return;
         }
         saveAdmissionFee("CHEQUE", ad_admi_cheq_cheque_amount.getText());
+
+        // ✅ LOG: Admission Cheque Payment
+        logHelper.log(
+                "ADMISSION_PAYMENT",
+                selectedEnrollmentId,
+                "ADMISSION PAID",
+                "Cheque Payment",
+                admiPayFee,
+                String.format("Cheque Received | Bank: %s | No: %s | Date: %s",
+                        ad_admi_cheq_cheque_bank.getEditor().getItem().toString(),
+                        ad_admi_cheq_cheque_number.getText(),
+                        ad_admi_cheq_cheque_date.getDate()),
+                username
+        );
         updateAdmissionStatusLabel(selectedEnrollmentId, firstName_label8);
 
     }//GEN-LAST:event_buttonGradient5ActionPerformed

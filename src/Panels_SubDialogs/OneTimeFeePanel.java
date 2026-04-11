@@ -5,6 +5,7 @@ import Classes.ChequeNumberFormatter;
 import Classes.GeneralMethods;
 import Classes.GradientButton;
 import Classes.HibernateConfig;
+import Classes.LogHelper;
 import Classes.ModernDialog;
 import Classes.NumberOnlyFilter;
 import Classes.styleDateChooser;
@@ -35,6 +36,7 @@ import javax.swing.text.PlainDocument;
 public class OneTimeFeePanel extends javax.swing.JPanel {
 
     GeneralMethods generalMethods = new GeneralMethods();
+    LogHelper logHelper = new LogHelper();
     SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
 
     String username;
@@ -159,7 +161,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
         return totalBalance;
     }
 
-    public void deleteOneTimeOrRoundPayment(int enrollmentId, String paymentDate, int amount) {
+    public void deleteOneTimeOrRoundPayment(int enrollmentId, String paymentDate, double amount) {
 
         EntityManager em = HibernateConfig.getEntityManager();
 
@@ -260,12 +262,12 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
             // ============================
             if (shouldUpdateAmount) {
 
-                int newTotalPaid = totalPaid - amount;
+                double newTotalPaid = totalPaid - amount;
                 if (newTotalPaid < 0) {
                     newTotalPaid = 0;
                 }
 
-                int newBalance = totalFee - newTotalPaid;
+                double newBalance = totalFee - newTotalPaid;
 
                 String paymentStatus;
 
@@ -315,7 +317,6 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                     .executeUpdate();
 
             em.getTransaction().commit();
-            
 
             JOptionPane.showMessageDialog(null, "Payment Deleted Successfully!");
 
@@ -1010,11 +1011,30 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
     private void buttonGradient2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient2ActionPerformed
 
         int st_id = Fees_Management.selectedStudentIds;
-        DefaultTableModel model = (DefaultTableModel) fm_fees_oneTime_table.getModel();
+        int en_id = Fees_Management.selectedEnrollmentId;
 
-        String payDate = fm_fees_oneTime_table.getValueAt(fm_fees_oneTime_table.getSelectedRow(), 1).toString();
-        int payAmount = GeneralMethods.parseCommaNumber(fm_fees_oneTime_table.getValueAt(fm_fees_oneTime_table.getSelectedRow(), 2).toString());
+        DefaultTableModel model = (DefaultTableModel) fm_fees_oneTime_table.getModel();
+        int selectedRow = fm_fees_oneTime_table.getSelectedRow();
+
+        String payDate = fm_fees_oneTime_table.getValueAt(selectedRow, 1).toString();
+        double payAmount = GeneralMethods.parseCommaNumber(fm_fees_oneTime_table.getValueAt(selectedRow, 2).toString());
+
         deleteOneTimeOrRoundPayment(Fees_Management.selectedEnrollmentId, payDate, payAmount);
+
+        String logDetail = String.format(
+                "DELETED Payment | Date: %s | Amount: %s | Enrollment: %d",
+                payDate, payAmount, en_id
+        );
+
+        logHelper.log(
+                "FEE_PAYMENT", // Action type
+                en_id, // Reference ID (Enrollment)
+                "FEE DELETED", // Status
+                "Student ID: " + st_id,
+                payAmount, // The amount that was reversed/removed
+                logDetail,
+                username
+        );
 
         model.removeRow(fm_fees_oneTime_table.getSelectedRow());
         Fees_Management.updateMasterTableRows(st_id);
@@ -1039,14 +1059,14 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                 return;
             }
 
-            int amount_paid = GeneralMethods.parseCommaNumber(fm_fees_cheq_cheque_amount.getText());
+            double amount_paid = GeneralMethods.parseCommaNumber(fm_fees_cheq_cheque_amount.getText());
 
             StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
             int pendingCheque = dao.getStudentPendingChequeTotal(st_id);
             int totalBalance = getTotalBalanceFromTable();
 
-            int actualBalance = totalBalance - pendingCheque;
-            int cheq_final_bal = GeneralMethods.parseCommaNumber(fm_fees_cheq_cheque_sum_bal_Textfield.getText());
+            double actualBalance = totalBalance - pendingCheque;
+            double cheq_final_bal = GeneralMethods.parseCommaNumber(fm_fees_cheq_cheque_sum_bal_Textfield.getText());
 
             // ⚠ Prevent payment if fully paid
             if (cheq_final_bal <= 0) {
@@ -1086,7 +1106,6 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                 }
             }
 
-            int tot_fee = GeneralMethods.parseCommaNumber(fm_fees_cheq_full_fees_Textfield.getText());
             String chq_no = fm_fees_cheq_cheque_number.getText();
             String bank_name = fm_fees_cheq_cheque_bank.getEditor().getItem().toString();
             String bank_branch = fm_fees_cheq_cheque_branch.getText();
@@ -1101,10 +1120,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
             java.sql.Date paymentDate = new java.sql.Date(utilDate.getTime());
             java.sql.Date chqPaymentDate = new java.sql.Date(chq_date.getTime());
 
-            String chq_status = fm_fees_cheq_cheque_status.getSelectedItem().toString();
-
-            int balance = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
-            LedgerDAO ledgerDAO = new LedgerDAO();
+            double balance = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
 
             int nextInstallmentNo = 1;
 
@@ -1127,7 +1143,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
 //                        dao.saveChequePayment(st_id, en_id, amount_paid,
 //                                paymentDate, chq_no, bank_name, bank_branch, chqPaymentDate, username);
                         instModel.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
-                      //  ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, "CHEQUE", "Student Management", username);
+                        //  ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, "CHEQUE", "Student Management", username);
                         break;
 
                     case 2:
@@ -1140,7 +1156,16 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                         dao.saveChequePayment(st_id, en_id, amount_paid, paymentDate, chq_no, bank_name, bank_branch, chqPaymentDate, username);
                         instModel.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
 
-                      //  ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentIds, "CHEQUE", "Student Management", username);
+                        // LOG paymentId = `student_fee_payments`.`student_fee_payments_id`,
+                        // Construct a detailed log message
+                        String logDetail = String.format(
+                                "Full fee payment for Enrollment: %d | Cheque No: %s | Bank: %s | Branch: %s | Amount: %s",
+                                en_id, chq_no, bank_name, bank_branch, GeneralMethods.formatWithComma(amount_paid)
+                        );
+
+                        // Execute the log
+                        logHelper.log("FEE_PAYMENT", paymentIds, "FEE PAID", "StudentID: " + st_id, amount_paid, logDetail, username);
+
                         break;
 
                     default:
@@ -1156,7 +1181,14 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                 dao.saveChequePayment(st_id, en_id, amount_paid, paymentDate, chq_no, bank_name, bank_branch, chqPaymentDate, username);
                 instModel.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(amount_paid)});
 
-              //  ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentId, "CHEQUE", "Student Management", username);
+                // LOG paymentId = `student_fee_payments`.`student_fee_payments_id`,
+                String logDetail = String.format(
+                        "Fee payment for Enrollment: %d | Cheque No: %s | Bank: %s | Branch: %s | Amount: %s",
+                        en_id, chq_no, bank_name, bank_branch, GeneralMethods.formatWithComma(amount_paid)
+                );
+
+                // Execute the log
+                logHelper.log("FEE_PAYMENT", paymentId, "FEE PAID", "StudentID: " + st_id, amount_paid, logDetail, username);
             }
 
         } catch (Exception e) {
@@ -1414,8 +1446,8 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
             int pendingCheque = dao.getStudentPendingChequeTotal(st_id);
             int totalBalance = getTotalBalanceFromTable();
 
-            int actualBalance = totalBalance - pendingCheque;
-            int cheq_final_bal = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
+            double actualBalance = totalBalance - pendingCheque;
+            double cheq_final_bal = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
 
             // ⚠ Prevent payment if fully paid
             if (cheq_final_bal <= 0) {
@@ -1426,7 +1458,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                 return;
             }
 
-            int amount_paid = GeneralMethods.parseCommaNumber(fm_fees_oneTime_total_paid_Textfield.getText());
+            double amount_paid = GeneralMethods.parseCommaNumber(fm_fees_oneTime_total_paid_Textfield.getText());
 
             // Check if entered amount exceeds max allowed
             if (amount_paid > actualBalance) {
@@ -1462,7 +1494,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
             java.sql.Date paymentDate = new java.sql.Date(utilDate.getTime());
             String pay_method = fm_fees_oneTime_payment_method_combo.getSelectedItem().toString();
 
-            int balance = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
+            double balance = GeneralMethods.parseCommaNumber(fm_fees_oneTime_chq_sum_bal_Textfield.getText());
             LedgerDAO ledgerDAO = new LedgerDAO();
 
             int nextInstallmentNo = 1;
@@ -1484,7 +1516,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                         Fees_Management.updateMasterTableRows(st_id);
                         int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
                         model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
-                       // ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, pay_method, "Student Management", username);
+                        // ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Round", paymentId, pay_method, "Student Management", username);
                         break;
 
                     case 2:
@@ -1493,7 +1525,19 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                         Fees_Management.updateMasterTableRows(st_id);
                         int paymentIds = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
                         model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(balance)});
-                      //  ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentIds, pay_method, "Student Management", username);
+
+                        String logDetailCase2 = String.format("Partial Course Settlement via %s | Paid: %s",
+                                pay_method, GeneralMethods.parseCommaNumber(amount_paid + ""));
+                        logHelper.log(
+                                "FEE_PAYMENT",
+                                paymentIds,
+                                "FEE PAID",
+                                "Enrollment: " + en_id,
+                                balance, // Note: logging the balance amount actually applied to this course
+                                logDetailCase2,
+                                username
+                        );
+
                         break;
 
                     default:
@@ -1504,7 +1548,18 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                 Fees_Management.updateMasterTableRows(st_id);
                 int paymentId = dao.getPaymentIdByStudentAndEnrollment(st_id, en_id);
                 model.addRow(new Object[]{nextInstallmentNo, paymentDate, GeneralMethods.formatWithComma(amount_paid)});
-             //   ledgerDAO.saveLedgerEntry(paymentDate, "INCOME", amount_paid, "Student Fee Payment", "Student Fees - Full", paymentId, pay_method, "Student Management", username);
+
+                String logDetail = String.format("One-time fee payment for Enrollment: %d via %s", en_id, pay_method);
+                logHelper.log(
+                        "FEE_PAYMENT",
+                        paymentId,
+                        "FEE PAID",
+                        "Student ID: " + st_id,
+                        amount_paid,
+                        logDetail,
+                        username
+                );
+
             }
 
             List<Object[]> list = dao.getInstallments(en_id);
@@ -1520,7 +1575,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
                 model2.addRow(new Object[]{
                     row[0],
                     sdf.format(row[1]),
-                    GeneralMethods.formatWithComma(Integer.parseInt(row[2].toString())),
+                    GeneralMethods.formatWithComma(GeneralMethods.parseCommaNumber(row[2].toString())),
                     paymentMethod,
                     chequeStatus
                 });
@@ -1574,7 +1629,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
     private javax.swing.JLabel sup_payment_cheque_label;
     private javax.swing.JLabel sup_payment_cheque_label1;
     // End of variables declaration//GEN-END:variables
-private int showRoundPaymentDialog(int studentId, int enrollmentId, int overpaidAmount) {
+private int showRoundPaymentDialog(int studentId, int enrollmentId, double overpaidAmount) {
         Window parent = SwingUtilities.getWindowAncestor(this);
 
         ModernDialog dialog = new ModernDialog((Frame) parent, 480, 300);
@@ -1644,7 +1699,7 @@ private int showRoundPaymentDialog(int studentId, int enrollmentId, int overpaid
         // ===== SUM BALANCES IF MULTIPLE COURSES =====
         int courseCount = Fees_Management.fm_fees_course_table.getRowCount();
         if (courseCount > 1) {
-            int totalBalance = 0;
+            double totalBalance = 0.0;
             for (int i = 0; i < courseCount; i++) {
                 totalBalance += GeneralMethods.parseCommaNumber(
                         Fees_Management.fm_fees_course_table.getValueAt(i, 9).toString()

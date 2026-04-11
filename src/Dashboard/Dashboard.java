@@ -1,9 +1,11 @@
 package Dashboard;
 
 import Dashboard_Design.MyDrawerBuilder;
+import Panels.Additional_Payments;
 import Panels.Cheque_Handling;
 import Panels.Dashboard_Panel;
 import Panels.Fees_Management;
+import Panels.Inventory;
 import Panels.Register_Course;
 import Panels.Student_Management;
 import com.formdev.flatlaf.FlatLaf;
@@ -25,7 +27,9 @@ public class Dashboard extends javax.swing.JFrame {
     Student_Management studentManagement;
     Register_Course register_Courses;
     Fees_Management fees_Management;
+    Inventory inventory;
     Cheque_Handling cheque_Handling;
+    Additional_Payments additional_Payments;
    // Course_enrolment course_enrolment;
     
     String username;
@@ -45,10 +49,12 @@ public class Dashboard extends javax.swing.JFrame {
         main_panels.setLayout(cardLayout);
 
         dashboard_Panel = new Dashboard_Panel();
-        studentManagement = new Student_Management();
-        register_Courses = new Register_Course();
+        studentManagement = new Student_Management(username, role);
+        register_Courses = new Register_Course(username, role);
         fees_Management = new Fees_Management(username, role);
+        inventory = new Inventory(username, role);
         cheque_Handling = new Cheque_Handling(username, role);
+        additional_Payments = new Additional_Payments(username, role);
        // course_enrolment = new Course_enrolment();
 
         // ADD PANEL TO CARDLAYOUT (ONLY ONCE)
@@ -56,7 +62,9 @@ public class Dashboard extends javax.swing.JFrame {
         main_panels.add(studentManagement, "STUDENT_ADMISSION");
         main_panels.add(register_Courses, "REGISTER_COURSE");
         main_panels.add(fees_Management, "FEES_MANAGEMENT");
+        main_panels.add(inventory, "INVENTORY");
         main_panels.add(cheque_Handling, "CHEQUE_HANDLING");
+        main_panels.add(additional_Payments, "ADDITIONAL_PAYMENTS");
        // main_panels.add(course_enrolment, "COURSE_ENROLMENT");
 
         showPanel("DASHBOARD_PANEL"); // default
