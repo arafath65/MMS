@@ -242,9 +242,6 @@
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
                 </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
-                </Property>
                 <Property name="text" type="java.lang.String" value="Admission Number"/>
               </Properties>
             </Component>
@@ -253,9 +250,6 @@
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
                 </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
-                </Property>
                 <Property name="text" type="java.lang.String" value="Full Name"/>
               </Properties>
             </Component>
@@ -263,9 +257,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Form Number"/>
               </Properties>
@@ -284,9 +275,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Date of Birth"/>
               </Properties>
@@ -317,9 +305,6 @@
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
                 </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
-                </Property>
                 <Property name="text" type="java.lang.String" value="Age"/>
               </Properties>
             </Component>
@@ -327,9 +312,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Gender"/>
               </Properties>
@@ -355,9 +337,6 @@
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
                 </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
-                </Property>
                 <Property name="text" type="java.lang.String" value="NIC"/>
               </Properties>
             </Component>
@@ -365,9 +344,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Address"/>
               </Properties>
@@ -445,9 +421,6 @@
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
                 </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
-                </Property>
                 <Property name="text" type="java.lang.String" value="Contact"/>
               </Properties>
             </Component>
@@ -465,9 +438,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Admission Date"/>
               </Properties>
@@ -634,9 +604,6 @@
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
                 </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
-                </Property>
                 <Property name="text" type="java.lang.String" value="NIC"/>
               </Properties>
             </Component>
@@ -644,9 +611,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Full Name"/>
               </Properties>
@@ -656,9 +620,6 @@
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
                 </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
-                </Property>
                 <Property name="text" type="java.lang.String" value="Contact"/>
               </Properties>
             </Component>
@@ -666,9 +627,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Occupation"/>
               </Properties>
@@ -691,9 +649,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="WhatsApp"/>
               </Properties>
@@ -760,9 +715,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Living with child"/>
               </Properties>
@@ -899,9 +851,6 @@
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
                 </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
-                </Property>
                 <Property name="text" type="java.lang.String" value="NIC"/>
               </Properties>
             </Component>
@@ -909,9 +858,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Full Name"/>
               </Properties>
@@ -921,9 +867,6 @@
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
                 </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
-                </Property>
                 <Property name="text" type="java.lang.String" value="Relationship"/>
               </Properties>
             </Component>
@@ -932,9 +875,6 @@
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
                 </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
-                </Property>
                 <Property name="text" type="java.lang.String" value="Contact"/>
               </Properties>
             </Component>
@@ -942,9 +882,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="WhatsApp"/>
               </Properties>
@@ -1007,9 +944,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Address"/>
               </Properties>
@@ -1130,9 +1064,6 @@
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
                 </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
-                </Property>
                 <Property name="text" type="java.lang.String" value="NIC"/>
               </Properties>
             </Component>
@@ -1140,9 +1071,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Full Name"/>
               </Properties>
@@ -1152,9 +1080,6 @@
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
                 </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
-                </Property>
                 <Property name="text" type="java.lang.String" value="Contact"/>
               </Properties>
             </Component>
@@ -1162,9 +1087,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Occupation"/>
               </Properties>
@@ -1187,9 +1109,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="WhatsApp"/>
               </Properties>
@@ -1256,9 +1175,6 @@
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Medium" size="12" style="0"/>
-                </Property>
-                <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-                  <Color blue="e8" green="e8" red="e8" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Living with child"/>
               </Properties>
@@ -1513,7 +1429,7 @@
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
               <Image iconType="3" name="/images/misc32.png"/>
             </Property>
-            <Property name="toolTipText" type="java.lang.String" value="Issue Miscellaneous Student Fees"/>
+            <Property name="toolTipText" type="java.lang.String" value="Issue Miscellaneous Items"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton3ActionPerformed"/>

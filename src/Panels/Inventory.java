@@ -116,7 +116,7 @@ public class Inventory extends javax.swing.JPanel {
                     return;
                 }
 
-                int itemId = extractIdFromCombo(selectedValue);
+                int itemId = generalMethods.extractIdFromCombo(selectedValue);
                 Object[] data = getItemUnitsAndPrice(itemId);
 
                 if (data != null) {
@@ -157,38 +157,38 @@ public class Inventory extends javax.swing.JPanel {
         return false;
     }
 
-    public int extractIdFromCombo(String combo) {
-
-        Object selectedObj = combo;
-
-        if (selectedObj == null) {
-            JOptionPane.showMessageDialog(null, "Please select value");
-            return -1;
-        }
-
-        String text = selectedObj.toString().trim();
-
-        // check valid format
-        if (!text.contains("[") || !text.contains("]")) {
-            JOptionPane.showMessageDialog(null, "Please select from dropdown list");
-            return -1;
-        }
-
-        try {
-            int start = text.lastIndexOf("[") + 1;
-            int end = text.lastIndexOf("]");
-
-            if (start >= end) {
-                throw new Exception();
-            }
-
-            return Integer.parseInt(text.substring(start, end));
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Invalid selection format");
-            return -1;
-        }
-    }
+//    public int extractIdFromCombo(String combo) {
+//
+//        Object selectedObj = combo;
+//
+//        if (selectedObj == null) {
+//            JOptionPane.showMessageDialog(null, "Please select value");
+//            return -1;
+//        }
+//
+//        String text = selectedObj.toString().trim();
+//
+//        // check valid format
+//        if (!text.contains("[") || !text.contains("]")) {
+//            JOptionPane.showMessageDialog(null, "Please select from dropdown list");
+//            return -1;
+//        }
+//
+//        try {
+//            int start = text.lastIndexOf("[") + 1;
+//            int end = text.lastIndexOf("]");
+//
+//            if (start >= end) {
+//                throw new Exception();
+//            }
+//
+//            return Integer.parseInt(text.substring(start, end));
+//
+//        } catch (Exception e) {
+//            JOptionPane.showMessageDialog(null, "Invalid selection format");
+//            return -1;
+//        }
+//    }
 
     public void loadGrnToTable(JTable table, int supplierId, String invoiceNo) {
 
@@ -269,7 +269,7 @@ public class Inventory extends javax.swing.JPanel {
             int selectedRow = inv_grn_table.getSelectedRow();
 
             String invoiceNo = inv_grn_invoice_no_text.getText();
-            int supId = extractIdFromCombo(inv_grn_supplier_combo.getSelectedItem().toString());
+            int supId = generalMethods.extractIdFromCombo(inv_grn_supplier_combo.getSelectedItem().toString());
 
             // =========================
             // CASE 1: ROW SELECTED
@@ -288,7 +288,7 @@ public class Inventory extends javax.swing.JPanel {
                     return;
                 }
 
-                int itemId = extractIdFromCombo(model.getValueAt(selectedRow, 4).toString());
+                int itemId = generalMethods.extractIdFromCombo(model.getValueAt(selectedRow, 4).toString());
 
                 // GRN ITEM SOFT DELETE
                 Query q1 = em.createQuery(
@@ -760,7 +760,7 @@ public class Inventory extends javax.swing.JPanel {
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel9Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 330, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 325, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1039,7 +1039,7 @@ public class Inventory extends javax.swing.JPanel {
     private void buttonGradient5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient5ActionPerformed
 
         EntityManager em = HibernateConfig.getEntityManager();
-        int supp_id = extractIdFromCombo(inv_grn_supplier_combo.getEditor().getItem().toString());
+        int supp_id = generalMethods.extractIdFromCombo(inv_grn_supplier_combo.getEditor().getItem().toString());
 
         String invoiceNo = inv_grn_invoice_no_text.getText();
 
@@ -1066,7 +1066,7 @@ public class Inventory extends javax.swing.JPanel {
             // =========================
             // 1. CREATE & SAVE GRN
             // =========================
-            int sup_id = extractIdFromCombo(inv_grn_supplier_combo.getEditor().getItem().toString());
+            int sup_id = generalMethods.extractIdFromCombo(inv_grn_supplier_combo.getEditor().getItem().toString());
 
             Grn grn = new Grn();
             grn.setSuppliersId(sup_id); // from UI
@@ -1089,7 +1089,7 @@ public class Inventory extends javax.swing.JPanel {
             for (int i = 0; i < model.getRowCount(); i++) {
 
                 GrnItems item = new GrnItems();
-                int itemId = extractIdFromCombo(model.getValueAt(i, 4).toString());
+                int itemId = generalMethods.extractIdFromCombo(model.getValueAt(i, 4).toString());
                 // int itemId = itemDAO.getItemIdByName(model.getValueAt(i, 4).toString());
 
                 // int itemId = selectedItemId;
@@ -1275,7 +1275,8 @@ public class Inventory extends javax.swing.JPanel {
     }//GEN-LAST:event_inv_grn_discount_textActionPerformed
 
     private void inv_grn_discount_textKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_inv_grn_discount_textKeyTyped
-        // TODO add your handling code here:
+        ((AbstractDocument) inv_grn_discount_text.getDocument())
+        .setDocumentFilter(new DecimalOnlyFilter());
     }//GEN-LAST:event_inv_grn_discount_textKeyTyped
 
     private void inv_grn_line_total_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inv_grn_line_total_textActionPerformed
@@ -1293,7 +1294,7 @@ public class Inventory extends javax.swing.JPanel {
             return;
         }
 
-        int sup_id = extractIdFromCombo(inv_grn_supplier_combo.getEditor().getItem().toString());
+        int sup_id = generalMethods.extractIdFromCombo(inv_grn_supplier_combo.getEditor().getItem().toString());
         loadGrnToTable(inv_grn_table, sup_id, inv_grn_invoice_no_text.getText());
         calculateInvoiceTotal();
 

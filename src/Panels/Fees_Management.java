@@ -20,6 +20,7 @@ import Panels_SubDialogs.MonthlyFeePanel;
 import Panels_SubDialogs.OneTimeFeePanel;
 import static Panels_SubDialogs.OneTimeFeePanel.fm_fees_oneTime_table;
 import static Panels_SubDialogs.OneTimeFeePanel.fm_fees_oneTime_total_fee_Textfield;
+import Panels_SubDialogs.Round_Payment;
 import com.formdev.flatlaf.FlatClientProperties;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -661,6 +662,12 @@ public class Fees_Management extends javax.swing.JPanel {
             .addGap(0, 407, Short.MAX_VALUE)
         );
 
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -886,6 +893,28 @@ public class Fees_Management extends javax.swing.JPanel {
         GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
 
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+
+        String st_name = fm_fees_name_combo.getEditor().getItem().toString();
+        if (st_name.equals("")) {
+            return;
+        }
+
+        DefaultTableModel model = (DefaultTableModel) fm_fees_course_table.getModel();
+        int st_id = 0;
+        for (int i = 0; i < model.getRowCount(); i++) {
+            st_id = Integer.parseInt(fm_fees_course_table.getValueAt(i, 11).toString());
+        }
+
+        JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+
+        //  int admiFee = GeneralMethods.parseCommaNumber(fm_fees_course_table.getValueAt(fm_fees_course_table.getSelectedRow(), 6).toString());
+        Round_Payment dialog = new Round_Payment(parentFrame, st_id, st_name, username, role);
+        System.out.println("stuuu - " + st_id);
+
+        GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
+    }//GEN-LAST:event_jButton3ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

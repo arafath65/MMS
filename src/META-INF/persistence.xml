@@ -24,6 +24,7 @@
     <class>Entities.Student_Management.StudentFeeRoundPaymentMaster</class>
     <class>Entities.Student_Management.StudentFeeChequeDetails</class>
     <class>Entities.Student_Management.FeeTypes</class>
+    <class>Entities.Student_Management.StudentAdditionalFees</class>
     <class>Entities.Inventory.Supplier</class>
     <class>Entities.Inventory.Item</class>
     <class>Entities.Inventory.Grn</class>

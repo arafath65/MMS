@@ -342,7 +342,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
             // =====================================================
             if (payingFee == 0) {
 
-                List<Object[]> lastPaidRows = em.createNativeQuery(
+                List<Object> lastPaidRows = em.createNativeQuery(
                         "SELECT month_for FROM student_fee_installments "
                         + "WHERE enrollment_id=? AND status=1 "
                         + "ORDER BY month_for DESC"
@@ -351,7 +351,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                 String targetMonth;
 
                 if (!lastPaidRows.isEmpty()) {
-                    String lastMonth = lastPaidRows.get(0)[0].toString();
+                    String lastMonth = lastPaidRows.get(0).toString();
 
                     String[] parts = lastMonth.split("-");
                     int year = Integer.parseInt(parts[0]);

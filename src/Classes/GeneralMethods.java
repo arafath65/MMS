@@ -19,6 +19,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.imageio.ImageIO;
 import javax.persistence.EntityManager;
@@ -37,9 +39,15 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.RowFilter;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import javax.swing.text.DateFormatter;
 
 /**
@@ -436,7 +444,11 @@ public class GeneralMethods {
 
             try {
 
-                String sql = "SELECT DISTINCT CONCAT(" + nameColumn + ", ' [', " + idColumn + ", ']') "
+//                String sql = "SELECT DISTINCT CONCAT(" + nameColumn + ", ' [', " + idColumn + ", ']') "
+//                        + "FROM " + table + " "
+//                        + "WHERE " + nameColumn + " LIKE ? "
+//                        + "AND status = 1";
+                String sql = "SELECT DISTINCT CONCAT(" + nameColumn + ", ' [', IFNULL(" + idColumn + ", 0), ']') "
                         + "FROM " + table + " "
                         + "WHERE " + nameColumn + " LIKE ? "
                         + "AND status = 1";
@@ -468,6 +480,116 @@ public class GeneralMethods {
                 em.close();
             }
 
+        });
+    }
+
+    public String extractNameFromCombo(String combo) {
+
+        if (combo == null) {
+            JOptionPane.showMessageDialog(null, "Please select value");
+            return "";
+        }
+
+        String text = combo.toString().trim();
+
+        // check format
+        if (!text.contains("[") || !text.contains("]")) {
+            JOptionPane.showMessageDialog(null, "Please select from dropdown list");
+            return "";
+        }
+
+        try {
+            int end = text.lastIndexOf("[");
+
+            if (end <= 0) {
+                throw new Exception();
+            }
+
+            // 🔥 extract name part
+            String name = text.substring(0, end).trim();
+
+            return name;
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Invalid selection format");
+            return "";
+        }
+    }
+
+    public int extractIdFromCombo(String combo) {
+
+        Object selectedObj = combo;
+
+        if (selectedObj == null) {
+            JOptionPane.showMessageDialog(null, "Please select value");
+            return -1;
+        }
+
+        String text = selectedObj.toString().trim();
+
+        // check valid format
+        if (!text.contains("[") || !text.contains("]")) {
+            JOptionPane.showMessageDialog(null, "Please select from dropdown list");
+            return -1;
+        }
+
+        try {
+            int start = text.lastIndexOf("[") + 1;
+            int end = text.lastIndexOf("]");
+
+            if (start >= end) {
+                throw new Exception();
+            }
+
+            return Integer.parseInt(text.substring(start, end));
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Invalid selection format");
+            return -1;
+        }
+    }
+
+    public void enableTableSearch(JTable table, JTextField textField) {
+
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+        table.setRowSorter(sorter);
+
+        // initial sort
+        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
+        sortKeys.add(new RowSorter.SortKey(1, SortOrder.ASCENDING));
+        sorter.setSortKeys(sortKeys);
+
+        textField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                filter();
+            }
+
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                filter();
+            }
+
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                filter();
+            }
+
+            private void filter() {
+                String text = textField.getText().trim();
+
+                if (text.isEmpty()) {
+                    sorter.setRowFilter(null);
+                } else {
+                    sorter.setRowFilter(
+                            RowFilter.regexFilter("(?i)" + java.util.regex.Pattern.quote(text), 1)
+                    );
+                }
+
+                // 🔥 RE-APPLY SORT AFTER FILTER
+                sorter.setSortKeys(Arrays.asList(
+                        new RowSorter.SortKey(1, SortOrder.ASCENDING)
+                ));
+            }
         });
     }
 

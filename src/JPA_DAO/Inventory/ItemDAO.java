@@ -15,7 +15,7 @@ public class ItemDAO {
         EntityManager em = HibernateConfig.getEntityManager();
         em.getTransaction().begin();
         em.persist(item);
-        
+
         em.getTransaction().commit();
         em.close();
     }
@@ -91,4 +91,97 @@ public class ItemDAO {
 
         return itemId;
     }
+
+    public Object[] getItemLatestPriceAndStock(int itemId, String feeName) {
+
+        EntityManager em = HibernateConfig.getEntityManager();
+
+        try {
+
+            double latestPrice = 0.0;
+            double currentStock = 0.0;
+
+            // =========================
+            // CASE 1: SERVICE (itemId = 0)
+            // =========================
+            if (itemId == 0) {
+
+                Query feeQuery = em.createQuery(
+                        "SELECT f.defaultAmount FROM FeeTypes f "
+                        + "WHERE f.feeName = :name AND f.status = 1"
+                );
+
+                feeQuery.setParameter("name", feeName);
+                feeQuery.setMaxResults(1);
+
+                List<Double> feeList = feeQuery.getResultList();
+
+                if (!feeList.isEmpty()) {
+                    latestPrice = feeList.get(0);
+                }
+
+                // No stock for services
+                return new Object[]{latestPrice, 0.0};
+            }
+
+            // =========================
+            // CASE 2: NORMAL ITEM
+            // =========================
+            // ---------- LATEST PRICE ----------
+            Query priceQuery = em.createQuery(
+                    "SELECT gi.unitPrice FROM GrnItems gi "
+                    + "WHERE gi.itemId = :itemId AND gi.status = 1 "
+                    + "ORDER BY gi.grnItemsId DESC"
+            );
+
+            priceQuery.setParameter("itemId", itemId);
+            priceQuery.setMaxResults(1);
+
+            List<Double> priceList = priceQuery.getResultList();
+            latestPrice = priceList.isEmpty() ? 0.0 : priceList.get(0);
+
+            // ---------- STOCK IN ----------
+            Query inQuery = em.createQuery(
+                    "SELECT SUM(st.quantity) FROM StockTransaction st "
+                    + "WHERE st.itemId = :itemId "
+                    + "AND st.transactionType = 'IN' "
+                    + "AND st.status = 1"
+            );
+
+            inQuery.setParameter("itemId", itemId);
+
+            Double inQty = (Double) inQuery.getSingleResult();
+            if (inQty == null) {
+                inQty = 0.0;
+            }
+
+            // ---------- STOCK OUT ----------
+            Query outQuery = em.createQuery(
+                    "SELECT SUM(st.quantity) FROM StockTransaction st "
+                    + "WHERE st.itemId = :itemId "
+                    + "AND st.transactionType <> 'IN' "
+                    + "AND st.status = 1"
+            );
+
+            outQuery.setParameter("itemId", itemId);
+
+            Double outQty = (Double) outQuery.getSingleResult();
+            if (outQty == null) {
+                outQty = 0.0;
+            }
+
+            currentStock = inQty - outQty;
+
+            return new Object[]{latestPrice, currentStock};
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
+
+        return new Object[]{0.0, 0.0};
+    }
+
+
 }

@@ -11,6 +11,7 @@ import Entities.Student_Management.StudentParents;
 import JPA_DAO.Student_Management.StudentDAO;
 import JPA_DAO.Student_Management.StudentParentsDAO;
 import Panels_SubDialogs.Course_Enrollment;
+import Panels_SubDialogs.Miscellaneous_Issuing;
 import Panels_SubDialogs.Siblings_Register;
 import java.awt.Window;
 import java.awt.event.KeyAdapter;
@@ -1277,22 +1278,18 @@ public class Student_Management extends javax.swing.JPanel {
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "General Information", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
         jLabel1.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel1.setForeground(new java.awt.Color(232, 232, 232));
         jLabel1.setText("Admission Number");
 
         jLabel2.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel2.setForeground(new java.awt.Color(232, 232, 232));
         jLabel2.setText("Full Name");
 
         jLabel3.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel3.setForeground(new java.awt.Color(232, 232, 232));
         jLabel3.setText("Form Number");
 
         stm_ad_admission_date.setForeground(new java.awt.Color(204, 204, 204));
         stm_ad_admission_date.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
 
         jLabel4.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel4.setForeground(new java.awt.Color(232, 232, 232));
         jLabel4.setText("Date of Birth");
 
         stm_ad_student_dob.setForeground(new java.awt.Color(255, 255, 255));
@@ -1307,22 +1304,18 @@ public class Student_Management extends javax.swing.JPanel {
         });
 
         jLabel5.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel5.setForeground(new java.awt.Color(232, 232, 232));
         jLabel5.setText("Age");
 
         jLabel6.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel6.setForeground(new java.awt.Color(232, 232, 232));
         jLabel6.setText("Gender");
 
         stm_ad_student_gender_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
         stm_ad_student_gender_combo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Male", "Female" }));
 
         jLabel7.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel7.setForeground(new java.awt.Color(232, 232, 232));
         jLabel7.setText("NIC");
 
         jLabel8.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel8.setForeground(new java.awt.Color(232, 232, 232));
         jLabel8.setText("Address");
 
         stm_ad_student_address_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
@@ -1371,7 +1364,6 @@ public class Student_Management extends javax.swing.JPanel {
         );
 
         jLabel15.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel15.setForeground(new java.awt.Color(232, 232, 232));
         jLabel15.setText("Contact");
 
         stm_ad_student_contact_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
@@ -1382,7 +1374,6 @@ public class Student_Management extends javax.swing.JPanel {
         });
 
         jLabel25.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel25.setForeground(new java.awt.Color(232, 232, 232));
         jLabel25.setText("Admission Date");
 
         stm_ad_admission_no_combo.setEditable(true);
@@ -1492,26 +1483,21 @@ public class Student_Management extends javax.swing.JPanel {
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Mother Information", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
         jLabel13.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel13.setForeground(new java.awt.Color(232, 232, 232));
         jLabel13.setText("NIC");
 
         jLabel14.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel14.setForeground(new java.awt.Color(232, 232, 232));
         jLabel14.setText("Full Name");
 
         jLabel21.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel21.setForeground(new java.awt.Color(232, 232, 232));
         jLabel21.setText("Contact");
 
         jLabel23.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel23.setForeground(new java.awt.Color(232, 232, 232));
         jLabel23.setText("Occupation");
 
         stm_ad_student_mother_occupation_combo.setEditable(true);
         stm_ad_student_mother_occupation_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
 
         jLabel24.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel24.setForeground(new java.awt.Color(232, 232, 232));
         jLabel24.setText("WhatsApp");
 
         stm_ad_student_mother_nic_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
@@ -1546,7 +1532,6 @@ public class Student_Management extends javax.swing.JPanel {
         stm_ad_student_mother_living_combo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "None", "Deceased", "Seperated", "Dead" }));
 
         jLabel26.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel26.setForeground(new java.awt.Color(232, 232, 232));
         jLabel26.setText("Living with child");
 
         buttonGroup1.add(stm_ad_student_mother_living_yes_checkbox);
@@ -1623,23 +1608,18 @@ public class Student_Management extends javax.swing.JPanel {
         jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Guardian Information", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
         jLabel31.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel31.setForeground(new java.awt.Color(232, 232, 232));
         jLabel31.setText("NIC");
 
         jLabel32.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel32.setForeground(new java.awt.Color(232, 232, 232));
         jLabel32.setText("Full Name");
 
         jLabel33.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel33.setForeground(new java.awt.Color(232, 232, 232));
         jLabel33.setText("Relationship");
 
         jLabel34.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel34.setForeground(new java.awt.Color(232, 232, 232));
         jLabel34.setText("Contact");
 
         jLabel36.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel36.setForeground(new java.awt.Color(232, 232, 232));
         jLabel36.setText("WhatsApp");
 
         stm_ad_student_guardian_relationship_combo.setEditable(true);
@@ -1674,7 +1654,6 @@ public class Student_Management extends javax.swing.JPanel {
         });
 
         jLabel35.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel35.setForeground(new java.awt.Color(232, 232, 232));
         jLabel35.setText("Address");
 
         stm_ad_student_guardian_nic.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
@@ -1756,26 +1735,21 @@ public class Student_Management extends javax.swing.JPanel {
         jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Father Information", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
         jLabel17.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel17.setForeground(new java.awt.Color(232, 232, 232));
         jLabel17.setText("NIC");
 
         jLabel22.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel22.setForeground(new java.awt.Color(232, 232, 232));
         jLabel22.setText("Full Name");
 
         jLabel27.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel27.setForeground(new java.awt.Color(232, 232, 232));
         jLabel27.setText("Contact");
 
         jLabel28.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel28.setForeground(new java.awt.Color(232, 232, 232));
         jLabel28.setText("Occupation");
 
         stm_ad_student_father_occupation_combo.setEditable(true);
         stm_ad_student_father_occupation_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
 
         jLabel29.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel29.setForeground(new java.awt.Color(232, 232, 232));
         jLabel29.setText("WhatsApp");
 
         stm_ad_student_father_nic_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
@@ -1810,7 +1784,6 @@ public class Student_Management extends javax.swing.JPanel {
         stm_ad_student_father_living_combo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "None", "Deceased", "Seperated", "Dead" }));
 
         jLabel30.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel30.setForeground(new java.awt.Color(232, 232, 232));
         jLabel30.setText("Living with child");
 
         buttonGroup2.add(stm_ad_student_father_living_yes_checkbox);
@@ -2015,7 +1988,7 @@ public class Student_Management extends javax.swing.JPanel {
 
         jButton3.setBackground(new java.awt.Color(102, 102, 102));
         jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/misc32.png"))); // NOI18N
-        jButton3.setToolTipText("Issue Miscellaneous Student Fees");
+        jButton3.setToolTipText("Issue Miscellaneous Items");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);
@@ -2523,7 +2496,7 @@ public class Student_Management extends javax.swing.JPanel {
                     "STUDENT_MANAGEMENT",
                     student.getStudentId(),
                     "STUDENT DELETE",
-                    "Admission: "+admissionNo,
+                    "Admission: " + admissionNo,
                     0.0,
                     String.format("STUDENT DEACTIVATED: %s (Adm No: %s).", student.getFullName(), admissionNo),
                     username
@@ -2597,7 +2570,17 @@ public class Student_Management extends javax.swing.JPanel {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        // TODO add your handling code here:
+        
+        String st_admi = stm_ad_admission_no_combo.getEditor().getItem().toString();
+        String st_name = stm_ad_student_name_combo.getEditor().getItem().toString();
+        if (st_admi.equals("") || st_name.equals("")) {
+            return;
+        }
+        
+        JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+
+        Miscellaneous_Issuing dialog = new Miscellaneous_Issuing(parentFrame, selectedStudentId, st_name, username, role);
+        GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
     }//GEN-LAST:event_jButton3ActionPerformed
 
 
