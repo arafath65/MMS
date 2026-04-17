@@ -1,43 +1,27 @@
 package Panels_SubDialogs;
 
-import Classes.ChequeNumberFormatter;
-import Classes.DecimalOnlyFilter;
 import Classes.GeneralMethods;
 import Classes.HibernateConfig;
 import Classes.LogHelper;
-import Classes.NumberOnlyFilter;
 import Classes.TableCheckboxHandler;
 import Classes.TableGradientCell;
 import Classes.styleDateChooser;
-import Entities.Student_Management.StudentAdditionalFees;
-import JPA_DAO.Inventory.ItemDAO;
 import JPA_DAO.Settings.CourseDAO;
 import JPA_DAO.Student_Management.StudentAdditionalFeesDAO;
 import JPA_DAO.Student_Management.StudentFeeInstallmentsDAO;
 import Panels.Fees_Management;
 import com.formdev.flatlaf.FlatClientProperties;
-import java.awt.Color;
 import java.awt.Window;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.swing.ComboBoxModel;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.text.AbstractDocument;
-import javax.swing.text.PlainDocument;
 
 public class Round_Payment extends javax.swing.JDialog {
 
@@ -82,7 +66,7 @@ public class Round_Payment extends javax.swing.JDialog {
         loadCourseDuesToTable(this.selectedStudentIds);
         calculateTotal();
 
-        new TableCheckboxHandler(rp_due_table, 6, rp_round_total_pay_cash_text, rp_round_cheque_amount);
+        new TableCheckboxHandler(rp_due_table, 6, rp_round_total_pay_cash_text, rp_round_cheque_amount, rp_round_remaining_bal_text);
 
 //        reg_misc_amount_text.putClientProperty("JComponent.outline", new Color(255, 160, 41));
 //        reg_misc_amount_text.putClientProperty("JComponent.focusWidth", 2);
@@ -316,6 +300,43 @@ public class Round_Payment extends javax.swing.JDialog {
         } finally {
             em.close();
         }
+
+        sortTableByDueAmount(model);
+    }
+
+    private void sortTableByDueAmount(DefaultTableModel model) {
+
+        java.util.List<Object[]> rows = new java.util.ArrayList<>();
+
+        // Collect rows
+        for (int i = 0; i < model.getRowCount(); i++) {
+
+            Object[] row = new Object[model.getColumnCount()];
+
+            for (int j = 0; j < model.getColumnCount(); j++) {
+                row[j] = model.getValueAt(i, j);
+            }
+
+            rows.add(row);
+        }
+
+        // Sort by Due Amount (column 4)
+        rows.sort((a, b) -> {
+            double valA = GeneralMethods.parseCommaNumber(a[4].toString());
+            double valB = GeneralMethods.parseCommaNumber(b[4].toString());
+            return Double.compare(valA, valB);
+        });
+
+        // Clear table
+        model.setRowCount(0);
+
+        // Re-add sorted rows with new numbering
+        int count = 1;
+
+        for (Object[] row : rows) {
+            row[0] = count++; // reset serial no
+            model.addRow(row);
+        }
     }
 
     public int getPendingMonthCount(int enrollmentId) {
@@ -369,6 +390,7 @@ public class Round_Payment extends javax.swing.JDialog {
         }
 
         rp_total_due_text.setText(GeneralMethods.formatWithComma(total));
+        rp_round_remaining_bal_text.setText(GeneralMethods.formatWithComma(total));
     }
 
     public void calculateRoundDistribution() {
@@ -471,7 +493,7 @@ public class Round_Payment extends javax.swing.JDialog {
             System.out.println("Remaining AFTER: " + remaining);
         }
 
-    calculateTotal();
+        calculateTotal();
     }
 
     @SuppressWarnings("unchecked")
@@ -594,9 +616,9 @@ public class Round_Payment extends javax.swing.JDialog {
             rp_due_table.getColumnModel().getColumn(6).setMinWidth(50);
             rp_due_table.getColumnModel().getColumn(6).setPreferredWidth(50);
             rp_due_table.getColumnModel().getColumn(6).setMaxWidth(50);
-            rp_due_table.getColumnModel().getColumn(7).setMinWidth(60);
-            rp_due_table.getColumnModel().getColumn(7).setPreferredWidth(60);
-            rp_due_table.getColumnModel().getColumn(7).setMaxWidth(60);
+            rp_due_table.getColumnModel().getColumn(7).setMinWidth(120);
+            rp_due_table.getColumnModel().getColumn(7).setPreferredWidth(120);
+            rp_due_table.getColumnModel().getColumn(7).setMaxWidth(120);
         }
 
         jLabel10.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
