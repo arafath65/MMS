@@ -21,6 +21,7 @@ import java.awt.event.KeyEvent;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.swing.ComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -659,6 +660,8 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
 
     private void reg_misc_discount_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reg_misc_discount_textActionPerformed
 
+        EntityManager em = HibernateConfig.getEntityManager();
+        EntityTransaction tx = em.getTransaction();
         try {
 
             String ser_name = reg_misc_service_combo.getEditor().getItem().toString();
@@ -671,6 +674,8 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
                 return;
             }
 
+            tx.begin();
+
             StudentAdditionalFeesDAO dao = new StudentAdditionalFeesDAO();
             StudentAdditionalFees fee = new StudentAdditionalFees();
 
@@ -679,7 +684,7 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
             double qty = GeneralMethods.parseCommaNumber(reg_misc_qty_text.getText());
             double discount = GeneralMethods.parseCommaNumber(reg_misc_discount_text.getText());
             double finalTotal = (amount * qty) - discount;
-            
+
             if (qty > stock) {
                 JOptionPane.showMessageDialog(null, "No enough stock available!", "NO STOCK", JOptionPane.WARNING_MESSAGE);
                 reg_misc_qty_text.selectAll();
@@ -695,12 +700,24 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
             fee.setIssuedDate(reg_misc_date.getDate());
             fee.setUser(username);
             fee.setStatus(1);
-
             int generatedId = dao.save(fee);
+            
+            int item_id = generalMethods.extractIdFromCombo(reg_misc_service_combo.getEditor().getItem().toString());
+
+            em.createNativeQuery(
+                    "INSERT INTO stock_transactions "
+                    + "(item_id, student_id, quantity, transaction_type, transaction_date, remarks, user, status) "
+                    + "VALUES (?, ?, ?, 'OUT', NOW(), 'Student Purchased', ?, 1)"
+            )
+                    .setParameter(1, item_id)
+                    .setParameter(2, selectedStudentIds)
+                    .setParameter(3, finalTotal)
+                    .setParameter(4, username)
+                    .executeUpdate();
+
+            tx.commit();
 
             // ✅ LOG: Miscellaneous Fee Issuance
-            
-
             logHelper.log(
                     "MISC_PAYMENTS",
                     selectedStudentIds,
@@ -737,6 +754,8 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
 
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            em.close();
         }
     }//GEN-LAST:event_reg_misc_discount_textActionPerformed
 

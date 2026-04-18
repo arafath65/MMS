@@ -185,7 +185,7 @@ public class StudentAdditionalFeesDAO {
 
             return em.createNativeQuery(
                     "SELECT sfp.enrollment_id, c.course_name, "
-                    + "sfp.course_type, sfp.total_balance "
+                    + "sfp.course_type, sfp.total_balance, sfp.created_at, sfp.total_fee, sfp.total_paid "
                     + "FROM student_fee_payments sfp "
                     + "JOIN course_enrollment ce ON sfp.enrollment_id = ce.enrollment_id "
                     + "JOIN course c ON ce.course_id = c.course_id "
