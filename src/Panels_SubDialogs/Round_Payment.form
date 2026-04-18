@@ -46,25 +46,32 @@
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Group type="102" attributes="0">
                                   <Component id="panelRound2" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace type="separate" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
                                   <Component id="jButton3" min="-2" pref="50" max="-2" attributes="0"/>
                               </Group>
-                              <Group type="102" attributes="0">
-                                  <EmptySpace min="-2" pref="62" max="-2" attributes="0"/>
-                                  <Component id="jLabel10" min="-2" pref="61" max="-2" attributes="0"/>
+                              <Group type="102" alignment="0" attributes="0">
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="rp_total_due_text" alignment="0" min="-2" pref="195" max="-2" attributes="0"/>
+                                      <Component id="jLabel10" alignment="0" min="-2" pref="61" max="-2" attributes="0"/>
+                                  </Group>
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="rp_total_due_text" min="-2" pref="195" max="-2" attributes="0"/>
-                                  <EmptySpace type="separate" max="-2" attributes="0"/>
-                                  <Component id="firstName_label9" min="-2" pref="102" max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="firstName_label10" alignment="0" min="-2" pref="102" max="-2" attributes="0"/>
+                                      <Component id="rp_round_total_paid_text" alignment="0" min="-2" pref="195" max="-2" attributes="0"/>
+                                  </Group>
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="rp_round_total_pending_cheque_text" min="-2" pref="195" max="-2" attributes="0"/>
-                                  <EmptySpace type="separate" max="-2" attributes="0"/>
-                                  <Component id="firstName_label8" min="-2" max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="rp_round_total_pending_cheque_text" min="-2" pref="195" max="-2" attributes="0"/>
+                                      <Component id="firstName_label9" min="-2" pref="102" max="-2" attributes="0"/>
+                                  </Group>
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="rp_round_remaining_bal_text" min="-2" pref="195" max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="rp_round_remaining_bal_text" min="-2" pref="195" max="-2" attributes="0"/>
+                                      <Component id="firstName_label8" min="-2" max="-2" attributes="0"/>
+                                  </Group>
                               </Group>
                           </Group>
-                          <EmptySpace type="separate" max="-2" attributes="0"/>
+                          <EmptySpace min="-2" pref="186" max="-2" attributes="0"/>
                           <Component id="jTabbedPane1" min="-2" pref="315" max="-2" attributes="0"/>
                           <EmptySpace min="0" pref="10" max="32767" attributes="0"/>
                       </Group>
@@ -84,17 +91,29 @@
                   <EmptySpace max="-2" attributes="0"/>
                   <Component id="jPanel6" max="32767" attributes="0"/>
                   <Group type="103" groupAlignment="1" attributes="0">
-                      <Group type="102" alignment="0" attributes="0">
+                      <Group type="102" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="rp_round_remaining_bal_text" linkSize="1" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
-                              <Component id="firstName_label8" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
-                              <Component id="rp_round_total_pending_cheque_text" linkSize="1" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="firstName_label9" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
-                              <Component id="rp_total_due_text" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
-                              <Component id="jLabel10" alignment="3" max="32767" attributes="0"/>
+                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                              <Group type="102" alignment="0" attributes="0">
+                                  <Component id="jLabel10" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="rp_total_due_text" linkSize="2" min="-2" pref="35" max="-2" attributes="0"/>
+                              </Group>
+                              <Group type="102" attributes="0">
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="firstName_label10" alignment="3" min="-2" pref="15" max="-2" attributes="0"/>
+                                      <Component id="firstName_label9" alignment="3" min="-2" pref="15" max="-2" attributes="0"/>
+                                      <Component id="firstName_label8" max="32767" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="rp_round_total_paid_text" linkSize="2" alignment="3" max="32767" attributes="0"/>
+                                      <Component id="rp_round_total_pending_cheque_text" linkSize="1" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="rp_round_remaining_bal_text" linkSize="1" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
                           </Group>
-                          <EmptySpace min="-2" pref="41" max="-2" attributes="0"/>
+                          <EmptySpace min="-2" pref="165" max="-2" attributes="0"/>
                       </Group>
                       <Component id="jTabbedPane1" min="-2" pref="227" max="-2" attributes="0"/>
                   </Group>
@@ -145,7 +164,7 @@
                   <Color blue="ff" green="ff" red="ff" type="rgb"/>
                 </Property>
                 <Property name="horizontalAlignment" type="int" value="0"/>
-                <Property name="text" type="java.lang.String" value="ROUND PAYMENT"/>
+                <Property name="text" type="java.lang.String" value="DUE PAYMENTS"/>
               </Properties>
               <AuxValues>
                 <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="9"/>
@@ -182,21 +201,18 @@
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="rp_student_name_combo" alignment="0" min="-2" pref="268" max="-2" attributes="0"/>
-                                  <Component id="jLabel2" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
+                                  <Component id="rp_student_name_text" min="-2" pref="243" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace max="32767" attributes="0"/>
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
                                   <Component id="rp_round_calculate_text" min="-2" pref="139" max="-2" attributes="0"/>
-                                  <Group type="102" alignment="0" attributes="0">
-                                      <Component id="jLabel11" min="-2" pref="121" max="-2" attributes="0"/>
-                                      <EmptySpace min="18" pref="18" max="-2" attributes="0"/>
-                                  </Group>
+                                  <Component id="jLabel11" alignment="0" min="-2" pref="121" max="-2" attributes="0"/>
                               </Group>
                           </Group>
                           <Group type="102" attributes="0">
                               <EmptySpace max="-2" attributes="0"/>
-                              <Component id="jScrollPane2" max="32767" attributes="0"/>
+                              <Component id="jScrollPane2" pref="1285" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
@@ -220,8 +236,8 @@
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="rp_student_name_combo" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
                                   <Component id="rp_round_calculate_text" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
+                                  <Component id="rp_student_name_text" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
                               </Group>
                           </Group>
                       </Group>
@@ -248,20 +264,6 @@
                 </Property>
                 <Property name="text" type="java.lang.String" value=" Student Name"/>
               </Properties>
-            </Component>
-            <Component class="javax.swing.JComboBox" name="rp_student_name_combo">
-              <Properties>
-                <Property name="editable" type="boolean" value="true"/>
-                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-                  <Font name="Roboto Light" size="14" style="0"/>
-                </Property>
-                <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                  <StringArray count="0"/>
-                </Property>
-              </Properties>
-              <AuxValues>
-                <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
-              </AuxValues>
             </Component>
             <Component class="com.toedter.calendar.JDateChooser" name="rp_date">
               <Properties>
@@ -358,7 +360,7 @@
                           <Editor/>
                           <Renderer/>
                         </Column>
-                        <Column maxWidth="120" minWidth="120" prefWidth="120" resizable="true">
+                        <Column maxWidth="0" minWidth="0" prefWidth="0" resizable="true">
                           <Title/>
                           <Editor/>
                           <Renderer/>
@@ -388,16 +390,27 @@
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Light" size="14" style="1"/>
                 </Property>
+                <Property name="toolTipText" type="java.lang.String" value="Enter total amount to auto-distribute across all selected dues"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="rp_round_calculate_textActionPerformed"/>
                 <EventHandler event="keyTyped" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="rp_round_calculate_textKeyTyped"/>
               </Events>
             </Component>
+            <Component class="javax.swing.JTextField" name="rp_student_name_text">
+              <Properties>
+                <Property name="editable" type="boolean" value="false"/>
+                <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                  <Font name="Roboto Light" size="14" style="1"/>
+                </Property>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="rp_student_name_textActionPerformed"/>
+                <EventHandler event="keyTyped" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="rp_student_name_textKeyTyped"/>
+              </Events>
+            </Component>
           </SubComponents>
         </Container>
-        <Component class="javax.swing.JButton" name="jButton3">
-        </Component>
         <Container class="javax.swing.JTabbedPane" name="jTabbedPane1">
           <Properties>
             <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
@@ -763,6 +776,44 @@
             </Property>
             <Property name="text" type="java.lang.String" value="Total Due"/>
           </Properties>
+        </Component>
+        <Component class="javax.swing.JTextField" name="rp_round_total_paid_text">
+          <Properties>
+            <Property name="editable" type="boolean" value="false"/>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Roboto Condensed Light" size="14" style="0"/>
+            </Property>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="rp_round_total_paid_textActionPerformed"/>
+            <EventHandler event="keyReleased" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="rp_round_total_paid_textKeyReleased"/>
+          </Events>
+          <AuxValues>
+            <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="9"/>
+          </AuxValues>
+        </Component>
+        <Component class="javax.swing.JLabel" name="firstName_label10">
+          <Properties>
+            <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="21" green="21" red="21" type="rgb"/>
+            </Property>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Roboto Medium" size="12" style="0"/>
+            </Property>
+            <Property name="horizontalAlignment" type="int" value="2"/>
+            <Property name="text" type="java.lang.String" value="Total Paid"/>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JButton" name="jButton3">
+          <Properties>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/images/revoke32.png"/>
+            </Property>
+            <Property name="toolTipText" type="java.lang.String" value="Search and cancel recent transactions (Last 3 days)"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton3ActionPerformed"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>

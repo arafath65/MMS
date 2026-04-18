@@ -345,6 +345,60 @@ public class GeneralMethods {
         dialog.setVisible(true);
     }
 
+    public static void openDialogOnDialog(JDialog parentDialog, JDialog childDialog) {
+        // 1. Get the layered pane of the parent dialog
+        JLayeredPane layeredPane = parentDialog.getLayeredPane();
+
+        // 2. Create the dark overlay
+        JPanel darkBackground = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g.create();
+                // 150-180 alpha is usually better for nested dialogs to distinguish layers
+                g2d.setColor(new Color(0, 0, 0, 200));
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+                g2d.dispose();
+            }
+        };
+
+        darkBackground.setOpaque(false);
+        // Set bounds to match the parent dialog's current size
+        darkBackground.setBounds(0, 0, parentDialog.getWidth(), parentDialog.getHeight());
+
+        // 3. Add to the MODAL_LAYER so it sits above the parent content but below the child dialog
+        layeredPane.add(darkBackground, JLayeredPane.MODAL_LAYER);
+        layeredPane.revalidate();
+        layeredPane.repaint();
+
+        // 4. Center the new dialog on the parent dialog
+        childDialog.setLocationRelativeTo(parentDialog);
+
+        // 5. Cleanup listener
+        childDialog.addWindowListener(new java.awt.event.WindowAdapter() {
+            private void removeOverlay() {
+                layeredPane.remove(darkBackground);
+                layeredPane.revalidate();
+                layeredPane.repaint();
+                parentDialog.setEnabled(true);
+            }
+
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                removeOverlay();
+            }
+
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                removeOverlay();
+            }
+        });
+
+        // 6. Set modality and show
+        childDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+        childDialog.setVisible(true);
+    }
+
     public static String formatWithComma(double amount) {
         return String.format("%,.2f", amount);
     }

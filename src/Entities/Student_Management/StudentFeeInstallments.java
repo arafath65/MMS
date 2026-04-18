@@ -62,6 +62,9 @@ public class StudentFeeInstallments implements Serializable {
 
     @Column(name = "enrollment_id")
     private Integer enrollmentId;
+    
+    @Column(name = "student_fee_round_payment_master_id")
+    private Integer roundMasterId;
 
     @Column(name = "payment_type")   // <-- NEW
     private String paymentType;
@@ -151,6 +154,14 @@ public class StudentFeeInstallments implements Serializable {
 
     public void setEnrollmentId(Integer enrollmentId) {
         this.enrollmentId = enrollmentId;
+    }
+    
+    public Integer getRoundMasterId() {
+        return roundMasterId;
+    }
+
+    public void setRoundMasterId(Integer roundMasterId) {
+        this.roundMasterId = roundMasterId;
     }
 
     public String getPaymentType() {

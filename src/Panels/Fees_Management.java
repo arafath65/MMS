@@ -662,6 +662,8 @@ public class Fees_Management extends javax.swing.JPanel {
             .addGap(0, 407, Short.MAX_VALUE)
         );
 
+        jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/roundPayment32.png"))); // NOI18N
+        jButton3.setToolTipText("View and pay all outstanding dues for this student in one screen");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);

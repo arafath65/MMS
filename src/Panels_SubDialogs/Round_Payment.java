@@ -69,7 +69,7 @@ public class Round_Payment extends javax.swing.JDialog {
         rp_date.setDate(new Date());
         styleDateChooser.applyDarkTheme(rp_date);
         styleDateChooser.applyDarkTheme(rp_round_cheque_date);
-        rp_student_name_combo.setSelectedItem(this.studentName);
+        rp_student_name_text.setText(this.studentName);
 
         //JComboPopulatesBankInfo();
         rp_due_table.setDefaultRenderer(Object.class, new TableGradientCell());
@@ -331,387 +331,9 @@ public class Round_Payment extends javax.swing.JDialog {
         } finally {
             em.close();
         }
-//        EntityManager em = HibernateConfig.getEntityManager();
-//
-//        try {
-//
-//            // ✅ STEP 1: GET SUMMED ISSUED AMOUNT PER fee_type_id
-//            List<Object[]> issuedList = em.createNativeQuery(
-//                    "SELECT fee_type_id, "
-//                    + "MIN(student_additional_fees_id), "
-//                    + "SUM(amount) "
-//                    + "FROM student_additional_fees "
-//                    + "WHERE student_id = ? AND status = 1 "
-//                    + "GROUP BY fee_type_id"
-//            )
-//                    .setParameter(1, studentId)
-//                    .getResultList();
-        ////            List<Object[]> issuedList = em.createNativeQuery(
-////                    "SELECT fee_type_id, student_additional_fees_id, SUM(amount) "
-////                    + "FROM student_additional_fees "
-////                    + "WHERE student_id = ? AND status = 1 "
-////                    + "GROUP BY fee_type_id"
-////            )
-////                    .setParameter(1, studentId)
-////                    .getResultList();
-//
-//            for (Object[] row : issuedList) {
-//
-//                int feeTypeId = Integer.parseInt(row[0].toString());
-//                int additionalFeeId = Integer.parseInt(row[1].toString());
-//                double totalIssued = Double.parseDouble(row[2].toString());
-//
-//                // ================================
-//                // STEP 2: GET PAID AMOUNT
-//                // ================================
-//                Double totalPaid = (Double) em.createNativeQuery(
-//                        "SELECT COALESCE(SUM(p.amount_paid),0) "
-//                        + "FROM student_additional_fee_payments p "
-//                        + "JOIN student_additional_fees saf "
-//                        + "ON p.student_additional_fees_id = saf.student_additional_fees_id "
-//                        + "WHERE saf.fee_type_id = ? "
-//                        + "AND saf.student_id = ? "
-//                        + "AND p.status = 1"
-//                )
-//                        .setParameter(1, feeTypeId)
-//                        .setParameter(2, studentId)
-//                        .getSingleResult();
-//
-//                if (totalPaid == null) {
-//                    totalPaid = 0.0;
-//                }
-//
-//                // ================================
-//                // STEP 3: GET FEE DETAILS
-//                // ================================
-//                Object[] feeData = (Object[]) em.createNativeQuery(
-//                        "SELECT fee_name, item_id "
-//                        + "FROM fee_types "
-//                        + "WHERE fee_type_id = ?"
-//                )
-//                        .setParameter(1, feeTypeId)
-//                        .getSingleResult();
-//
-//                String feeName = feeData[0].toString();
-//
-//                int itemId = 0;
-//                if (feeData[1] != null) {
-//                    try {
-//                        itemId = Integer.parseInt(feeData[1].toString());
-//                    } catch (Exception e) {
-//                        itemId = 0;
-//                    }
-//                }
-//
-//                // ================================
-//                // STEP 4: CALCULATE BALANCE
-//                // ================================
-//                double balance = totalIssued - totalPaid;
-//
-//                if (balance <= 0) {
-//                    continue;
-//                }
-//
-//                // ================================
-//                // STEP 5: CATEGORY
-//                // ================================
-//                String category = (itemId == 0) ? "SERVICE" : "INVENTORY";
-//
-//                // ================================
-//                // STEP 6: ADD TO TABLE
-//                // ================================
-//                model.addRow(new Object[]{
-//                    count++,
-//                    category,
-//                    feeName,
-//                    1,
-//                    GeneralMethods.formatWithComma(balance),
-//                    "",
-//                    false,
-//                    //                    "ADD_" + feeTypeId + "F" + additionalFeeId // ✅ grouped by fee_type_id
-//                    "ADD_" + additionalFeeId
-//                });
-//            }
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        } finally {
-//            em.close();
-//        }
 
         sortTableByDueAmount(model);
     }
-
-//    public void loadCourseDuesToTable(int studentId) {
-//
-//        DefaultTableModel model = (DefaultTableModel) rp_due_table.getModel();
-//        model.setRowCount(0);
-//
-//        int count = 1;
-//
-//        // =========================================
-//        // 1. COURSE DUES
-//        // =========================================
-//        StudentAdditionalFeesDAO dao = new StudentAdditionalFeesDAO();
-//        List<Object[]> courseList = dao.getStudentCourseDues(studentId);
-//
-//        for (Object[] row : courseList) {
-//
-//            int enrollmentId = Integer.parseInt(row[0].toString());
-//            String courseName = row[1].toString();
-//            String courseType = row[2].toString();
-//            double balance = GeneralMethods.parseCommaNumber(row[3].toString());
-//            String p_date = row[4] != null ? row[4].toString().split(" ")[0] : "";
-//            double tot_amount = GeneralMethods.parseCommaNumber(row[5].toString());
-//            double tot_paid = GeneralMethods.parseCommaNumber(row[6].toString());
-//
-//            String name = courseName + " (" + courseType + ")";
-//
-//            int qty = 1;
-//
-//            if ("MONTHLY".equalsIgnoreCase(courseType)) {
-//                qty = getPendingMonthCount(enrollmentId);
-//                if (qty == 0) {
-//                    qty = 1;
-//                }
-//            }
-//
-//            model.addRow(new Object[]{
-//                count++,
-//                "COURSE",
-//                p_date,
-//                name,
-//                qty,
-//                GeneralMethods.formatWithComma(tot_amount),
-//                GeneralMethods.formatWithComma(tot_paid),
-//                "",
-//                GeneralMethods.formatWithComma(balance),
-//                "",
-//                false,
-//                "COURSE_" + enrollmentId
-//            });
-//        }
-//
-//        // =========================================
-    //// 2. ADDITIONAL + INVENTORY DUES (FINAL LOGIC)
-//// =========================================
-//        EntityManager em = HibernateConfig.getEntityManager();
-//
-//        try {
-//
-//            List<Object[]> issuedList = em.createNativeQuery(
-//                    "SELECT fee_type_id, "
-//                    + "MIN(student_additional_fees_id), "
-//                    + "SUM(amount), "
-//                    + "MIN(issued_date) "
-//                    + "FROM student_additional_fees "
-//                    + "WHERE student_id = ? AND status = 1 "
-//                    + "GROUP BY fee_type_id"
-//            )
-//                    .setParameter(1, studentId)
-//                    .getResultList();
-//
-//            for (Object[] row : issuedList) {
-//
-//                int feeTypeId = Integer.parseInt(row[0].toString());
-//                int additionalFeeId = Integer.parseInt(row[1].toString());
-//                double totalAmount = Double.parseDouble(row[2].toString());
-//
-//                // ✅ DATE FIX (DATETIME → DATE)
-//                String issuedDate = row[3] != null
-//                        ? row[3].toString().split(" ")[0]
-//                        : "";
-//
-//                // ================================
-//                // STEP 2: GET PAID AMOUNT
-//                // ================================
-//                Double totalPaid = (Double) em.createNativeQuery(
-//                        "SELECT COALESCE(SUM(p.amount_paid),0) "
-//                        + "FROM student_additional_fee_payments p "
-//                        + "JOIN student_additional_fees saf "
-//                        + "ON p.student_additional_fees_id = saf.student_additional_fees_id "
-//                        + "WHERE saf.fee_type_id = ? "
-//                        + "AND saf.student_id = ? "
-//                        + "AND p.status = 1"
-//                )
-//                        .setParameter(1, feeTypeId)
-//                        .setParameter(2, studentId)
-//                        .getSingleResult();
-//
-//                if (totalPaid == null) {
-//                    totalPaid = 0.0;
-//                }
-//
-//                // ================================
-//                // STEP 3: GET FEE DETAILS
-//                // ================================
-//                Object[] feeData = (Object[]) em.createNativeQuery(
-//                        "SELECT fee_name, item_id "
-//                        + "FROM fee_types "
-//                        + "WHERE fee_type_id = ?"
-//                )
-//                        .setParameter(1, feeTypeId)
-//                        .getSingleResult();
-//
-//                String feeName = feeData[0].toString();
-//
-//                int itemId = 0;
-//                if (feeData[1] != null) {
-//                    try {
-//                        itemId = Integer.parseInt(feeData[1].toString());
-//                    } catch (Exception e) {
-//                        itemId = 0;
-//                    }
-//                }
-//
-//                // ================================
-//                // STEP 4: CALCULATE BALANCE
-//                // ================================
-//                double balance = totalAmount - totalPaid;
-//
-//                if (balance <= 0) {
-//                    continue;
-//                }
-//
-//                // ================================
-//                // STEP 5: CATEGORY
-//                // ================================
-//                String category = (itemId == 0) ? "SERVICE" : "INVENTORY";
-//
-//                // ================================
-//                // STEP 6: ADD TO TABLE
-//                // ================================
-//                model.addRow(new Object[]{
-//                    count++,
-//                    category,
-//                    issuedDate, // ✅ DATE COLUMN
-//                    feeName, // SERVICE NAME
-//                    1, // QTY
-//                    GeneralMethods.formatWithComma(totalAmount), // AMOUNT
-//                    GeneralMethods.formatWithComma(totalPaid), // PAID
-//                    "", // CHEQUE
-//                    GeneralMethods.formatWithComma(balance), // DUE
-//                    "", // PAYABLE
-//                    false,
-//                    "ADD_" + additionalFeeId
-//                });
-//            }
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        } finally {
-//            em.close();
-//        }
-////        EntityManager em = HibernateConfig.getEntityManager();
-////
-////        try {
-////
-////            // ✅ STEP 1: GET SUMMED ISSUED AMOUNT PER fee_type_id
-////            List<Object[]> issuedList = em.createNativeQuery(
-////                    "SELECT fee_type_id, "
-////                    + "MIN(student_additional_fees_id), "
-////                    + "SUM(amount) "
-////                    + "FROM student_additional_fees "
-////                    + "WHERE student_id = ? AND status = 1 "
-////                    + "GROUP BY fee_type_id"
-////            )
-////                    .setParameter(1, studentId)
-////                    .getResultList();
-//        ////            List<Object[]> issuedList = em.createNativeQuery(
-//////                    "SELECT fee_type_id, student_additional_fees_id, SUM(amount) "
-//////                    + "FROM student_additional_fees "
-//////                    + "WHERE student_id = ? AND status = 1 "
-//////                    + "GROUP BY fee_type_id"
-//////            )
-//////                    .setParameter(1, studentId)
-//////                    .getResultList();
-////
-////            for (Object[] row : issuedList) {
-////
-////                int feeTypeId = Integer.parseInt(row[0].toString());
-////                int additionalFeeId = Integer.parseInt(row[1].toString());
-////                double totalIssued = Double.parseDouble(row[2].toString());
-////
-////                // ================================
-////                // STEP 2: GET PAID AMOUNT
-////                // ================================
-////                Double totalPaid = (Double) em.createNativeQuery(
-////                        "SELECT COALESCE(SUM(p.amount_paid),0) "
-////                        + "FROM student_additional_fee_payments p "
-////                        + "JOIN student_additional_fees saf "
-////                        + "ON p.student_additional_fees_id = saf.student_additional_fees_id "
-////                        + "WHERE saf.fee_type_id = ? "
-////                        + "AND saf.student_id = ? "
-////                        + "AND p.status = 1"
-////                )
-////                        .setParameter(1, feeTypeId)
-////                        .setParameter(2, studentId)
-////                        .getSingleResult();
-////
-////                if (totalPaid == null) {
-////                    totalPaid = 0.0;
-////                }
-////
-////                // ================================
-////                // STEP 3: GET FEE DETAILS
-////                // ================================
-////                Object[] feeData = (Object[]) em.createNativeQuery(
-////                        "SELECT fee_name, item_id "
-////                        + "FROM fee_types "
-////                        + "WHERE fee_type_id = ?"
-////                )
-////                        .setParameter(1, feeTypeId)
-////                        .getSingleResult();
-////
-////                String feeName = feeData[0].toString();
-////
-////                int itemId = 0;
-////                if (feeData[1] != null) {
-////                    try {
-////                        itemId = Integer.parseInt(feeData[1].toString());
-////                    } catch (Exception e) {
-////                        itemId = 0;
-////                    }
-////                }
-////
-////                // ================================
-////                // STEP 4: CALCULATE BALANCE
-////                // ================================
-////                double balance = totalIssued - totalPaid;
-////
-////                if (balance <= 0) {
-////                    continue;
-////                }
-////
-////                // ================================
-////                // STEP 5: CATEGORY
-////                // ================================
-////                String category = (itemId == 0) ? "SERVICE" : "INVENTORY";
-////
-////                // ================================
-////                // STEP 6: ADD TO TABLE
-////                // ================================
-////                model.addRow(new Object[]{
-////                    count++,
-////                    category,
-////                    feeName,
-////                    1,
-////                    GeneralMethods.formatWithComma(balance),
-////                    "",
-////                    false,
-////                    //                    "ADD_" + feeTypeId + "F" + additionalFeeId // ✅ grouped by fee_type_id
-////                    "ADD_" + additionalFeeId
-////                });
-////            }
-////
-////        } catch (Exception e) {
-////            e.printStackTrace();
-////        } finally {
-////            em.close();
-////        }
-//
-//        sortTableByDueAmount(model);
-//    }
 
     private void sortTableByDueAmount(DefaultTableModel model) {
 
@@ -788,23 +410,30 @@ public class Round_Payment extends javax.swing.JDialog {
         DefaultTableModel model = (DefaultTableModel) rp_due_table.getModel();
 
         double total = 0.0;
+        double total_paid = 0.0;
         double tot_chq = 0.0;
 
         for (int i = 0; i < model.getRowCount(); i++) {
 
             Object value = GeneralMethods.parseCommaNumber(model.getValueAt(i, 8).toString());
+            Object value_paid = GeneralMethods.parseCommaNumber(model.getValueAt(i, 6).toString());
             Object value_chq = GeneralMethods.parseCommaNumber(model.getValueAt(i, 7).toString());
 
             if (value != null && !value.toString().isEmpty()) {
                 total += Double.parseDouble(String.valueOf(value));
             }
-            
+
             if (value_chq != null && !value_chq.toString().isEmpty()) {
                 tot_chq += Double.parseDouble(String.valueOf(value_chq));
+            }
+
+            if (value_paid != null && !value_paid.toString().isEmpty()) {
+                total_paid += Double.parseDouble(String.valueOf(value_paid));
             }
         }
 
         rp_total_due_text.setText(GeneralMethods.formatWithComma(total));
+        rp_round_total_paid_text.setText(GeneralMethods.formatWithComma(total_paid));
         rp_round_total_pending_cheque_text.setText(GeneralMethods.formatWithComma(tot_chq));
         rp_round_remaining_bal_text.setText(GeneralMethods.formatWithComma(total - tot_chq));
     }
@@ -927,28 +556,27 @@ public class Round_Payment extends javax.swing.JDialog {
 
             System.out.println("ROUND MASTER ID: " + roundMasterId);
 
-            // =========================
-            // CHEQUE MASTER SAVE (ONLY ONCE)
-            // =========================
-            if ("CHEQUE".equalsIgnoreCase(paymentMode)) {
-
-                em.createNativeQuery(
-                        "INSERT INTO student_fee_cheque_details "
-                        + "(reference_id, reference_type, category, cheque_no, bank, branch, cheque_date, cheque_amount, cheque_status, status) "
-                        + "VALUES (?, 'ROUND', ?, ?, ?, ?, ?, ?, 'PENDING', 1)"
-                )
-                        .setParameter(1, roundMasterId)
-                        .setParameter(2, "STUDENT")
-                        .setParameter(3, rp_round_cheque_number_text.getText())
-                        .setParameter(4, rp_round_bank_name_combo.getEditor().getItem().toString())
-                        .setParameter(5, rp_round_cheque_branch.getText())
-                        .setParameter(6, rp_round_cheque_date.getDate())
-                        .setParameter(7, totalPaid)
-                        .executeUpdate();
-
-                System.out.println("CHEQUE SAVED FOR ROUND MASTER ID: " + roundMasterId);
-            }
-
+//            // =========================
+//            // CHEQUE MASTER SAVE (ONLY ONCE)
+//            // =========================
+//            if ("CHEQUE".equalsIgnoreCase(paymentMode)) {
+//
+//                em.createNativeQuery(
+//                        "INSERT INTO student_fee_cheque_details "
+//                        + "(reference_id, reference_type, category, cheque_no, bank, branch, cheque_date, cheque_amount, cheque_status, status) "
+//                        + "VALUES (?, 'ROUND', ?, ?, ?, ?, ?, ?, 'PENDING', 1)"
+//                )
+//                        .setParameter(1, roundMasterId)
+//                        .setParameter(2, "STUDENT")
+//                        .setParameter(3, rp_round_cheque_number_text.getText())
+//                        .setParameter(4, rp_round_bank_name_combo.getEditor().getItem().toString())
+//                        .setParameter(5, rp_round_cheque_branch.getText())
+//                        .setParameter(6, rp_round_cheque_date.getDate())
+//                        .setParameter(7, totalPaid)
+//                        .executeUpdate();
+//
+//                System.out.println("CHEQUE SAVED FOR ROUND MASTER ID: " + roundMasterId);
+//            }
             System.out.println("CHEQUE SAVED FOR ROUND MASTER ID: " + roundMasterId);
 
             // =========================
@@ -1023,15 +651,16 @@ public class Round_Payment extends javax.swing.JDialog {
 
                         em.createNativeQuery(
                                 "INSERT INTO student_fee_installments "
-                                + "(student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+                                + "(student_fee_payments_id, enrollment_id, student_fee_round_payment_master_id, installment_no, amount_paid, "
                                 + "payment_date, payment_method, payment_type, remarks, status) "
-                                + "VALUES (?, ?, ?, ?, NOW(), ?, 'ROUND', 'Round Payment', 1)"
+                                + "VALUES (?, ?, ?, ?, ?, NOW(), ?, 'ROUND', 'Round Payment', 1)"
                         )
                                 .setParameter(1, paymentId)
                                 .setParameter(2, enrollmentId)
-                                .setParameter(3, nextInstallmentNo)
-                                .setParameter(4, payableAmount)
-                                .setParameter(5, paymentMode)
+                                .setParameter(3, roundMasterId)
+                                .setParameter(4, nextInstallmentNo)
+                                .setParameter(5, payableAmount)
+                                .setParameter(6, paymentMode)
                                 .executeUpdate();
 
                     } // =========================
@@ -1158,16 +787,17 @@ public class Round_Payment extends javax.swing.JDialog {
 
                                 int inserted = em.createNativeQuery(
                                         "INSERT INTO student_fee_installments "
-                                        + "(student_fee_payments_id, enrollment_id, installment_no, amount_paid, "
+                                        + "(student_fee_payments_id, enrollment_id, student_fee_round_payment_master_id, installment_no, amount_paid, "
                                         + "payment_date, payment_method, payment_type, month_for, remarks, status) "
-                                        + "VALUES (?, ?, ?, ?, NOW(), ?, 'ROUND', ?, 'Round Monthly Payment', 1)"
+                                        + "VALUES (?, ?, ?, ?, ?, NOW(), ?, 'ROUND', ?, 'Round Monthly Payment', 1)"
                                 )
                                         .setParameter(1, paymentId)
                                         .setParameter(2, enrollmentId)
-                                        .setParameter(3, installmentNo)
-                                        .setParameter(4, payNow)
-                                        .setParameter(5, paymentMode)
-                                        .setParameter(6, monthKey)
+                                        .setParameter(3, roundMasterId)
+                                        .setParameter(4, installmentNo)
+                                        .setParameter(5, payNow)
+                                        .setParameter(6, paymentMode)
+                                        .setParameter(7, monthKey)
                                         .executeUpdate();
 
                                 System.out.println("INSERT RESULT : " + inserted);
@@ -1239,13 +869,14 @@ public class Round_Payment extends javax.swing.JDialog {
 
                     em.createNativeQuery(
                             "INSERT INTO student_additional_fee_payments "
-                            + "(student_additional_fees_id, paid_date, amount_paid, payment_method, user, status) "
-                            + "VALUES (?, NOW(), ?, ?, ?, 1)"
+                            + "(student_additional_fees_id, student_fee_round_payment_master_id, paid_date, amount_paid, payment_method, user, status) "
+                            + "VALUES (?, ?, NOW(), ?, ?, ?, 1)"
                     )
                             .setParameter(1, safId)
-                            .setParameter(2, payableAmount)
-                            .setParameter(3, paymentMode)
-                            .setParameter(4, user)
+                            .setParameter(2, roundMasterId)
+                            .setParameter(3, payableAmount)
+                            .setParameter(4, paymentMode)
+                            .setParameter(5, user)
                             .executeUpdate();
 
                     StudentFeeRoundPaymentMasterDetails d = new StudentFeeRoundPaymentMasterDetails();
@@ -1260,8 +891,28 @@ public class Round_Payment extends javax.swing.JDialog {
                 }
             }
 
+            // ✅ AUDIT LOG: Bulk Round Payment
+            // Grab the name safely
+            String studentName = (rp_student_name_text.getText() != null)
+                    ? rp_student_name_text.getText() : "";
+
+            String description = String.format(
+                    "Round Payment: Student=%s, Mode=%s, Amount=%.2f, Student ID: %d",
+                    studentName, paymentMode, totalPaid, studentId
+            );
+
+            logHelper.log(
+                    "ROUND_PAYMENT",
+                    studentId,
+                    "PAYMENT", // Usually the 'Action' column looks better as a single verb like 'PAYMENT' or 'COLLECT'
+                    paymentMode,
+                    totalPaid,
+                    description,
+                    user
+            );
+
             tx.commit();
-            System.out.println("✅ ROUND PAYMENT FULLY SAVED");
+            JOptionPane.showMessageDialog(this, "Payment saved successfully.", "Payment Processed", JOptionPane.INFORMATION_MESSAGE);
 
         } catch (Exception e) {
             tx.rollback();
@@ -1385,9 +1036,31 @@ public class Round_Payment extends javax.swing.JDialog {
                 }
             }
 
+            // ✅ AUDIT LOG: Cheque Round Payment (Pending)
+            String studentName = (rp_student_name_text.getText() != null)
+                    ? rp_student_name_text.getText() : "";
+
+            String chequeNo = rp_round_cheque_number_text.getText();
+            String bank = rp_round_bank_name_combo.getEditor().getItem().toString();
+
+            String description = String.format(
+                    "Cheque Round Payment (PENDING): Student=%s, Cheque No=%s, Bank=%s, Amount=%.2f, Student ID: %d",
+                    studentName, chequeNo, bank, totalPaid, studentId
+            );
+
+            logHelper.log(
+                    "ROUND_PAYMENT",
+                    studentId,
+                    "CHEQUE_RECEIVED",
+                    "CHEQUE",
+                    totalPaid,
+                    description,
+                    user
+            );
+
             tx.commit();
 
-            System.out.println("✅ CHEQUE ROUND PAYMENT SAVED (NO FINANCIAL IMPACT)");
+            JOptionPane.showMessageDialog(this, "Payment saved successfully.", "Payment Processed", JOptionPane.INFORMATION_MESSAGE);
 
         } catch (Exception e) {
             tx.rollback();
@@ -1465,13 +1138,12 @@ public class Round_Payment extends javax.swing.JDialog {
         jPanel6 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
-        rp_student_name_combo = new javax.swing.JComboBox<>();
         rp_date = new com.toedter.calendar.JDateChooser();
         jScrollPane2 = new javax.swing.JScrollPane();
         rp_due_table = new javax.swing.JTable();
         jLabel11 = new javax.swing.JLabel();
         rp_round_calculate_text = new javax.swing.JTextField();
-        jButton3 = new javax.swing.JButton();
+        rp_student_name_text = new javax.swing.JTextField();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel7 = new javax.swing.JPanel();
         rp_round_total_pay_cash_text = new javax.swing.JTextField();
@@ -1493,6 +1165,9 @@ public class Round_Payment extends javax.swing.JDialog {
         firstName_label8 = new javax.swing.JLabel();
         rp_total_due_text = new javax.swing.JTextField();
         jLabel10 = new javax.swing.JLabel();
+        rp_round_total_paid_text = new javax.swing.JTextField();
+        firstName_label10 = new javax.swing.JLabel();
+        jButton3 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -1505,7 +1180,7 @@ public class Round_Payment extends javax.swing.JDialog {
         Main_Lable.setFont(new java.awt.Font("Roboto Black", 3, 14)); // NOI18N
         Main_Lable.setForeground(new java.awt.Color(255, 255, 255));
         Main_Lable.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        Main_Lable.setText("ROUND PAYMENT");
+        Main_Lable.setText("DUE PAYMENTS");
 
         javax.swing.GroupLayout panelRound2Layout = new javax.swing.GroupLayout(panelRound2);
         panelRound2.setLayout(panelRound2Layout);
@@ -1531,9 +1206,6 @@ public class Round_Payment extends javax.swing.JDialog {
 
         jLabel2.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
         jLabel2.setText(" Student Name");
-
-        rp_student_name_combo.setEditable(true);
-        rp_student_name_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
 
         rp_date.setForeground(new java.awt.Color(204, 204, 204));
         rp_date.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
@@ -1573,15 +1245,16 @@ public class Round_Payment extends javax.swing.JDialog {
             rp_due_table.getColumnModel().getColumn(10).setMinWidth(50);
             rp_due_table.getColumnModel().getColumn(10).setPreferredWidth(50);
             rp_due_table.getColumnModel().getColumn(10).setMaxWidth(50);
-            rp_due_table.getColumnModel().getColumn(11).setMinWidth(120);
-            rp_due_table.getColumnModel().getColumn(11).setPreferredWidth(120);
-            rp_due_table.getColumnModel().getColumn(11).setMaxWidth(120);
+            rp_due_table.getColumnModel().getColumn(11).setMinWidth(0);
+            rp_due_table.getColumnModel().getColumn(11).setPreferredWidth(0);
+            rp_due_table.getColumnModel().getColumn(11).setMaxWidth(0);
         }
 
         jLabel11.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
         jLabel11.setText("Calculate Payment");
 
         rp_round_calculate_text.setFont(new java.awt.Font("Roboto Light", 1, 14)); // NOI18N
+        rp_round_calculate_text.setToolTipText("Enter total amount to auto-distribute across all selected dues");
         rp_round_calculate_text.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 rp_round_calculate_textActionPerformed(evt);
@@ -1590,6 +1263,19 @@ public class Round_Payment extends javax.swing.JDialog {
         rp_round_calculate_text.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyTyped(java.awt.event.KeyEvent evt) {
                 rp_round_calculate_textKeyTyped(evt);
+            }
+        });
+
+        rp_student_name_text.setEditable(false);
+        rp_student_name_text.setFont(new java.awt.Font("Roboto Light", 1, 14)); // NOI18N
+        rp_student_name_text.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rp_student_name_textActionPerformed(evt);
+            }
+        });
+        rp_student_name_text.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                rp_student_name_textKeyTyped(evt);
             }
         });
 
@@ -1605,17 +1291,15 @@ public class Round_Payment extends javax.swing.JDialog {
                             .addComponent(rp_date, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(rp_student_name_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 268, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel2))
+                            .addComponent(jLabel2)
+                            .addComponent(rp_student_name_text, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(rp_round_calculate_text, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(jPanel6Layout.createSequentialGroup()
-                                .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18))))
+                            .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(jScrollPane2)))
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 1285, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel6Layout.setVerticalGroup(
@@ -1633,8 +1317,8 @@ public class Round_Payment extends javax.swing.JDialog {
                             .addComponent(jLabel11))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(rp_student_name_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(rp_round_calculate_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                            .addComponent(rp_round_calculate_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(rp_student_name_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 251, Short.MAX_VALUE)
                 .addContainerGap())
@@ -1889,6 +1573,32 @@ public class Round_Payment extends javax.swing.JDialog {
         jLabel10.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
         jLabel10.setText("Total Due");
 
+        rp_round_total_paid_text.setEditable(false);
+        rp_round_total_paid_text.setFont(new java.awt.Font("Roboto Condensed Light", 0, 14)); // NOI18N
+        rp_round_total_paid_text.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rp_round_total_paid_textActionPerformed(evt);
+            }
+        });
+        rp_round_total_paid_text.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                rp_round_total_paid_textKeyReleased(evt);
+            }
+        });
+
+        firstName_label10.setBackground(new java.awt.Color(33, 33, 33));
+        firstName_label10.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        firstName_label10.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        firstName_label10.setText("Total Paid");
+
+        jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/revoke32.png"))); // NOI18N
+        jButton3.setToolTipText("Search and cancel recent transactions (Last 3 days)");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -1901,22 +1611,25 @@ public class Round_Payment extends javax.swing.JDialog {
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(panelRound2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(62, 62, 62)
-                                .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(rp_total_due_text, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(rp_total_due_text, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(firstName_label9, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(firstName_label10, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(rp_round_total_paid_text, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(rp_round_total_pending_cheque_text, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(firstName_label8)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(rp_round_total_pending_cheque_text, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(firstName_label9, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(rp_round_remaining_bal_text, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(18, 18, 18)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(rp_round_remaining_bal_text, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(firstName_label8))))
+                        .addGap(186, 186, 186)
                         .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 315, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 10, Short.MAX_VALUE)))
                 .addContainerGap())
@@ -1931,21 +1644,31 @@ public class Round_Payment extends javax.swing.JDialog {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
+                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(rp_round_remaining_bal_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(firstName_label8, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(rp_round_total_pending_cheque_text, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(firstName_label9, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(rp_total_due_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGap(41, 41, 41))
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel10)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(rp_total_due_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(firstName_label10, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(firstName_label9, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(firstName_label8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(rp_round_total_paid_text)
+                                    .addComponent(rp_round_total_pending_cheque_text, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(rp_round_remaining_bal_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addGap(165, 165, 165))
                     .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 227, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
         jPanel1Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {rp_round_remaining_bal_text, rp_round_total_pending_cheque_text});
+
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {rp_round_total_paid_text, rp_total_due_text});
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -2067,6 +1790,30 @@ public class Round_Payment extends javax.swing.JDialog {
         saveRoundPaymentCheque(selectedStudentIds, rp_due_table, paymentMode, totPaid, 0.00, username);
     }//GEN-LAST:event_buttonGradient5ActionPerformed
 
+    private void rp_round_total_paid_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rp_round_total_paid_textActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_rp_round_total_paid_textActionPerformed
+
+    private void rp_round_total_paid_textKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_rp_round_total_paid_textKeyReleased
+        // TODO add your handling code here:
+    }//GEN-LAST:event_rp_round_total_paid_textKeyReleased
+
+    private void rp_student_name_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rp_student_name_textActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_rp_student_name_textActionPerformed
+
+    private void rp_student_name_textKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_rp_student_name_textKeyTyped
+        // TODO add your handling code here:
+    }//GEN-LAST:event_rp_student_name_textKeyTyped
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+
+        JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+        Cancel_Round_Payment dialog = new Cancel_Round_Payment(parentFrame, selectedStudentIds, studentName, username, role);
+        GeneralMethods.openDialogOnDialog(this, dialog);
+
+    }//GEN-LAST:event_jButton3ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -2088,6 +1835,7 @@ public class Round_Payment extends javax.swing.JDialog {
     public static javax.swing.JLabel Main_Lable;
     private Classes.ButtonGradient buttonGradient4;
     private Classes.ButtonGradient buttonGradient5;
+    private javax.swing.JLabel firstName_label10;
     private javax.swing.JLabel firstName_label7;
     private javax.swing.JLabel firstName_label8;
     private javax.swing.JLabel firstName_label9;
@@ -2115,9 +1863,10 @@ public class Round_Payment extends javax.swing.JDialog {
     private javax.swing.JComboBox<String> rp_round_cheque_status;
     private javax.swing.JComboBox<String> rp_round_payement_method_combo;
     public static javax.swing.JTextField rp_round_remaining_bal_text;
+    public static javax.swing.JTextField rp_round_total_paid_text;
     private javax.swing.JTextField rp_round_total_pay_cash_text;
     public static javax.swing.JTextField rp_round_total_pending_cheque_text;
-    private javax.swing.JComboBox<String> rp_student_name_combo;
+    private javax.swing.JTextField rp_student_name_text;
     private javax.swing.JTextField rp_total_due_text;
     // End of variables declaration//GEN-END:variables
 

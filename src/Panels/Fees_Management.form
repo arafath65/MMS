@@ -319,6 +319,12 @@
           </Layout>
         </Container>
         <Component class="javax.swing.JButton" name="jButton3">
+          <Properties>
+            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+              <Image iconType="3" name="/images/roundPayment32.png"/>
+            </Property>
+            <Property name="toolTipText" type="java.lang.String" value="View and pay all outstanding dues for this student in one screen"/>
+          </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton3ActionPerformed"/>
           </Events>

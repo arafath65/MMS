@@ -7,6 +7,7 @@ public class StudentAdditionalFeePayment {
 
     private int studentAdditionalFeePaymentsId;
     private int studentAdditionalFeesId;
+    private int roundMasterId;
     private Date paidDate;
     private double amountPaid;
     private String paymentMethod;
@@ -27,6 +28,14 @@ public class StudentAdditionalFeePayment {
 
     public void setStudentAdditionalFeesId(int studentAdditionalFeesId) {
         this.studentAdditionalFeesId = studentAdditionalFeesId;
+    }
+    
+    public int getRoundMasterId() {
+        return roundMasterId;
+    }
+
+    public void setRoundMasterId(int roundMasterId) {
+        this.roundMasterId = roundMasterId;
     }
 
     public Date getPaidDate() {
