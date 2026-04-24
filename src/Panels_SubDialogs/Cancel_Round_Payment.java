@@ -586,12 +586,12 @@ public class Cancel_Round_Payment extends javax.swing.JDialog {
             // IF NO CHEQUE (CASH / CARD)
             // =========================================
             else {
-                crp_round_cheque_details_label.setText("No cheque details");
+                // crp_round_cheque_details_label.setText("No cheque details");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            crp_round_cheque_details_label.setText("Error loading cheque details");
+            // crp_round_cheque_details_label.setText("Error loading cheque details");
         } finally {
             em.close();
         }
@@ -869,6 +869,8 @@ public class Cancel_Round_Payment extends javax.swing.JDialog {
 
             if (crp_round_table.getValueAt(row, 2).toString().equalsIgnoreCase("CHEQUE")) {
                 loadChequeDetailsToLabel(masterId);
+            } else {
+                crp_round_cheque_details_label.setText("");
             }
 
             loadRoundPaymentDetails(masterId);

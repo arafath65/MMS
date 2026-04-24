@@ -200,6 +200,7 @@
               <SubComponents>
                 <Component class="javax.swing.JTextField" name="ad_admi_total_paid_Textfield">
                   <Properties>
+                    <Property name="editable" type="boolean" value="false"/>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                       <Font name="Roboto Condensed Light" size="14" style="0"/>
                     </Property>
@@ -426,6 +427,7 @@
                 </Component>
                 <Component class="javax.swing.JTextField" name="ad_admi_cheq_cheque_amount">
                   <Properties>
+                    <Property name="editable" type="boolean" value="false"/>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                       <Font name="Roboto Condensed Light" size="14" style="0"/>
                     </Property>

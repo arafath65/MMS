@@ -15,6 +15,15 @@ public class StudentFeeChequeDetails implements Serializable {
 
     @Column(name = "student_fee_installments_id")
     private Integer studentFeeInstallmentsId;
+    
+    @Column(name = "reference_id")
+    private int referenceId;
+    
+    @Column(name = "reference_type")
+    private String referenceType;
+    
+    @Column(name = "category")
+    private String category;
 
     @Column(name = "cheque_no")
     private String chequeNo;
@@ -53,6 +62,30 @@ public class StudentFeeChequeDetails implements Serializable {
 
     public void setStudentFeeInstallmentsId(Integer studentFeeInstallmentsId) {
         this.studentFeeInstallmentsId = studentFeeInstallmentsId;
+    }
+    
+    public int getReferenceId() {
+        return referenceId;
+    }
+
+    public void setReferenceId(int referenceId) {
+        this.referenceId = referenceId;
+    }
+    
+    public String getReferenceType() {
+        return referenceType;
+    }
+
+    public void setReferenceType(String referenceType) {
+        this.referenceType = referenceType;
+    }
+    
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public String getChequeNo() {

@@ -280,15 +280,17 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
 
                 em.createNativeQuery(
                         "INSERT INTO student_fee_cheque_details "
-                        + "(student_fee_installments_id, cheque_no, bank, branch, cheque_date, cheque_amount, cheque_status, status) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 1)"
+                        + "(reference_id, reference_type, category, cheque_no, bank, branch, cheque_date, cheque_amount, cheque_status, status) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 1)"
                 )
-                        .setParameter(1, installmentId)
-                        .setParameter(2, ad_admi_cheq_cheque_number.getText())
-                        .setParameter(3, ad_admi_cheq_cheque_bank.getEditor().getItem().toString())
-                        .setParameter(4, ad_admi_cheq_cheque_branch.getText())
-                        .setParameter(5, ad_admi_cheq_cheque_date.getDate())
-                        .setParameter(6, paidAmount)
+                        .setParameter(1, selectedEnrollmentId)
+                        .setParameter(2, "ADMISSION")
+                        .setParameter(3, "STUDENT")
+                        .setParameter(4, ad_admi_cheq_cheque_number.getText())
+                        .setParameter(5, ad_admi_cheq_cheque_bank.getEditor().getItem().toString())
+                        .setParameter(6, ad_admi_cheq_cheque_branch.getText())
+                        .setParameter(7, ad_admi_cheq_cheque_date.getDate())
+                        .setParameter(8, paidAmount)
                         .executeUpdate();
             }
 
@@ -313,16 +315,29 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
 
         try {
 
-            List<Object[]> list = em.createNativeQuery(
-                    "SELECT sfi.amount_paid, sfi.payment_method, scd.cheque_status "
-                    + "FROM student_fee_installments sfi "
-                    + "LEFT JOIN student_fee_cheque_details scd "
-                    + "ON sfi.student_fee_installments_id = scd.student_fee_installments_id "
-                    + "JOIN student_fee_payments sfp "
-                    + "ON sfi.student_fee_payments_id = sfp.student_fee_payments_id "
-                    + "WHERE sfp.enrollment_id = ? "
-                    + "AND sfi.payment_type = 'ADMISSION' "
-                    + "AND sfi.status = 1"
+            // ============================================
+            // 1. CASH / CARD (from installments)
+            // ============================================
+            List<Object[]> cashList = em.createNativeQuery(
+                    "SELECT amount_paid, payment_method "
+                    + "FROM student_fee_installments "
+                    + "WHERE enrollment_id = ? "
+                    + "AND payment_type = 'ADMISSION' "
+                    + "AND status = 1"
+            )
+                    .setParameter(1, enrollmentId)
+                    .getResultList();
+
+            // ============================================
+            // 2. CHEQUE (NEW CORRECT LOGIC)
+            // ============================================
+            List<Object[]> chequeList = em.createNativeQuery(
+                    "SELECT cheque_amount, cheque_status "
+                    + "FROM student_fee_cheque_details "
+                    + "WHERE reference_type = 'ADMISSION' "
+                    + "AND reference_id = ? "
+                    + "AND category = 'STUDENT' "
+                    + "AND status = 1"
             )
                     .setParameter(1, enrollmentId)
                     .getResultList();
@@ -331,45 +346,54 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
             boolean hasPendingCheque = false;
             String paymentMethodText = "";
 
-            for (Object[] row : list) {
+            // ============================================
+            // 3. CHECK CASH / CARD FIRST
+            // ============================================
+            for (Object[] row : cashList) {
 
                 int amount = ((Number) row[0]).intValue();
                 String method = row[1] != null ? row[1].toString() : "";
-                String chequeStatus = row[2] != null ? row[2].toString() : "";
 
-                // ============================
-                // CASH / CARD → PAID
-                // ============================
                 if ((method.equalsIgnoreCase("CASH") || method.equalsIgnoreCase("CARD")) && amount > 0) {
                     isPaid = true;
-                    paymentMethodText = method; // show Cash or Card
-                    break; // no need to check more if already paid
+                    paymentMethodText = method;
+                    break;
                 }
+            }
 
-                // ============================
-                // CHEQUE LOGIC
-                // ============================
-                if (method.equalsIgnoreCase("CHEQUE")) {
+            // ============================================
+            // 4. CHECK CHEQUE
+            // ============================================
+            if (!isPaid) {
+
+                for (Object[] row : chequeList) {
+
+                    int amount = ((Number) row[0]).intValue();
+                    String chequeStatus = row[1] != null ? row[1].toString() : "";
+
+                    if (amount <= 0) {
+                        continue;
+                    }
+
                     if ("CLEARED".equalsIgnoreCase(chequeStatus)) {
                         isPaid = true;
-                        paymentMethodText = "Cheque"; // show Cheque
+                        paymentMethodText = "Cheque";
                         break;
                     } else if ("PENDING".equalsIgnoreCase(chequeStatus)) {
                         hasPendingCheque = true;
                         paymentMethodText = "Cheque";
                     }
-                    // RETURNED / BOUNCED / CANCELLED → ignore
                 }
             }
 
-            // ============================
-            // 🔥 SET LABEL TEXT & COLOR
-            // ============================
+            // ============================================
+            // 5. FINAL LABEL
+            // ============================================
             if (isPaid) {
                 label.setText("Admission Paid (" + paymentMethodText + ")");
                 label.setForeground(new java.awt.Color(0, 153, 0)); // green
             } else if (hasPendingCheque) {
-                label.setText("Admission Pending (" + paymentMethodText + ")");
+                label.setText("Admission Pending (Cheque)");
                 label.setForeground(new java.awt.Color(204, 153, 0)); // yellow
             } else {
                 label.setText("Admission Not Paid");
@@ -407,6 +431,7 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
 //
 //            boolean isPaid = false;
 //            boolean hasPendingCheque = false;
+//            String paymentMethodText = "";
 //
 //            for (Object[] row : list) {
 //
@@ -417,34 +442,36 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
 //                // ============================
 //                // CASH / CARD → PAID
 //                // ============================
-//                if (method.equalsIgnoreCase("CASH") || method.equalsIgnoreCase("CARD")) {
-//                    if (amount > 0) {
-//                        isPaid = true;
-//                    }
+//                if ((method.equalsIgnoreCase("CASH") || method.equalsIgnoreCase("CARD")) && amount > 0) {
+//                    isPaid = true;
+//                    paymentMethodText = method; // show Cash or Card
+//                    break; // no need to check more if already paid
 //                }
 //
 //                // ============================
 //                // CHEQUE LOGIC
 //                // ============================
 //                if (method.equalsIgnoreCase("CHEQUE")) {
-//
 //                    if ("CLEARED".equalsIgnoreCase(chequeStatus)) {
 //                        isPaid = true;
+//                        paymentMethodText = "Cheque"; // show Cheque
+//                        break;
 //                    } else if ("PENDING".equalsIgnoreCase(chequeStatus)) {
 //                        hasPendingCheque = true;
+//                        paymentMethodText = "Cheque";
 //                    }
 //                    // RETURNED / BOUNCED / CANCELLED → ignore
 //                }
 //            }
 //
 //            // ============================
-//            // 🔥 SET LABEL
+//            // 🔥 SET LABEL TEXT & COLOR
 //            // ============================
 //            if (isPaid) {
-//                label.setText("Admission is Paid");
+//                label.setText("Admission Paid (" + paymentMethodText + ")");
 //                label.setForeground(new java.awt.Color(0, 153, 0)); // green
 //            } else if (hasPendingCheque) {
-//                label.setText("Admission Pending (Cheque)");
+//                label.setText("Admission Pending (" + paymentMethodText + ")");
 //                label.setForeground(new java.awt.Color(204, 153, 0)); // yellow
 //            } else {
 //                label.setText("Admission Not Paid");
@@ -453,6 +480,8 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
 //
 //        } catch (Exception e) {
 //            e.printStackTrace();
+//            label.setText("Admission Status Unknown");
+//            label.setForeground(java.awt.Color.GRAY);
 //        } finally {
 //            em.close();
 //        }
@@ -580,6 +609,7 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
 
         jTabbedPane1.setFont(new java.awt.Font("Roboto", 0, 14)); // NOI18N
 
+        ad_admi_total_paid_Textfield.setEditable(false);
         ad_admi_total_paid_Textfield.setFont(new java.awt.Font("Roboto Condensed Light", 0, 14)); // NOI18N
         ad_admi_total_paid_Textfield.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -727,6 +757,7 @@ public class Admission_Fee_Payment extends javax.swing.JDialog {
             }
         });
 
+        ad_admi_cheq_cheque_amount.setEditable(false);
         ad_admi_cheq_cheque_amount.setFont(new java.awt.Font("Roboto Condensed Light", 0, 14)); // NOI18N
         ad_admi_cheq_cheque_amount.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

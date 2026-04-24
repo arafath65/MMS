@@ -50,10 +50,9 @@ public class Cheque_Handling extends javax.swing.JPanel {
                 + "pressedBackground:null;"
                 + "separatorColor:$TableHeader.background");
 
-        chq_handling_cheq_details_table.getColumnModel().getColumn(10).setMinWidth(0);
-        chq_handling_cheq_details_table.getColumnModel().getColumn(10).setMaxWidth(0);
-        chq_handling_cheq_details_table.getColumnModel().getColumn(10).setWidth(0);
-
+//        chq_handling_cheq_details_table.getColumnModel().getColumn(9).setMinWidth(0);
+//        chq_handling_cheq_details_table.getColumnModel().getColumn(9).setMaxWidth(0);
+//        chq_handling_cheq_details_table.getColumnModel().getColumn(9).setWidth(0);
         loadChequeTable(chq_handling_chq_status_combo.getSelectedItem().toString(), chq_handling_cheq_details_table);
         //   setChequeActionCombo(chq_handling_cheq_details_table, chq_handling_chq_status_combo.getSelectedItem().toString());
         setupComboSelectionListeners(chq_handling_chq_status_combo, chq_handling_table_sorter_text);
@@ -136,7 +135,7 @@ public class Cheque_Handling extends javax.swing.JPanel {
 
     private void setChequeActionCombo(JTable table, String filterStatus) {
 
-        TableColumn actionColumn = table.getColumnModel().getColumn(9);
+        TableColumn actionColumn = table.getColumnModel().getColumn(8);
 
         String[] actions;
 
@@ -176,7 +175,7 @@ public class Cheque_Handling extends javax.swing.JPanel {
                 int row = table.getEditingRow();
                 Object selected = combo.getSelectedItem();
 
-                table.getModel().setValueAt(selected, row, 9); // 🔥 force update
+                table.getModel().setValueAt(selected, row, 8); // 🔥 force update
                 table.getCellEditor().stopCellEditing();
             }
         });
@@ -198,59 +197,36 @@ public class Cheque_Handling extends javax.swing.JPanel {
 
             int chequeId = ((Number) row[0]).intValue();
 
-            String chequeNo = String.valueOf(row[1]);
-            String bank = String.valueOf(row[2]);
-            String branch = String.valueOf(row[3]);   // ✅ NEW
-            String chequeDate = String.valueOf(row[4]);
+            String category = String.valueOf(row[1]);
+            String subCategory = String.valueOf(row[2]);
+            String studentName = String.valueOf(row[3]);
 
-            int amount = ((Number) row[5]).intValue(); // ✅ FIXED (SUM amount)
-            String chequeStatus = String.valueOf(row[6]);
+            String chequeNo = String.valueOf(row[4]);
+            String bank = String.valueOf(row[5]);
+            String branch = String.valueOf(row[6]);
+            String chequeDate = String.valueOf(row[7]);
 
-            String admissionNo = String.valueOf(row[7]);
-            String studentName = String.valueOf(row[8]);
-            String batch = String.valueOf(row[9]);
-            String course = String.valueOf(row[10]);
+            double amount = ((Number) row[8]).doubleValue();
+            String chequeStatus = String.valueOf(row[9]);
 
             model.addRow(new Object[]{
                 rowNo++,
-                admissionNo,
+                category,
+                subCategory,
                 studentName,
-                batch,
-                course,
                 chequeNo,
                 bank + " - " + branch,
                 chequeDate,
                 GeneralMethods.formatWithComma(amount),
-                chequeStatus, // ✅ important fix
+                chequeStatus,
                 chequeId
             });
-
-//            model.addRow(new Object[]{
-//                rowNo++,
-//                admissionNo,
-//                studentName,
-//                batch,
-//                course,
-//                chequeNo,
-//                bank + " - " + branch, // ✅ combined (nice UI)
-//                chequeDate,
-//                GeneralMethods.formatWithComma(amount),
-//                chequeStatus, // will be replaced by combo
-//                chequeId
-//            });
         }
 
         // ============================
-        // HIDE CHEQUE ID COLUMN
-        // ============================
-        table.getColumnModel().getColumn(10).setMinWidth(0);
-        table.getColumnModel().getColumn(10).setMaxWidth(0);
-
-        // ============================
-        // SET ACTION COMBO
+        // ACTION COMBO
         // ============================
         setChequeActionCombo(table, status);
-
     }
 
     private void applyTableFilter(JTable table, String text) {
@@ -270,6 +246,7 @@ public class Cheque_Handling extends javax.swing.JPanel {
     private void processChequeClearance() {
 
         String filterStatus = chq_handling_chq_status_combo.getSelectedItem().toString();
+        System.out.println("FILTER STATUS = " + filterStatus);
 
         DefaultTableModel model = (DefaultTableModel) chq_handling_cheq_details_table.getModel();
         EntityManager em = HibernateConfig.getEntityManager();
@@ -279,43 +256,42 @@ public class Cheque_Handling extends javax.swing.JPanel {
 
             for (int i = 0; i < model.getRowCount(); i++) {
 
-                String action = String.valueOf(model.getValueAt(i, 9));
+                String action = String.valueOf(model.getValueAt(i, 8));
 
                 if (action == null || action.equalsIgnoreCase(filterStatus)) {
-                    continue; // skip unchanged rows
+                    continue;
                 }
 
-                String chequeNo = String.valueOf(model.getValueAt(i, 5));
-                String bankBranch = String.valueOf(model.getValueAt(i, 6));
-                String chequeDate = String.valueOf(model.getValueAt(i, 7));
+                String chequeNo = String.valueOf(model.getValueAt(i, 4));
+                String bankBranch = String.valueOf(model.getValueAt(i, 5));
+                String chequeDate = String.valueOf(model.getValueAt(i, 6));
 
                 String bank = bankBranch.split("-")[0].trim();
 
                 // ============================
-                // 🔥 GET PAYMENT DETAILS
+                // GET CHEQUE IDS
                 // ============================
-                List<Object[]> paymentList = em.createNativeQuery(
-                        "SELECT sfp.student_fee_payments_id, "
-                        + "SUM(scd.cheque_amount), "
-                        + "MAX(sfi.remarks) "
-                        + "FROM student_fee_cheque_details scd "
-                        + "JOIN student_fee_installments sfi ON scd.student_fee_installments_id = sfi.student_fee_installments_id "
-                        + "JOIN student_fee_payments sfp ON sfi.student_fee_payments_id = sfp.student_fee_payments_id "
-                        + "WHERE scd.cheque_no = ? AND scd.bank = ? AND scd.cheque_date = ? "
-                        + "GROUP BY sfp.student_fee_payments_id"
+                List<Integer> chequeIds = em.createNativeQuery(
+                        "SELECT student_fee_cheque_details_id "
+                        + "FROM student_fee_cheque_details "
+                        + "WHERE cheque_no=? AND bank=? AND cheque_date=? AND status=1"
                 )
                         .setParameter(1, chequeNo)
                         .setParameter(2, bank)
                         .setParameter(3, chequeDate)
                         .getResultList();
 
+                if (chequeIds.isEmpty()) {
+                    continue;
+                }
+
                 // ============================
-                // UPDATE CHEQUE STATUS
+                // UPDATE STATUS
                 // ============================
                 em.createNativeQuery(
                         "UPDATE student_fee_cheque_details "
-                        + "SET cheque_status = ? "
-                        + "WHERE cheque_no = ? AND bank = ? AND cheque_date = ?"
+                        + "SET cheque_status=? "
+                        + "WHERE cheque_no=? AND bank=? AND cheque_date=?"
                 )
                         .setParameter(1, action)
                         .setParameter(2, chequeNo)
@@ -324,129 +300,112 @@ public class Cheque_Handling extends javax.swing.JPanel {
                         .executeUpdate();
 
                 // ============================
-                // 🔥 HANDLE PAYMENT IMPACT
+                // LOOP EACH CHEQUE RECORD
                 // ============================
-                for (Object[] p : paymentList) {
+                for (Integer chequeId : chequeIds) {
 
-                    int paymentId = ((Number) p[0]).intValue();
-                    int chequeAmount = ((Number) p[1]).intValue();
-                    String remarks = String.valueOf(p[2]); // ADMISSION / NORMAL
+                    Object[] row = (Object[]) em.createNativeQuery(
+                            "SELECT reference_type, reference_id, cheque_amount "
+                            + "FROM student_fee_cheque_details "
+                            + "WHERE student_fee_cheque_details_id=?"
+                    )
+                            .setParameter(1, chequeId)
+                            .getSingleResult();
 
-                    // ============================
+                    String refType = row[0] != null ? row[0].toString() : "";
+                    int refId = row[1] != null ? ((Number) row[1]).intValue() : 0;
+                    double amount = row[2] != null ? ((Number) row[2]).doubleValue() : 0;
+
+                    // =========================================================
                     // CASE 1: PENDING → CLEARED
-                    // ============================
-                    if (filterStatus.equalsIgnoreCase("PENDING")
-                            && action.equalsIgnoreCase("CLEARED")) {
+                    // =========================================================
+                    if (filterStatus.equalsIgnoreCase("PENDING")) {
 
-                        // Update total_paid
-                        em.createNativeQuery(
-                                "UPDATE student_fee_payments "
-                                + "SET total_paid = total_paid + ? "
-                                + "WHERE student_fee_payments_id = ?"
-                        )
-                                .setParameter(1, chequeAmount)
-                                .setParameter(2, paymentId)
-                                .executeUpdate();
+                        if (action.equalsIgnoreCase("CLEARED")) {
 
-                        // Recalculate balance
-                        em.createNativeQuery(
-                                "UPDATE student_fee_payments "
-                                + "SET total_balance = total_fee - total_paid "
-                                + "WHERE student_fee_payments_id = ?"
-                        )
-                                .setParameter(1, paymentId)
-                                .executeUpdate();
+                            processClearance(em, refType, refId, amount);
 
-                        // Ledger entry for cleared cheque
-                        LedgerHelper.saveLedger(em,
-                                chequeAmount,
-                                "CREDIT",
-                                "Cheque cleared - " + chequeNo + " | Bank: " + bankBranch,
-                                "STUDENT_PAYMENT",
-                                paymentId,
-                                "CHEQUE",
-                                "MONTHLY_FEE",
-                                username
-                        );
+                        } else if (action.equalsIgnoreCase("RETURNED") || action.equalsIgnoreCase("CANCELLED") || action.equalsIgnoreCase("BOUNCED")) {
+                            processInvalidCheque(em, chequeId);
+                        }
 
-                        // ✅ LOG: Cheque Cleared
-                        logHelper.log(
-                                "CHEQUE_HANDLING",
-                                paymentId,
-                                "CLEARED",
-                                "CHQ-" + chequeNo,
-                                (double) chequeAmount,
-                                String.format("Cheque #%s CLEARED. Amount added to student balance. Bank: %s", chequeNo, bankBranch),
-                                username
-                        );
-
-                    } // ============================
+                    } // =========================================================
                     // CASE 2: CLEARED → PENDING (REVERSE)
-                    // ============================
+                    // =========================================================
                     else if (filterStatus.equalsIgnoreCase("CLEARED")
                             && action.equalsIgnoreCase("PENDING")) {
 
-                        // Subtract from total_paid
-                        em.createNativeQuery(
-                                "UPDATE student_fee_payments "
-                                + "SET total_paid = total_paid - ? "
-                                + "WHERE student_fee_payments_id = ?"
-                        )
-                                .setParameter(1, chequeAmount)
-                                .setParameter(2, paymentId)
-                                .executeUpdate();
+                        // ---------- ADMISSION REVERSE ----------
+                        if (refType.equalsIgnoreCase("ADMISSION")) {
 
-                        // Recalculate balance
-                        em.createNativeQuery(
-                                "UPDATE student_fee_payments "
-                                + "SET total_balance = total_fee - total_paid "
-                                + "WHERE student_fee_payments_id = ?"
-                        )
-                                .setParameter(1, paymentId)
-                                .executeUpdate();
+                            em.createNativeQuery(
+                                    "UPDATE student_fee_payments "
+                                    + "SET payment_status='ACTIVE', "
+                                    + "total_paid = total_paid - ?, "
+                                    + "total_balance = total_fee - total_paid "
+                                    + "WHERE enrollment_id=?"
+                            )
+                                    .setParameter(1, amount)
+                                    .setParameter(2, refId)
+                                    .executeUpdate();
+                        } // ---------- ROUND REVERSE ----------
+                        else if (refType.equalsIgnoreCase("ROUND")) {
 
-                        // Ledger deduction
-                        LedgerHelper.saveLedger(em,
-                                chequeAmount,
-                                "DEBIT",
-                                "Cheque " + action + " - " + chequeNo + " | Bank: " + bankBranch,
-                                "STUDENT_PAYMENT",
-                                paymentId,
-                                "CHEQUE",
-                                "MONTHLY_FEE",
-                                username
-                        );
+                            List<Object[]> details = em.createNativeQuery(
+                                    "SELECT reference_type, reference_id, enrollment_id, paid_amount "
+                                    + "FROM student_fee_round_payment_master_details "
+                                    + "WHERE student_fee_round_payment_master_id=? AND status=1"
+                            )
+                                    .setParameter(1, refId)
+                                    .getResultList();
 
-                        // LOG: Cheque Reversed
-                        logHelper.log(
-                                "CHEQUE_HANDLING",
-                                paymentId,
-                                "REVERSED",
-                                "CHQ-" + chequeNo,
-                                (double) chequeAmount,
-                                String.format("REVERSAL: Cheque #%s moved back to PENDING. Amount deducted from student balance.", chequeNo),
-                                username
-                        );
+                            for (Object[] d : details) {
 
-                    } // ============================
-                    // CASE 3: RETURNED / BOUNCED / CANCELLED → PENDING
-                    // Only status update, no money impact
-                    // ============================
+                                String type = d[0] != null ? d[0].toString() : "";
+                                int refIdInner = d[1] != null ? ((Number) d[1]).intValue() : 0;
+                                int enrollmentId = d[2] != null ? ((Number) d[2]).intValue() : 0;
+                                double paid = d[3] != null ? ((Number) d[3]).doubleValue() : 0;
+
+                                int targetEnrollmentId = (refIdInner != 0) ? refIdInner : enrollmentId;
+
+                                // COURSE REVERSE
+                                if (type.equalsIgnoreCase("COURSE")) {
+
+                                    em.createNativeQuery(
+                                            "UPDATE student_fee_payments "
+                                            + "SET total_paid = total_paid - ?, "
+                                            + "total_balance = total_fee - total_paid "
+                                            + "WHERE enrollment_id=?"
+                                    )
+                                            .setParameter(1, paid)
+                                            .setParameter(2, targetEnrollmentId)
+                                            .executeUpdate();
+                                } // ADDITIONAL REVERSE
+                                else if (type.equalsIgnoreCase("ADDITIONAL")) {
+
+                                    em.createNativeQuery(
+                                            "DELETE FROM student_additional_fee_payments "
+                                            + "WHERE student_fee_round_payment_master_id=? "
+                                            + "AND student_additional_fees_id=? "
+                                            + "AND payment_method='CHEQUE'"
+                                    )
+                                            .setParameter(1, refId)
+                                            .setParameter(2, refIdInner)
+                                            .executeUpdate();
+                                }
+                            }
+                        }
+                    } // =========================================================
+                    // CASE 3: RETURNED / BOUNCED / CANCELLED
+                    // =========================================================
                     else if ((filterStatus.equalsIgnoreCase("RETURNED")
                             || filterStatus.equalsIgnoreCase("BOUNCED")
                             || filterStatus.equalsIgnoreCase("CANCELLED"))
                             && action.equalsIgnoreCase("PENDING")) {
-                        // Nothing to do, status already updated above
-                        // LOG: Status Change
-                        logHelper.log(
-                                "CHEQUE_HANDLING",
-                                paymentId,
-                                action.toUpperCase(),
-                                "CHQ-" + chequeNo,
-                                (double) chequeAmount,
-                                String.format("Status update for Cheque #%s: %s to %s", chequeNo, filterStatus, action),
-                                username
-                        );
+
+                        System.out.println("@@@@@@@@@@ Cheq id = " + chequeId);
+                        processtoPendingCheque(em, chequeId);
+
                     }
                 }
             }
@@ -454,7 +413,6 @@ public class Cheque_Handling extends javax.swing.JPanel {
             em.getTransaction().commit();
 
             JOptionPane.showMessageDialog(this, "Cheque Update Completed!");
-
             loadChequeTable(filterStatus, chq_handling_cheq_details_table);
 
         } catch (Exception e) {
@@ -465,6 +423,235 @@ public class Cheque_Handling extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
         } finally {
             em.close();
+        }
+    }
+
+    private void processClearance(EntityManager em, String refType, int refId, double amount) {
+
+        // ---------- ADMISSION ----------
+        if (refType.equalsIgnoreCase("ADMISSION")) {
+
+            em.createNativeQuery(
+                    "UPDATE student_fee_payments "
+                    + "SET payment_status='PAID', "
+                    + "total_paid = total_paid + ?, "
+                    + "total_balance = total_fee - total_paid "
+                    + "WHERE enrollment_id=?"
+            )
+                    .setParameter(1, amount)
+                    .setParameter(2, refId)
+                    .executeUpdate();
+        } // ---------- ROUND ----------
+        else if (refType.equalsIgnoreCase("ROUND")) {
+
+            List<Object[]> details = em.createNativeQuery(
+                    "SELECT reference_type, reference_id, enrollment_id, paid_amount "
+                    + "FROM student_fee_round_payment_master_details "
+                    + "WHERE student_fee_round_payment_master_id=? AND status=1"
+            )
+                    .setParameter(1, refId)
+                    .getResultList();
+
+            for (Object[] d : details) {
+
+                String type = d[0] != null ? d[0].toString() : "";
+                int refIdInner = d[1] != null ? ((Number) d[1]).intValue() : 0;
+                int enrollmentId = d[2] != null ? ((Number) d[2]).intValue() : 0;
+                double paid = d[3] != null ? ((Number) d[3]).doubleValue() : 0;
+
+                int targetEnrollmentId = (refIdInner != 0) ? refIdInner : enrollmentId;
+
+                if (type.equalsIgnoreCase("COURSE")) {
+
+                    em.createNativeQuery(
+                            "UPDATE student_fee_payments "
+                            + "SET total_paid = total_paid + ?, "
+                            + "total_balance = total_fee - total_paid "
+                            + "WHERE enrollment_id=?"
+                    )
+                            .setParameter(1, paid)
+                            .setParameter(2, targetEnrollmentId)
+                            .executeUpdate();
+
+                    // ✅ FIX: status update
+                    em.createNativeQuery(
+                            "UPDATE student_fee_payments "
+                            + "SET payment_status = CASE "
+                            + "WHEN total_balance <= 0 THEN 'COMPLETED' "
+                            + "ELSE 'ACTIVE' END "
+                            + "WHERE enrollment_id = ?"
+                    )
+                            .setParameter(1, targetEnrollmentId)
+                            .executeUpdate();
+                    
+                } else if (type.equalsIgnoreCase("ADDITIONAL")) {
+
+                    em.createNativeQuery(
+                            "INSERT INTO student_additional_fee_payments "
+                            + "(student_additional_fees_id, student_fee_round_payment_master_id, paid_date, amount_paid, payment_method, user, status) "
+                            + "VALUES (?, ?, NOW(), ?, 'CHEQUE', ?, 1)"
+                    )
+                            .setParameter(1, refIdInner)
+                            .setParameter(2, refId)
+                            .setParameter(3, paid)
+                            .setParameter(4, username)
+                            .executeUpdate();
+                }
+            }
+        }
+    }
+
+    private void processInvalidCheque(EntityManager em, int chequeId) {
+
+        Object[] row = (Object[]) em.createNativeQuery(
+                "SELECT reference_type, reference_id, cheque_amount "
+                + "FROM student_fee_cheque_details "
+                + "WHERE student_fee_cheque_details_id=?"
+        )
+                .setParameter(1, chequeId)
+                .getSingleResult();
+
+        String refType = row[0] != null ? row[0].toString() : "";
+        int refId = row[1] != null ? ((Number) row[1]).intValue() : 0;
+
+        // =====================================================
+        // 🔥 DISABLE INSTALLMENTS (ALL TYPES)
+        // =====================================================
+        em.createNativeQuery(
+                "UPDATE student_fee_installments "
+                + "SET status = 0 "
+                + "WHERE student_fee_round_payment_master_id = ?"
+        )
+                .setParameter(1, refId)
+                .executeUpdate();
+
+        // =====================================================
+        // 🔥 REMOVE PAYMENT EFFECT
+        // =====================================================
+        if (refType.equalsIgnoreCase("ADMISSION")) {
+
+            // restore installment rows
+            em.createNativeQuery(
+                    "UPDATE student_fee_installments "
+                    + "SET status = 0 "
+                    + "WHERE enrollment_id = ? "
+                    + "AND payment_type = 'ADMISSION'"
+            )
+                    .setParameter(1, refId)
+                    .executeUpdate();
+
+            // restore payment table
+            em.createNativeQuery(
+                    "UPDATE student_fee_payments "
+                    + "SET payment_status='PENDING', "
+                    + "status = 0 "
+                    + "WHERE enrollment_id=? "
+                    + "AND payment_type='ADMISSION'"
+            )
+                    .setParameter(1, refId)
+                    .executeUpdate();
+
+        } else if (refType.equalsIgnoreCase("ROUND")) {
+
+            em.createNativeQuery(
+                    "UPDATE student_fee_round_payment_master SET status=0 WHERE student_fee_round_payment_master_id=?"
+            ).setParameter(1, refId).executeUpdate();
+
+            em.createNativeQuery(
+                    "UPDATE student_fee_round_payment_master_details SET status=0 WHERE student_fee_round_payment_master_id=?"
+            ).setParameter(1, refId).executeUpdate();
+        }
+    }
+
+    private void processtoPendingCheque(EntityManager em, int chequeId) {
+
+        Object[] row = (Object[]) em.createNativeQuery(
+                "SELECT reference_type, reference_id, cheque_amount "
+                + "FROM student_fee_cheque_details "
+                + "WHERE student_fee_cheque_details_id=?"
+        )
+                .setParameter(1, chequeId)
+                .getSingleResult();
+
+        String refType = row[0] != null ? row[0].toString() : "";
+        int refId = row[1] != null ? ((Number) row[1]).intValue() : 0;
+
+        System.out.println("refType = " + refType);
+        System.out.println("refId = " + refId);
+
+        // =====================================================
+        // 🔥 DISABLE INSTALLMENTS (ALL TYPES)
+        // =====================================================
+        em.createNativeQuery(
+                "UPDATE student_fee_installments "
+                + "SET status = 1 "
+                + "WHERE student_fee_round_payment_master_id = ?"
+        )
+                .setParameter(1, refId)
+                .executeUpdate();
+
+        // =====================================================
+        // 🔥 REMOVE PAYMENT EFFECT
+        // =====================================================
+        if (refType.equalsIgnoreCase("ADMISSION")) {
+
+            // restore installment rows
+            em.createNativeQuery(
+                    "UPDATE student_fee_installments "
+                    + "SET status = 1 "
+                    + "WHERE enrollment_id = ? "
+                    + "AND payment_type = 'ADMISSION'"
+            )
+                    .setParameter(1, refId)
+                    .executeUpdate();
+
+            // restore payment table
+            em.createNativeQuery(
+                    "UPDATE student_fee_payments "
+                    + "SET payment_status='PENDING', "
+                    + "status = 1 "
+                    + "WHERE enrollment_id=? "
+                    + "AND payment_type='ADMISSION'"
+            )
+                    .setParameter(1, refId)
+                    .executeUpdate();
+
+        } else if (refType.equalsIgnoreCase("ROUND")) {
+
+            System.out.println("RESTORE ROUND -> refId = " + refId);
+
+            // 1. restore round master
+            int masterUpdated = em.createNativeQuery(
+                    "UPDATE student_fee_round_payment_master "
+                    + "SET status = 1 "
+                    + "WHERE student_fee_round_payment_master_id = ?"
+            )
+                    .setParameter(1, refId)
+                    .executeUpdate();
+
+            System.out.println("MASTER UPDATED = " + masterUpdated);
+
+            // 2. restore round details
+            int detailUpdated = em.createNativeQuery(
+                    "UPDATE student_fee_round_payment_master_details "
+                    + "SET status = 1 "
+                    + "WHERE student_fee_round_payment_master_id = ?"
+            )
+                    .setParameter(1, refId)
+                    .executeUpdate();
+
+            System.out.println("DETAILS UPDATED = " + detailUpdated);
+
+            // 3. restore installments linked to this round
+            int installmentUpdated = em.createNativeQuery(
+                    "UPDATE student_fee_installments "
+                    + "SET status = 1 "
+                    + "WHERE student_fee_round_payment_master_id = ?"
+            )
+                    .setParameter(1, refId)
+                    .executeUpdate();
+
+            System.out.println("INSTALLMENTS UPDATED = " + installmentUpdated);
         }
     }
 
@@ -480,43 +667,43 @@ public class Cheque_Handling extends javax.swing.JPanel {
 //
 //            for (int i = 0; i < model.getRowCount(); i++) {
 //
-//                String action = String.valueOf(model.getValueAt(i, 9));
+//                String action = String.valueOf(model.getValueAt(i, 8)); // action column
 //
 //                if (action == null || action.equalsIgnoreCase(filterStatus)) {
-//                    continue; // skip unchanged rows
+//                    continue;
 //                }
 //
-//                String chequeNo = String.valueOf(model.getValueAt(i, 5));
-//                String bankBranch = String.valueOf(model.getValueAt(i, 6));
-//                String chequeDate = String.valueOf(model.getValueAt(i, 7));
+//                String chequeNo = String.valueOf(model.getValueAt(i, 4));
+//                String bankBranch = String.valueOf(model.getValueAt(i, 5));
+//                String chequeDate = String.valueOf(model.getValueAt(i, 6));
 //
 //                String bank = bankBranch.split("-")[0].trim();
 //
 //                // ============================
-//                // 🔥 GET PAYMENT + TYPE
+//                // GET CHEQUE IDS
 //                // ============================
-//                List<Object[]> paymentList = em.createNativeQuery(
-//                        "SELECT sfp.student_fee_payments_id, "
-//                        + "SUM(scd.cheque_amount), "
-//                        + "MAX(sfi.remarks) "
-//                        + "FROM student_fee_cheque_details scd "
-//                        + "JOIN student_fee_installments sfi ON scd.student_fee_installments_id = sfi.student_fee_installments_id "
-//                        + "JOIN student_fee_payments sfp ON sfi.student_fee_payments_id = sfp.student_fee_payments_id "
-//                        + "WHERE scd.cheque_no = ? AND scd.bank = ? AND scd.cheque_date = ? "
-//                        + "GROUP BY sfp.student_fee_payments_id"
+//                List<Integer> chequeIds = em.createNativeQuery(
+//                        "SELECT student_fee_cheque_details_id "
+//                        + "FROM student_fee_cheque_details "
+//                        + "WHERE cheque_no=? AND bank=? AND cheque_date=? AND status=1"
 //                )
 //                        .setParameter(1, chequeNo)
 //                        .setParameter(2, bank)
 //                        .setParameter(3, chequeDate)
 //                        .getResultList();
 //
+//                if (chequeIds.isEmpty()) {
+//                    continue;
+//                }
+//                System.out.println("&&& CHKK IDS = " + chequeIds);
+//
 //                // ============================
-//                // UPDATE CHEQUE STATUS
+//                // UPDATE STATUS
 //                // ============================
 //                em.createNativeQuery(
 //                        "UPDATE student_fee_cheque_details "
-//                        + "SET cheque_status = ? "
-//                        + "WHERE cheque_no = ? AND bank = ? AND cheque_date = ?"
+//                        + "SET cheque_status=? "
+//                        + "WHERE cheque_no=? AND bank=? AND cheque_date=?"
 //                )
 //                        .setParameter(1, action)
 //                        .setParameter(2, chequeNo)
@@ -524,61 +711,417 @@ public class Cheque_Handling extends javax.swing.JPanel {
 //                        .setParameter(4, chequeDate)
 //                        .executeUpdate();
 //
-//                // ============================
-//                // 🔥 HANDLE LOGIC
-//                // ============================
-//                for (Object[] p : paymentList) {
+//                // =========================================================
+//                // CASE 1: PENDING → CLEARED
+//                // =========================================================
+//                if (filterStatus.equalsIgnoreCase("PENDING")
+//                        && action.equalsIgnoreCase("CLEARED")) {
 //
-//                    int paymentId = ((Number) p[0]).intValue();
-//                    int chequeAmount = ((Number) p[1]).intValue();
-//                    String remarks = String.valueOf(p[2]); // ADMISSION / NORMAL
+//                    for (Integer chequeId : chequeIds) {
 //
-//                    // ============================
-//                    // CASE 1: PENDING → CLEARED
-//                    // ============================
-//                    if (filterStatus.equalsIgnoreCase("PENDING")
-//                            && action.equalsIgnoreCase("CLEARED")) {
-//
-//                        // 🔥 BOTH ADMISSION + NORMAL SAME BEHAVIOR
-//                        em.createNativeQuery(
-//                                "UPDATE student_fee_payments "
-//                                + "SET total_paid = total_paid + ?, "
-//                                + "total_balance = total_fee - (total_paid + ?) "
-//                                + "WHERE student_fee_payments_id = ?"
+//                        Object[] row = (Object[]) em.createNativeQuery(
+//                                "SELECT reference_type, reference_id, cheque_amount "
+//                                + "FROM student_fee_cheque_details "
+//                                + "WHERE student_fee_cheque_details_id=?"
 //                        )
-//                                .setParameter(1, chequeAmount)
-//                                .setParameter(2, chequeAmount)
-//                                .setParameter(3, paymentId)
-//                                .executeUpdate();
+//                                .setParameter(1, chequeId)
+//                                .getSingleResult();
 //
-//                    } // ============================
-//                    // CASE 2: CLEARED → PENDING (REVERSE)
-//                    // ============================
-//                    else if (filterStatus.equalsIgnoreCase("CLEARED")
-//                            && action.equalsIgnoreCase("PENDING")) {
+//                        String refType = row[0].toString();
+//                        int refId = ((Number) row[1]).intValue();
+//                        double amount = ((Number) row[2]).doubleValue();
 //
-//                        em.createNativeQuery(
-//                                "UPDATE student_fee_payments "
-//                                + "SET total_paid = total_paid - ?, "
-//                                + "total_balance = total_fee - (total_paid - ?) "
-//                                + "WHERE student_fee_payments_id = ?"
-//                        )
-//                                .setParameter(1, chequeAmount)
-//                                .setParameter(2, chequeAmount)
-//                                .setParameter(3, paymentId)
-//                                .executeUpdate();
-//                    } // ============================
-//                    // CASE 3:
-//                    // RETURNED / BOUNCED / CANCELLED → PENDING
-//                    // ONLY STATUS CHANGE (NO MONEY)
-//                    // ============================
-//                    else if ((filterStatus.equalsIgnoreCase("RETURNED")
-//                            || filterStatus.equalsIgnoreCase("BOUNCED")
-//                            || filterStatus.equalsIgnoreCase("CANCELLED"))
-//                            && action.equalsIgnoreCase("PENDING")) {
+//                        System.out.println("&&& CHKK REF IDS = " + refId + "REF TYPE = " + refType);
 //
-//                        // 🔥 DO NOTHING (only status already updated)
+//                        // ============================
+//                        // ADMISSION
+//                        // ============================
+//                        if (refType.equalsIgnoreCase("ADMISSION")) {
+//
+//                            em.createNativeQuery(
+//                                    "UPDATE student_fee_payments "
+//                                    + "SET payment_status='PAID', "
+//                                    + "total_paid = total_paid + ?, "
+//                                    + "total_balance = total_fee - total_paid "
+//                                    + "WHERE enrollment_id=?"
+//                            )
+//                                    .setParameter(1, amount)
+//                                    .setParameter(2, refId)
+//                                    .executeUpdate();
+//                        } // ============================
+//                        // ROUND
+//                        // ============================
+//                        else if (refType.equalsIgnoreCase("ROUND")) {
+//
+//                            System.out.println("&&& ROUND INSIDE");
+//
+//                            List<Object[]> details = em.createNativeQuery(
+//                                    "SELECT reference_type, reference_id, enrollment_id, paid_amount "
+//                                    + "FROM student_fee_round_payment_master_details "
+//                                    + "WHERE student_fee_round_payment_master_id=? AND status=1"
+//                            )
+//                                    .setParameter(1, refId)
+//                                    .getResultList();
+//
+//                            for (Object[] d : details) {
+//
+//                                String type = d[0] != null ? d[0].toString() : "";
+//
+//                                int refIdInner = (d[1] != null) ? ((Number) d[1]).intValue() : 0;
+//                                int enrollmentId = (d[2] != null) ? ((Number) d[2]).intValue() : 0;
+//                                double paid = (d[3] != null) ? ((Number) d[3]).doubleValue() : 0;
+//
+//                                // ============================
+//                                // COURSE
+//                                // ============================
+//                                if (type.equalsIgnoreCase("COURSE")) {
+//
+//                                    int targetEnrollmentId = (refIdInner != 0) ? refIdInner : enrollmentId;
+//
+//                                    System.out.println("&&& COURSE ENROLLMENT ID = " + targetEnrollmentId);
+//
+//                                    em.createNativeQuery(
+//                                            "UPDATE student_fee_payments "
+//                                            + "SET total_paid = total_paid + ?, "
+//                                            + "total_balance = total_fee - total_paid "
+//                                            + "WHERE enrollment_id=?"
+//                                    )
+//                                            .setParameter(1, paid)
+//                                            .setParameter(2, targetEnrollmentId)
+//                                            .executeUpdate();
+//                                } // ============================
+//                                // ADDITIONAL
+//                                // ============================
+//                                else if (type.equalsIgnoreCase("ADDITIONAL")) {
+//
+//                                    em.createNativeQuery(
+//                                            "INSERT INTO student_additional_fee_payments "
+//                                            + "(student_additional_fees_id, student_fee_round_payment_master_id, paid_date, amount_paid, payment_method, user, status) "
+//                                            + "VALUES (?, ?, NOW(), ?, 'CHEQUE', ?, 1)"
+//                                    )
+//                                            .setParameter(1, refIdInner)
+//                                            .setParameter(2, refId)
+//                                            .setParameter(3, paid)
+//                                            .setParameter(4, username)
+//                                            .executeUpdate();
+//                                }
+//                            }
+//                        }
 //                    }
+//                } // =========================================================
+//                // CASE 2: CLEARED → PENDING (REVERSE)
+//                // =========================================================
+//                else if (refType.equalsIgnoreCase("ROUND")) {
+//
+//                    List<Object[]> details = em.createNativeQuery(
+//                            "SELECT reference_type, reference_id, enrollment_id, paid_amount "
+//                            + "FROM student_fee_round_payment_master_details "
+//                            + "WHERE student_fee_round_payment_master_id=? AND status=1"
+//                    )
+//                            .setParameter(1, refId)
+//                            .getResultList();
+//
+//                    for (Object[] d : details) {
+//
+//                        String type = d[0] != null ? d[0].toString() : "";
+//
+//                        int refIdInner = (d[1] != null) ? ((Number) d[1]).intValue() : 0;
+//                        int enrollmentId = (d[2] != null) ? ((Number) d[2]).intValue() : 0;
+//                        double paid = (d[3] != null) ? ((Number) d[3]).doubleValue() : 0;
+//
+//                        // ============================
+//                        // COURSE REVERSE
+//                        // ============================
+//                        if (type.equalsIgnoreCase("COURSE")) {
+//
+//                            int targetEnrollmentId = (refIdInner != 0) ? refIdInner : enrollmentId;
+//
+//                            System.out.println("REVERSE COURSE → ENROLLMENT ID = " + targetEnrollmentId);
+//
+//                            em.createNativeQuery(
+//                                    "UPDATE student_fee_payments "
+//                                    + "SET total_paid = total_paid - ?, "
+//                                    + "total_balance = total_fee - total_paid "
+//                                    + "WHERE enrollment_id=?"
+//                            )
+//                                    .setParameter(1, paid)
+//                                    .setParameter(2, targetEnrollmentId)
+//                                    .executeUpdate();
+//                        } // ============================
+//                        // ADDITIONAL REVERSE
+//                        // ============================
+//                        else if (type.equalsIgnoreCase("ADDITIONAL")) {
+//
+//                            em.createNativeQuery(
+//                                    "DELETE FROM student_additional_fee_payments "
+//                                    + "WHERE student_fee_round_payment_master_id=? "
+//                                    + "AND student_additional_fees_id=? "
+//                                    + "AND payment_method='CHEQUE'"
+//                            )
+//                                    .setParameter(1, refId)
+//                                    .setParameter(2, refIdInner)
+//                                    .executeUpdate();
+//                        }
+//                    }
+//                } // =========================================================
+//                // CASE 3: RETURNED / BOUNCED / CANCELLED
+//                // =========================================================
+//                else if ((filterStatus.equalsIgnoreCase("RETURNED")
+//                        || filterStatus.equalsIgnoreCase("BOUNCED")
+//                        || filterStatus.equalsIgnoreCase("CANCELLED"))
+//                        && action.equalsIgnoreCase("PENDING")) {
+//                    // only status change already done
+//                }
+//            }
+//
+//            em.getTransaction().commit();
+//
+//            JOptionPane.showMessageDialog(this, "Cheque Update Completed!");
+//            loadChequeTable(filterStatus, chq_handling_cheq_details_table);
+//
+//        } catch (Exception e) {
+//            if (em.getTransaction().isActive()) {
+//                em.getTransaction().rollback();
+//            }
+//            e.printStackTrace();
+//            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+//        } finally {
+//            em.close();
+//        }
+//    }
+//    private void processChequeClearance() {
+//
+//        String filterStatus = chq_handling_chq_status_combo.getSelectedItem().toString();
+//
+//        DefaultTableModel model = (DefaultTableModel) chq_handling_cheq_details_table.getModel();
+//        EntityManager em = HibernateConfig.getEntityManager();
+//
+//        try {
+//            em.getTransaction().begin();
+//
+//            for (int i = 0; i < model.getRowCount(); i++) {
+//
+//                String action = String.valueOf(model.getValueAt(i, 8)); // action column
+//
+//                if (action == null || action.equalsIgnoreCase(filterStatus)) {
+//                    continue;
+//                }
+//
+//                String subCategory = String.valueOf(model.getValueAt(i, 2)); // ROUND / ADMISSION
+//                String chequeNo = String.valueOf(model.getValueAt(i, 4));
+//                String bankBranch = String.valueOf(model.getValueAt(i, 5));
+//                String chequeDate = String.valueOf(model.getValueAt(i, 6));
+//
+//                String bank = bankBranch.split("-")[0].trim();
+//
+//                // ============================
+//                // 🔥 GET CHEQUE IDS
+//                // ============================
+//                List<Integer> chequeIds = em.createNativeQuery(
+//                        "SELECT student_fee_cheque_details_id "
+//                        + "FROM student_fee_cheque_details "
+//                        + "WHERE cheque_no=? AND bank=? AND cheque_date=? AND status=1"
+//                )
+//                        .setParameter(1, chequeNo)
+//                        .setParameter(2, bank)
+//                        .setParameter(3, chequeDate)
+//                        .getResultList();
+//
+//                if (chequeIds.isEmpty()) {
+//                    continue;
+//                }
+//
+//                // ============================
+//                // UPDATE CHEQUE STATUS
+//                // ============================
+//                em.createNativeQuery(
+//                        "UPDATE student_fee_cheque_details "
+//                        + "SET cheque_status=? "
+//                        + "WHERE cheque_no=? AND bank=? AND cheque_date=?"
+//                )
+//                        .setParameter(1, action)
+//                        .setParameter(2, chequeNo)
+//                        .setParameter(3, bank)
+//                        .setParameter(4, chequeDate)
+//                        .executeUpdate();
+//
+//                // =========================================================
+//                // 🔥 CASE 1: PENDING → CLEARED
+//                // =========================================================
+//                if (filterStatus.equalsIgnoreCase("PENDING")
+//                        && action.equalsIgnoreCase("CLEARED")) {
+//
+//                    for (Integer chequeId : chequeIds) {
+//
+//                        Object[] row = (Object[]) em.createNativeQuery(
+//                                "SELECT reference_type, reference_id, cheque_amount "
+//                                + "FROM student_fee_cheque_details "
+//                                + "WHERE student_fee_cheque_details_id=?"
+//                        )
+//                                .setParameter(1, chequeId)
+//                                .getSingleResult();
+//
+//                        String refType = row[0].toString();
+//                        int refId = ((Number) row[1]).intValue();
+//                        double amount = ((Number) row[2]).doubleValue();
+//
+//                        // ============================
+//                        // 🔹 ROUND PAYMENT
+//                        // ============================
+//                        if (refType.equalsIgnoreCase("ROUND")) {
+//
+//                            List<Object[]> details = em.createNativeQuery(
+//                                    "SELECT reference_type, reference_id, paid_amount "
+//                                    + "FROM student_fee_round_payment_master_details "
+//                                    + "WHERE student_fee_round_payment_master_id=? AND status=1"
+//                            )
+//                                    .setParameter(1, refId)
+//                                    .getResultList();
+//
+//                            for (Object[] d : details) {
+//
+//                                String type = d[0].toString();
+//
+//                                if (d[1] == null) {
+//                                    continue; // skip broken DB record
+//                                }
+//
+//                                int id = ((Number) d[1]).intValue();
+//                                double paid = ((Number) d[2]).doubleValue();
+//
+//                                // COURSE
+//                                if (type.equalsIgnoreCase("COURSE")) {
+//
+//                                    em.createNativeQuery(
+//                                            "UPDATE student_fee_payments "
+//                                            + "SET total_paid = total_paid + ?, "
+//                                            + "total_balance = total_fee - (total_paid + ?) "
+//                                            + "WHERE enrollment_id=?"
+//                                    )
+//                                            .setParameter(1, paid)
+//                                            .setParameter(2, paid)
+//                                            .setParameter(3, id)
+//                                            .executeUpdate();
+//                                } // ADDITIONAL
+//                                else if (type.equalsIgnoreCase("ADDITIONAL")) {
+//
+//                                    em.createNativeQuery(
+//                                            "INSERT INTO student_additional_fee_payments "
+//                                            + "(student_additional_fees_id, student_fee_round_payment_master_id, paid_date, amount_paid, payment_method, user, status) "
+//                                            + "VALUES (?, ?, NOW(), ?, 'CHEQUE', ?, 1)"
+//                                    )
+//                                            .setParameter(1, id)
+//                                            .setParameter(2, refId)
+//                                            .setParameter(3, paid)
+//                                            .setParameter(4, username)
+//                                            .executeUpdate();
+//                                }
+//                            }
+//                        } // ============================
+//                        // 🔹 ADMISSION PAYMENT
+//                        // ============================
+//                        else if (refType.equalsIgnoreCase("ADMISSION")) {
+//
+//                            em.createNativeQuery(
+//                                    "UPDATE student_fee_payments "
+//                                    + "SET payment_status='PAID', "
+//                                    + "total_paid = total_fee, "
+//                                    + "total_balance = 0 "
+//                                    + "WHERE enrollment_id=?"
+//                            )
+//                                    .setParameter(1, refId)
+//                                    .executeUpdate();
+//                        }
+//                    }
+//                } // =========================================================
+//                // 🔥 CASE 2: CLEARED → PENDING (REVERSE)
+//                // =========================================================
+//                else if (filterStatus.equalsIgnoreCase("CLEARED")
+//                        && action.equalsIgnoreCase("PENDING")) {
+//
+//                    for (Integer chequeId : chequeIds) {
+//
+//                        Object[] row = (Object[]) em.createNativeQuery(
+//                                "SELECT reference_type, reference_id, cheque_amount "
+//                                + "FROM student_fee_cheque_details "
+//                                + "WHERE student_fee_cheque_details_id=?"
+//                        )
+//                                .setParameter(1, chequeId)
+//                                .getSingleResult();
+//
+//                        String refType = row[0].toString();
+//                        int refId = ((Number) row[1]).intValue();
+//
+//                        // ============================
+//                        // 🔹 ROUND REVERSE
+//                        // ============================
+//                        if (refType.equalsIgnoreCase("ROUND")) {
+//
+//                            List<Object[]> details = em.createNativeQuery(
+//                                    "SELECT reference_type, reference_id, paid_amount "
+//                                    + "FROM student_fee_round_payment_master_details "
+//                                    + "WHERE student_fee_round_payment_master_id=? AND status=1"
+//                            )
+//                                    .setParameter(1, refId)
+//                                    .getResultList();
+//
+//                            for (Object[] d : details) {
+//
+//                                String type = d[0].toString();
+//                                int id = ((Number) d[1]).intValue();
+//                                double paid = ((Number) d[2]).doubleValue();
+//
+//                                // COURSE REVERSE
+//                                if (type.equalsIgnoreCase("COURSE")) {
+//
+//                                    em.createNativeQuery(
+//                                            "UPDATE student_fee_payments "
+//                                            + "SET total_paid = total_paid - ?, "
+//                                            + "total_balance = total_fee - (total_paid - ?) "
+//                                            + "WHERE enrollment_id=?"
+//                                    )
+//                                            .setParameter(1, paid)
+//                                            .setParameter(2, paid)
+//                                            .setParameter(3, id)
+//                                            .executeUpdate();
+//                                } // ADDITIONAL REVERSE
+//                                else if (type.equalsIgnoreCase("ADDITIONAL")) {
+//
+//                                    em.createNativeQuery(
+//                                            "DELETE FROM student_additional_fee_payments "
+//                                            + "WHERE student_fee_round_payment_master_id=? "
+//                                            + "AND student_additional_fees_id=? "
+//                                            + "AND payment_method='CHEQUE'"
+//                                    )
+//                                            .setParameter(1, refId)
+//                                            .setParameter(2, id)
+//                                            .executeUpdate();
+//                                }
+//                            }
+//                        } // ============================
+//                        // 🔹 ADMISSION REVERSE
+//                        // ============================
+//                        else if (refType.equalsIgnoreCase("ADMISSION")) {
+//
+//                            em.createNativeQuery(
+//                                    "UPDATE student_fee_payments "
+//                                    + "SET payment_status='PENDING', "
+//                                    + "total_paid = 0, "
+//                                    + "total_balance = total_fee "
+//                                    + "WHERE enrollment_id=?"
+//                            )
+//                                    .setParameter(1, refId)
+//                                    .executeUpdate();
+//                        }
+//                    }
+//                } // =========================================================
+//                // 🔥 CASE 3: RETURNED / BOUNCED / CANCELLED → PENDING
+//                // =========================================================
+//                else if ((filterStatus.equalsIgnoreCase("RETURNED")
+//                        || filterStatus.equalsIgnoreCase("BOUNCED")
+//                        || filterStatus.equalsIgnoreCase("CANCELLED"))
+//                        && action.equalsIgnoreCase("PENDING")) {
+//                    // ✅ ONLY STATUS CHANGE (already done above)
 //                }
 //            }
 //
@@ -598,141 +1141,6 @@ public class Cheque_Handling extends javax.swing.JPanel {
 //            em.close();
 //        }
 //    }
-    // OLD ******************************************
-//    private void processChequeClearance() {
-//
-//        String filterStatus = chq_handling_chq_status_combo.getSelectedItem().toString();
-//
-//        DefaultTableModel model = (DefaultTableModel) chq_handling_cheq_details_table.getModel();
-//        EntityManager em = HibernateConfig.getEntityManager();
-//
-//        try {
-//            em.getTransaction().begin();
-//
-//            for (int i = 0; i < model.getRowCount(); i++) {
-//
-//                String action = String.valueOf(model.getValueAt(i, 9));
-//
-//                if (action == null || action.equalsIgnoreCase(filterStatus)) {
-//                    continue; // skip unchanged
-//                }
-//
-//                String chequeNo = String.valueOf(model.getValueAt(i, 5));
-//                String bankBranch = String.valueOf(model.getValueAt(i, 6));
-//                String chequeDate = String.valueOf(model.getValueAt(i, 7));
-//
-//                String bank = bankBranch.split("-")[0].trim();
-//
-//                // ============================
-//                // UPDATE CHEQUE STATUS
-//                // ============================
-//                em.createNativeQuery(
-//                        "UPDATE student_fee_cheque_details "
-//                        + "SET cheque_status = ? "
-//                        + "WHERE cheque_no = ? AND bank = ? AND cheque_date = ?"
-//                )
-//                        .setParameter(1, action)
-//                        .setParameter(2, chequeNo)
-//                        .setParameter(3, bank)
-//                        .setParameter(4, chequeDate)
-//                        .executeUpdate();
-//
-//                // ============================
-//                // 🔥 HANDLE PAYMENT IMPACT
-//                // ============================
-//                // ---- CASE 1: PENDING → CLEARED ----
-//                if (filterStatus.equalsIgnoreCase("PENDING")
-//                        && action.equalsIgnoreCase("CLEARED")) {
-//
-//                    List<Object[]> paymentList = em.createNativeQuery(
-//                            "SELECT sfp.student_fee_payments_id, SUM(scd.cheque_amount) "
-//                            + "FROM student_fee_cheque_details scd "
-//                            + "JOIN student_fee_installments sfi ON scd.student_fee_installments_id = sfi.student_fee_installments_id "
-//                            + "JOIN student_fee_payments sfp ON sfi.student_fee_payments_id = sfp.student_fee_payments_id "
-//                            + "WHERE scd.cheque_no = ? AND scd.bank = ? AND scd.cheque_date = ? "
-//                            + "GROUP BY sfp.student_fee_payments_id"
-//                    )
-//                            .setParameter(1, chequeNo)
-//                            .setParameter(2, bank)
-//                            .setParameter(3, chequeDate)
-//                            .getResultList();
-//
-//                    for (Object[] p : paymentList) {
-//
-//                        int paymentId = ((Number) p[0]).intValue();
-//                        int chequeAmount = ((Number) p[1]).intValue();
-//
-//                        em.createNativeQuery(
-//                                "UPDATE student_fee_payments "
-//                                + "SET total_paid = total_paid + ?, "
-//                                + "total_balance = total_fee - (total_paid + ?) "
-//                                + "WHERE student_fee_payments_id = ?"
-//                        )
-//                                .setParameter(1, chequeAmount)
-//                                .setParameter(2, chequeAmount)
-//                                .setParameter(3, paymentId)
-//                                .executeUpdate();
-//                    }
-//                } // ---- CASE 2: CLEARED → PENDING (REVERSE) ----
-//                else if (filterStatus.equalsIgnoreCase("CLEARED")
-//                        && action.equalsIgnoreCase("PENDING")) {
-//
-//                    List<Object[]> paymentList = em.createNativeQuery(
-//                            "SELECT sfp.student_fee_payments_id, SUM(scd.cheque_amount) "
-//                            + "FROM student_fee_cheque_details scd "
-//                            + "JOIN student_fee_installments sfi ON scd.student_fee_installments_id = sfi.student_fee_installments_id "
-//                            + "JOIN student_fee_payments sfp ON sfi.student_fee_payments_id = sfp.student_fee_payments_id "
-//                            + "WHERE scd.cheque_no = ? AND scd.bank = ? AND scd.cheque_date = ? "
-//                            + "GROUP BY sfp.student_fee_payments_id"
-//                    )
-//                            .setParameter(1, chequeNo)
-//                            .setParameter(2, bank)
-//                            .setParameter(3, chequeDate)
-//                            .getResultList();
-//
-//                    for (Object[] p : paymentList) {
-//
-//                        int paymentId = ((Number) p[0]).intValue();
-//                        int chequeAmount = ((Number) p[1]).intValue();
-//
-//                        em.createNativeQuery(
-//                                "UPDATE student_fee_payments "
-//                                + "SET total_paid = total_paid - ?, "
-//                                + "total_balance = total_fee - (total_paid - ?) "
-//                                + "WHERE student_fee_payments_id = ?"
-//                        )
-//                                .setParameter(1, chequeAmount)
-//                                .setParameter(2, chequeAmount)
-//                                .setParameter(3, paymentId)
-//                                .executeUpdate();
-//                    }
-//                } // ---- CASE 3: RETURNED / BOUNCED / CANCELLED → PENDING ----
-//                else if ((filterStatus.equalsIgnoreCase("RETURNED")
-//                        || filterStatus.equalsIgnoreCase("BOUNCED")
-//                        || filterStatus.equalsIgnoreCase("CANCELLED"))
-//                        && action.equalsIgnoreCase("PENDING")) {
-//                    
-//                }
-//
-//                // ---- CASE 3: OTHER STATUS CHANGES ----
-//                // RETURNED / BOUNCED / CANCELLED
-//                // → only status updated (already done above)
-//            }
-//
-//            em.getTransaction().commit();
-//
-//            JOptionPane.showMessageDialog(this, "Cheque Update Completed!");
-//
-//            loadChequeTable(filterStatus, chq_handling_cheq_details_table);
-//
-//        } catch (Exception e) {
-//            em.getTransaction().rollback();
-//            e.printStackTrace();
-//            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
-//        } finally {
-//            em.close();
-//        }
-//    }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -746,7 +1154,6 @@ public class Cheque_Handling extends javax.swing.JPanel {
         chq_handling_table_sorter_text = new javax.swing.JTextField();
         jLabel37 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
         jPanel10 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         chq_handling_cheq_details_table = new javax.swing.JTable();
@@ -805,18 +1212,11 @@ public class Cheque_Handling extends javax.swing.JPanel {
         );
 
         jButton1.setBackground(new java.awt.Color(102, 102, 102));
-        jButton1.setToolTipText("Siblings");
+        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/save32.png"))); // NOI18N
+        jButton1.setToolTipText("Cheque Clearance");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
-            }
-        });
-
-        jButton2.setBackground(new java.awt.Color(102, 102, 102));
-        jButton2.setToolTipText("Course Enrolment");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
             }
         });
 
@@ -827,11 +1227,11 @@ public class Cheque_Handling extends javax.swing.JPanel {
 
             },
             new String [] {
-                "#", "Admission", "Student", "Batch", "Course", "Cheque number", "Bank Name", "cheque_date", "cheque_amount", "Action", "Cheque ID"
+                "#", "Category", "Sub Category", "Name", "Cheque number", "Bank Name", "cheque_date", "cheque_amount", "Action", "Cheque ID"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, true, false, false, true, false
+                false, false, false, false, false, false, false, false, true, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -842,10 +1242,12 @@ public class Cheque_Handling extends javax.swing.JPanel {
         if (chq_handling_cheq_details_table.getColumnModel().getColumnCount() > 0) {
             chq_handling_cheq_details_table.getColumnModel().getColumn(0).setPreferredWidth(30);
             chq_handling_cheq_details_table.getColumnModel().getColumn(1).setPreferredWidth(100);
-            chq_handling_cheq_details_table.getColumnModel().getColumn(2).setPreferredWidth(120);
-            chq_handling_cheq_details_table.getColumnModel().getColumn(3).setPreferredWidth(100);
+            chq_handling_cheq_details_table.getColumnModel().getColumn(2).setPreferredWidth(100);
+            chq_handling_cheq_details_table.getColumnModel().getColumn(3).setPreferredWidth(120);
             chq_handling_cheq_details_table.getColumnModel().getColumn(4).setPreferredWidth(150);
-            chq_handling_cheq_details_table.getColumnModel().getColumn(5).setPreferredWidth(150);
+            chq_handling_cheq_details_table.getColumnModel().getColumn(9).setMinWidth(50);
+            chq_handling_cheq_details_table.getColumnModel().getColumn(9).setPreferredWidth(50);
+            chq_handling_cheq_details_table.getColumnModel().getColumn(9).setMaxWidth(50);
         }
 
         firstName_label5.setBackground(new java.awt.Color(33, 33, 33));
@@ -893,8 +1295,6 @@ public class Cheque_Handling extends javax.swing.JPanel {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel10, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -904,9 +1304,7 @@ public class Cheque_Handling extends javax.swing.JPanel {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(36, 36, 36)
                 .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -930,12 +1328,12 @@ public class Cheque_Handling extends javax.swing.JPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_chq_handling_table_sorter_textActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-
-    }//GEN-LAST:event_jButton2ActionPerformed
-
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
 
+        DefaultTableModel model = (DefaultTableModel) chq_handling_cheq_details_table.getModel();
+        if (model.getRowCount() == -1) {
+            return;
+        }
         processChequeClearance();
 
     }//GEN-LAST:event_jButton1ActionPerformed
@@ -950,7 +1348,6 @@ public class Cheque_Handling extends javax.swing.JPanel {
     private javax.swing.JTextField chq_handling_table_sorter_text;
     private javax.swing.JLabel firstName_label5;
     private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel31;
     private javax.swing.JLabel jLabel37;
     private javax.swing.JPanel jPanel1;
