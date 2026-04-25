@@ -589,41 +589,6 @@ public class Round_Payment extends javax.swing.JDialog {
 //
 //        return pendingCount;
 //    }
-    private void sortTableByDueAmount(DefaultTableModel model) {
-
-        java.util.List<Object[]> rows = new java.util.ArrayList<>();
-
-        // Collect rows
-        for (int i = 0; i < model.getRowCount(); i++) {
-
-            Object[] row = new Object[model.getColumnCount()];
-
-            for (int j = 0; j < model.getColumnCount(); j++) {
-                row[j] = model.getValueAt(i, j);
-            }
-
-            rows.add(row);
-        }
-
-        // Sort by Due Amount (column 4)
-        rows.sort((a, b) -> {
-            double valA = GeneralMethods.parseCommaNumber(a[8].toString());
-            double valB = GeneralMethods.parseCommaNumber(b[8].toString());
-            return Double.compare(valA, valB);
-        });
-
-        // Clear table
-        model.setRowCount(0);
-
-        // Re-add sorted rows with new numbering
-        int count = 1;
-
-        for (Object[] row : rows) {
-            row[0] = count++; // reset serial no
-            model.addRow(row);
-        }
-    }
-
     private void calculateTotal() {
 
         DefaultTableModel model = (DefaultTableModel) rp_due_table.getModel();
@@ -1767,6 +1732,32 @@ public class Round_Payment extends javax.swing.JDialog {
                     em.persist(d);
                 }
             }
+
+            // ✅ AUDIT LOG: Round Cheque Payment
+            // 1. Capture details from the UI components
+            String studentName = (rp_student_name_text.getText() != null) ? rp_student_name_text.getText() : "Unknown";
+            String chqNo = rp_round_cheque_number_text.getText();
+            String bank = rp_round_bank_name_combo.getEditor().getItem().toString();
+
+            // 2. Format the description to include Cheque and Rounding details
+            String description = String.format(
+                    "Round Cheque Payment: Student=%s, Chq#=%s, Bank=%s, Amount=%.2f, Adj=%.2f, Student ID: %d",
+                    studentName, chqNo, bank, totalPaid, roundingAdj, studentId
+            );
+
+            // 3. Call your logHelper (Same format as Cash/Round payment)
+            logHelper.log(
+                    "ROUND_PAYMENT", // action_type
+                    studentId, // student_id
+                    "ROUND PAYMENT", // action_performed
+                    "CHEQUE", // payment_mode
+                    totalPaid, // amount
+                    description, // description
+                    user // user
+            );
+
+            // Now commit everything
+            tx.commit();
 
             tx.commit();
 

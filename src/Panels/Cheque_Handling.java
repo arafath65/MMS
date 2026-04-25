@@ -227,6 +227,7 @@ public class Cheque_Handling extends javax.swing.JPanel {
         // ACTION COMBO
         // ============================
         setChequeActionCombo(table, status);
+        getTotalFromTable();
     }
 
     private void applyTableFilter(JTable table, String text) {
@@ -316,6 +317,20 @@ public class Cheque_Handling extends javax.swing.JPanel {
                     int refId = row[1] != null ? ((Number) row[1]).intValue() : 0;
                     double amount = row[2] != null ? ((Number) row[2]).doubleValue() : 0;
 
+                    // --- 1. Get Student ID for the log ---
+                    int logStudentId = 0;
+                    try {
+                        if (refType.equalsIgnoreCase("ADMISSION")) {
+                            logStudentId = ((Number) em.createNativeQuery("SELECT student_id FROM student_fee_payments WHERE enrollment_id=?")
+                                    .setParameter(1, refId).getSingleResult()).intValue();
+                        } else if (refType.equalsIgnoreCase("ROUND")) {
+                            logStudentId = ((Number) em.createNativeQuery("SELECT student_id FROM student_fee_round_payment_master WHERE student_fee_round_payment_master_id=?")
+                                    .setParameter(1, refId).getSingleResult()).intValue();
+                        }
+                    } catch (Exception e) {
+                        logStudentId = 0;
+                    }
+
                     // =========================================================
                     // CASE 1: PENDING → CLEARED
                     // =========================================================
@@ -395,6 +410,20 @@ public class Cheque_Handling extends javax.swing.JPanel {
                                 }
                             }
                         }
+
+                        // --- 2. LOG THE ACTION ---
+                        String logDesc = String.format("Cheque #%s (%s) status changed: %s -> %s. (Ref: %s #%d)",
+                                chequeNo, bank, filterStatus.toUpperCase(), action.toUpperCase(), refType, refId);
+
+                        logHelper.log(
+                                "CHEQUE_MANAGEMENT", // action_type
+                                logStudentId, // student_id
+                                action.toUpperCase(),// action_performed (e.g., CLEARED, RETURNED, PENDING)
+                                "CHEQUE", // payment_mode
+                                amount, // amount
+                                logDesc, // description
+                                username // user (assuming username is stored here)
+                        );
                     } // =========================================================
                     // CASE 3: RETURNED / BOUNCED / CANCELLED
                     // =========================================================
@@ -405,6 +434,21 @@ public class Cheque_Handling extends javax.swing.JPanel {
 
                         System.out.println("@@@@@@@@@@ Cheq id = " + chequeId);
                         processtoPendingCheque(em, chequeId);
+
+                        String logDesc = String.format(
+                                "RE-ACTIVATED CHEQUE: Status changed from %s back to PENDING. Chq #%s (%s), Ref: %s #%d",
+                                filterStatus.toUpperCase(), chequeNo, bank, refType, refId
+                        );
+
+                        logHelper.log(
+                                "CHEQUE_MANAGEMENT", // action_type
+                                logStudentId, // student_id (fetched at top of loop)
+                                "STATUS_RESET", // action_performed
+                                "CHEQUE", // payment_mode
+                                amount, // amount
+                                logDesc, // description
+                                username // user
+                        );
 
                     }
                 }
@@ -483,7 +527,7 @@ public class Cheque_Handling extends javax.swing.JPanel {
                     )
                             .setParameter(1, targetEnrollmentId)
                             .executeUpdate();
-                    
+
                 } else if (type.equalsIgnoreCase("ADDITIONAL")) {
 
                     em.createNativeQuery(
@@ -1141,6 +1185,24 @@ public class Cheque_Handling extends javax.swing.JPanel {
 //            em.close();
 //        }
 //    }
+    private void getTotalFromTable() {
+
+        DefaultTableModel model = (DefaultTableModel) chq_handling_cheq_details_table.getModel();
+
+        double total = 0.0;
+
+        for (int i = 0; i < model.getRowCount(); i++) {
+
+            Object val = GeneralMethods.parseCommaNumber(model.getValueAt(i, 7).toString()); // balance column
+
+            if (val != null) {
+                total += GeneralMethods.parseCommaNumber(val.toString());
+            }
+        }
+
+        cheque_details_value_label.setText(GeneralMethods.formatWithComma(total));
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -1255,7 +1317,7 @@ public class Cheque_Handling extends javax.swing.JPanel {
         firstName_label5.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         firstName_label5.setText("Total Value");
 
-        cheque_details_value_label.setFont(new java.awt.Font("Roboto Medium", 1, 12)); // NOI18N
+        cheque_details_value_label.setFont(new java.awt.Font("Roboto Medium", 1, 14)); // NOI18N
         cheque_details_value_label.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         cheque_details_value_label.setText("0.00");
 
@@ -1267,11 +1329,12 @@ public class Cheque_Handling extends javax.swing.JPanel {
                 .addContainerGap()
                 .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1324, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel10Layout.createSequentialGroup()
+                    .addGroup(jPanel10Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(firstName_label5, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(firstName_label5)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cheque_details_value_label, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(cheque_details_value_label, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(8, 8, 8)))
                 .addContainerGap())
         );
         jPanel10Layout.setVerticalGroup(
@@ -1280,8 +1343,8 @@ public class Cheque_Handling extends javax.swing.JPanel {
                 .addContainerGap()
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 373, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(cheque_details_value_label, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(cheque_details_value_label, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(firstName_label5, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );

@@ -143,23 +143,7 @@ public class OneTimeFeePanel extends javax.swing.JPanel {
         return false;
     }
 
-    private double getTotalBalanceFromTable() {
-
-        DefaultTableModel model = (DefaultTableModel) Fees_Management.fm_fees_course_table.getModel();
-
-        double totalBalance = 0.0;
-
-        for (int i = 0; i < model.getRowCount(); i++) {
-
-            Object val = GeneralMethods.parseCommaNumber(model.getValueAt(i, 9).toString()); // balance column
-
-            if (val != null) {
-                totalBalance += GeneralMethods.parseCommaNumber(val.toString());
-            }
-        }
-
-        return totalBalance;
-    }
+    
 
     public void deleteOneTimeOrRoundPayment(int enrollmentId, String paymentDate, double amount) {
 

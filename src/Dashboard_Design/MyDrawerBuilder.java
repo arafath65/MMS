@@ -77,14 +77,21 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
             //  new Item.Label("MAIN"),
             new Item("Dashboard", "dashboard.svg"),
             //   new Item.Label("STUDENT MANAGEMENT"),
+            
             new Item("Student Management", "student.svg")
             .subMenu("New Admission")
             .subMenu("Fees Handling")
-            .subMenu("Reports"),
+            .subMenu("Batch Fees Payment")
+            .subMenu(new Item("Reports")
+            .subMenu("Batch/Class Student Report")
+            ),
+            
             new Item("Inventory", "invetory.svg")
             .subMenu("Add Inventory"),
+            
             new Item("Accounts", "accountsvg.svg")
             .subMenu("Cheque Handling"),
+            
             new Item("Settings", "settingssvg.svg")
             .subMenu("Register Course")
             .subMenu("Additional Payments"),};
@@ -126,14 +133,21 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
                     Dashboard.Dashboard.Main_Lable.setText("FEES MANAGEMENT");
                     return;
                 }
-
-                // STUDENT MANAGEMENT -> Reports
+                
+                // STUDENT MANAGEMENT -> Batch Fees Paymeny
                 if (index.length == 2 && index[0] == 1 && index[1] == 2) {
-                    dashboard.showPanel("");
+                    dashboard.showPanel("BATCH_FEES_MANAGEMENT");
+                    Dashboard.Dashboard.Main_Lable.setText("BATCH FEES PAYMENT");
+                    return;
+                }
+                
+                // STUDENT MANAGEMENT -> Reports -> Single Student Financial
+                if (index.length == 3 && index[0] == 1 && index[1] == 3 && index[2] == 0) {
+                    dashboard.showPanel("BATCH/CLASS_STUDENT_REPORT");
+                    Dashboard.Dashboard.Main_Lable.setText("BATCH/CLASS STUDENT REPORT");
                     return;
                 }
 
-                // Accounts -> CHEQUE HANDLING
                 // Accounts -> CHEQUE HANDLING
                 if (index.length == 2 && index[0] == 2 && index[1] == 0) {
                     dashboard.showPanel("INVENTORY");
@@ -208,7 +222,7 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
                     if (index[0] == 5) {
                         return false;
                     }
-                } else if (index.length == 5) {
+                } else if (index.length == 10) {
                     //  Hide Read 4
                     if (index[0] == 1 && index[1] == 1 && index[2] == 4) {
                         return false;
