@@ -632,6 +632,7 @@ public class Register_Course extends javax.swing.JPanel {
             c.setPaymentMode(payment_mode);
             c.setAdmissionFee(Integer.parseInt(admissionFee));
             c.setFee(Integer.parseInt(fee));
+            c.setCourseStatus("ACTIVE");
             c.setStatus(1);
 
             new CourseDAO().save(c);

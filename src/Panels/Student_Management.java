@@ -11,6 +11,7 @@ import Entities.Student_Management.StudentParents;
 import JPA_DAO.Student_Management.StudentDAO;
 import JPA_DAO.Student_Management.StudentParentsDAO;
 import Panels_SubDialogs.Course_Enrollment;
+import Panels_SubDialogs.Eliminate_Student;
 import Panels_SubDialogs.Miscellaneous_Issuing;
 import Panels_SubDialogs.Siblings_Register;
 import java.awt.Window;
@@ -1185,6 +1186,119 @@ public class Student_Management extends javax.swing.JPanel {
         stm_ad_student_guardian_whatsapp_text.setText(parents.getGuardianWhatsapp());
     }
 
+    public boolean checkStudentElimination(int studentId) {
+
+        EntityManager em = HibernateConfig.getEntityManager();
+
+        try {
+
+            // =====================================================
+            // FETCH ELIMINATION + STUDENT DETAILS
+            // =====================================================
+            List<Object[]> list = em.createNativeQuery(
+                    "SELECT "
+                    + "se.eliminate_type, " // 0
+                    + "s.admission_no, " // 1
+                    + "s.full_name " // 2
+                    + "FROM student_eliminates se "
+                    + "INNER JOIN student s ON se.student_id = s.student_id "
+                    + "WHERE se.student_id = ? "
+                    + "AND se.status = 1 "
+                    + "AND s.status = 1 "
+                    + "ORDER BY se.student_eliminates_id DESC "
+                    + "LIMIT 1"
+            )
+                    .setParameter(1, studentId)
+                    .getResultList();
+
+            // =====================================================
+            // IF ELIMINATION RECORD FOUND
+            // =====================================================
+            if (!list.isEmpty()) {
+
+                Object[] row = list.get(0);
+
+                String eliminateType = row[0] != null ? row[0].toString() : "";
+                String admissionNo = row[1] != null ? row[1].toString() : "";
+                String studentName = row[2] != null ? row[2].toString() : "";
+
+                String message
+                        = "Following student is " + eliminateType + "\n\n"
+                        + "Admission Number : " + admissionNo + "\n"
+                        + "Student Name     : " + studentName + "\n\n"
+                        + "Do you want to change status?";
+
+                String[] options = {"Change Status", "Cancel"};
+
+                int confirm = JOptionPane.showOptionDialog(
+                        null,
+                        message,
+                        "Student Elimination Found",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE,
+                        null,
+                        options,
+                        options[0]
+                );
+
+                // Open dialog only if clicked Change Status
+                if (confirm == 0) {
+
+                    String student_name = stm_ad_student_name_combo
+                            .getEditor()
+                            .getItem()
+                            .toString();
+
+                    JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+
+                    Eliminate_Student dialog = new Eliminate_Student(
+                            parentFrame,
+                            selectedStudentId,
+                            student_name,
+                            username,
+                            role
+                    );
+
+                    GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
+                    return true;
+                }
+
+                return false;
+            }
+
+            // =====================================================
+            // IF NO ELIMINATION RECORD FOUND
+            // DIRECTLY OPEN DIALOG
+            // =====================================================
+            String student_name = stm_ad_student_name_combo
+                    .getEditor()
+                    .getItem()
+                    .toString();
+
+            JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+
+            Eliminate_Student dialog = new Eliminate_Student(
+                    parentFrame,
+                    selectedStudentId,
+                    student_name,
+                    username,
+                    role
+            );
+
+            GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
+
+            return true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        } finally {
+            em.close();
+        }
+
+        return false;
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -1274,6 +1388,7 @@ public class Student_Management extends javax.swing.JPanel {
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
         jButton3 = new javax.swing.JButton();
+        jButton4 = new javax.swing.JButton();
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "General Information", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
@@ -1825,7 +1940,7 @@ public class Student_Management extends javax.swing.JPanel {
                                 .addComponent(stm_ad_student_father_living_yes_checkbox)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(stm_ad_student_father_living_no_checkbox)
-                                .addGap(0, 22, Short.MAX_VALUE))
+                                .addGap(0, 24, Short.MAX_VALUE))
                             .addComponent(stm_ad_student_father_living_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap())
         );
@@ -1936,7 +2051,7 @@ public class Student_Management extends javax.swing.JPanel {
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel9Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 516, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel9Layout.setVerticalGroup(
@@ -1957,7 +2072,7 @@ public class Student_Management extends javax.swing.JPanel {
             jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel11Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 786, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 790, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel11Layout.setVerticalGroup(
@@ -1995,6 +2110,15 @@ public class Student_Management extends javax.swing.JPanel {
             }
         });
 
+        jButton4.setBackground(new java.awt.Color(102, 102, 102));
+        jButton4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/termination32.png"))); // NOI18N
+        jButton4.setToolTipText("Eliminate the student");
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -2005,16 +2129,18 @@ public class Student_Management extends javax.swing.JPanel {
                     .addComponent(jPanel8, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(6, 6, 6)
-                                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(0, 3, Short.MAX_VALUE)))
+                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 7, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(6, 6, 6)
+                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -2029,10 +2155,11 @@ public class Student_Management extends javax.swing.JPanel {
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
+                            .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
+                            .addComponent(jButton3, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
+                            .addComponent(jButton4, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE))
                         .addGap(42, 42, 42)
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
@@ -2570,18 +2697,31 @@ public class Student_Management extends javax.swing.JPanel {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        
+
         String st_admi = stm_ad_admission_no_combo.getEditor().getItem().toString();
         String st_name = stm_ad_student_name_combo.getEditor().getItem().toString();
         if (st_admi.equals("") || st_name.equals("")) {
             return;
         }
-        
+
         JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
 
         Miscellaneous_Issuing dialog = new Miscellaneous_Issuing(parentFrame, selectedStudentId, st_name, username, role);
         GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
     }//GEN-LAST:event_jButton3ActionPerformed
+
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+
+        checkStudentElimination(selectedStudentId);
+//        String student_name = stm_ad_student_name_combo.getEditor().getItem().toString();
+//        if (selectedStudentId == 0 || student_name.equals("")) {
+//            return;
+//        }
+//
+//        JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+//        Eliminate_Student dialog = new Eliminate_Student(parentFrame, selectedStudentId, student_name, username, role);
+//        GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
+    }//GEN-LAST:event_jButton4ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -2596,6 +2736,7 @@ public class Student_Management extends javax.swing.JPanel {
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButton4;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;

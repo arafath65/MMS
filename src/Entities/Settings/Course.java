@@ -30,6 +30,7 @@ import javax.persistence.Table;
     @NamedQuery(name = "Course.findByPaymentMode", query = "SELECT c FROM Course c WHERE c.paymentMode = :paymentMode"),
     @NamedQuery(name = "Course.findByAdmissionFee", query = "SELECT c FROM Course c WHERE c.admissionFee = :admissionFee"),
     @NamedQuery(name = "Course.findByFee", query = "SELECT c FROM Course c WHERE c.fee = :fee"),
+    @NamedQuery(name = "Course.findByCourseStatus", query = "SELECT c FROM Course c WHERE c.courseStatus = :courseStatus"),
     @NamedQuery(name = "Course.findByStatus", query = "SELECT c FROM Course c WHERE c.status = :status")})
 public class Course implements Serializable {
 
@@ -57,6 +58,8 @@ public class Course implements Serializable {
     private double admissionFee;
     @Column(name = "fee")
     private double fee;
+    @Column(name = "course_status")
+    private String courseStatus;
     @Column(name = "status")
     private Integer status;
 
@@ -145,6 +148,14 @@ public class Course implements Serializable {
 
     public void setFee(double fee) {
         this.fee = fee;
+    }
+    
+    public String getCourseStatus() {
+        return courseStatus;
+    }
+
+    public void setCourseStatus(String courseStatus) {
+        this.courseStatus = courseStatus;
     }
 
     public Integer getStatus() {

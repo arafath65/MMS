@@ -62,6 +62,30 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
         mm_fees_monthly_table.getColumnModel().getColumn(5).setMaxWidth(0);
         mm_fees_monthly_table.getColumnModel().getColumn(5).setWidth(0);
 
+        mm_fees_Monthly_checkbox.setSelected(false);
+        mm_fees_Monthly_checkbox.addActionListener(e -> {
+
+            boolean checked = mm_fees_Monthly_checkbox.isSelected();
+
+            int[] cols = {4, 7};
+
+            for (int colIndex : cols) {
+
+                if (checked) {
+                    // 🔹 SHOW COLUMN
+                    mm_fees_monthly_table.getColumnModel().getColumn(colIndex).setMinWidth(100);
+                    mm_fees_monthly_table.getColumnModel().getColumn(colIndex).setMaxWidth(Integer.MAX_VALUE);
+                    mm_fees_monthly_table.getColumnModel().getColumn(colIndex).setPreferredWidth(100);
+
+                } else {
+                    // 🔹 HIDE COLUMN
+                    mm_fees_monthly_table.getColumnModel().getColumn(colIndex).setMinWidth(0);
+                    mm_fees_monthly_table.getColumnModel().getColumn(colIndex).setMaxWidth(0);
+                    mm_fees_monthly_table.getColumnModel().getColumn(colIndex).setPreferredWidth(0);
+                }
+            }
+        });
+
 //        mm_fees_monthly_table.getColumnModel().getColumn(4).setMinWidth(0);
 //        mm_fees_monthly_table.getColumnModel().getColumn(4).setMaxWidth(0);
 //        mm_fees_monthly_table.getColumnModel().getColumn(4).setWidth(0);
@@ -155,7 +179,6 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
 //        }
 //        return false;
 //    }
-
 //    private int getTotalBalanceFromTable() {
 //
 //        DefaultTableModel model = (DefaultTableModel) Fees_Management.fm_fees_course_table.getModel();
@@ -642,7 +665,6 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
 //        }
 //
 //    }
-
 //    public void saveMonthlyChequePayment(
 //            int enrollmentId,
 //            JTable table,
@@ -661,7 +683,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
 //            double monthlyFee = GeneralMethods.parseCommaNumber(monthlyFeeField.getText().trim());
 //           // double chequeAmount = GeneralMethods.parseCommaNumber(mm_fees_cheq_cheque_amount.getText().trim());
 //
-////            String chequeNo = mm_fees_cheq_cheque_number.getText();
+    ////            String chequeNo = mm_fees_cheq_cheque_number.getText();
 ////            String bank = mm_fees_cheq_cheque_bank.getEditor().getItem().toString();
 ////            String branch = mm_fees_cheq_cheque_branch.getText();
 ////            Date chequeDate = mm_fees_cheq_cheque_date.getDate();
@@ -946,82 +968,283 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
 //        }
 //    }
 //
-    public void updateMonthlySummaryFields(
-            int enrollmentId,
-            JTable table,
-            JTextField paidMonthsField,
-            JTextField paidAmountField,
-            JTextField pendingMonthsField,
-            double tot_sum
-    ) {
+//    public void updateMonthlySummaryFields(
+//            int enrollmentId,
+//            JTable table,
+//            JTextField paidMonthsField,
+//            JTextField paidAmountField,
+//            JTextField pendingMonthsField,
+//            double tot_sum
+//    ) {
+//
+//        DefaultTableModel model = (DefaultTableModel) table.getModel();
+//
+//        int paidMonths = 0;
+//        int pendingMonths = 0;
+//        int totalPaidAmount = 0;
+//
+//        for (int i = 0; i < model.getRowCount(); i++) {
+//
+//            Object statusObj = model.getValueAt(i, 4);
+//            Object paidObj = model.getValueAt(i, 3);
+//
+//            String status = (statusObj != null) ? statusObj.toString().trim() : "";
+//
+//            System.out.println("Row " + i
+//                    + " | Status: " + status
+//                    + " | Paid: " + paidObj);
+//
+//            // ============================
+//            // PAID
+//            // ============================
+//            if (status.equalsIgnoreCase("PAID") || status.equalsIgnoreCase("Now Paid")) {
+//
+//                paidMonths++;
+//
+//                if (paidObj != null && !paidObj.toString().trim().isEmpty()) {
+//                    totalPaidAmount += GeneralMethods.parseCommaNumber(paidObj.toString());
+//                }
+//
+//            } else {
+//                pendingMonths++;
+//            }
+//        }
+//
+//        // ============================
+//        // 🔥 GET PENDING CHEQUE FROM DB
+//        // ============================
+//        StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
+//        int pendingCheque = dao.getPendingChequeAmount(enrollmentId);
+//
+//        // ============================
+//        // SET TEXTFIELDS
+//        // ============================
+//        paidMonthsField.setText(String.valueOf(paidMonths));
+//        paidAmountField.setText(GeneralMethods.formatWithComma(totalPaidAmount - pendingCheque));
+//
+//        // 🔥 SET CHEQUE PENDING
+//        mm_fees_Monthly_tot_cheque_pending_Textfield
+//                .setText(GeneralMethods.formatWithComma(pendingCheque));
+//
+//        // 🔥 TOTAL PAID (CASH + CHEQUE)
+//        mm_fees_Monthly_tot_totPaid_Textfield.setText(
+//                GeneralMethods.formatWithComma(totalPaidAmount)
+//        );
+//
+//        pendingMonthsField.setText(String.valueOf(pendingMonths));
+//
+//        // double month_fee = tot_sum;
+//        mm_fees_Monthly_tot_pending_balancee_Textfield.setText(
+//                GeneralMethods.formatWithComma((pendingMonths + paidMonths) * tot_sum - totalPaidAmount)
+//        );
+//
+//        // mm_fees_Monthly_total_balance_Textfield.setText(GeneralMethods.formatWithComma(pendingMonths * month_fee));
+//        //System.out.println("pendingMonths * month_fee = " + pendingMonths * month_fee);
+//    }
+    
+    public void loadMonthCountsFromTableWithCheque(int studentID) {
 
-        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        JTable table = mm_fees_monthly_table;
 
         int paidMonths = 0;
         int pendingMonths = 0;
-        int totalPaidAmount = 0;
 
-        for (int i = 0; i < model.getRowCount(); i++) {
+        double totalPaidAmount = 0;
+        double totalPendingBalance = 0;
+        double totalPendingCheque = 0;
 
-            Object statusObj = model.getValueAt(i, 4);
-            Object paidObj = model.getValueAt(i, 3);
+        EntityManager em = HibernateConfig.getEntityManager();
 
-            String status = (statusObj != null) ? statusObj.toString().trim() : "";
+        try {
 
-            System.out.println("Row " + i
-                    + " | Status: " + status
-                    + " | Paid: " + paidObj);
+            // =========================
+            // 🔥 TABLE CALCULATIONS
+            // =========================
+            for (int i = 0; i < table.getRowCount(); i++) {
 
-            // ============================
-            // PAID
-            // ============================
-            if (status.equalsIgnoreCase("PAID") || status.equalsIgnoreCase("Now Paid")) {
+                Object balanceObj = table.getValueAt(i, 8);
+                boolean isPaidRow = false;
 
-                paidMonths++;
+                if (balanceObj != null) {
+                    double balance = GeneralMethods.parseCommaNumber(balanceObj.toString());
 
-                if (paidObj != null && !paidObj.toString().trim().isEmpty()) {
-                    totalPaidAmount += GeneralMethods.parseCommaNumber(paidObj.toString());
+                    if (balance == 0.00) {
+                        paidMonths++;
+                        isPaidRow = true;
+                    }
                 }
 
-            } else {
-                pendingMonths++;
+                // PAID AMOUNT (col 6)
+                if (isPaidRow) {
+                    Object paidObj = table.getValueAt(i, 6);
+
+                    if (paidObj != null && !paidObj.toString().trim().isEmpty()) {
+                        totalPaidAmount += GeneralMethods.parseCommaNumber(paidObj.toString());
+                    }
+                }
+
+                // PENDING
+                Object statusObj = table.getValueAt(i, 9);
+
+                if (statusObj != null && statusObj.toString().equalsIgnoreCase("PENDING")) {
+
+                    pendingMonths++;
+
+                    Object pendingBalObj = table.getValueAt(i, 3);
+
+                    if (pendingBalObj != null && !pendingBalObj.toString().trim().isEmpty()) {
+                        totalPendingBalance += GeneralMethods.parseCommaNumber(pendingBalObj.toString());
+                    }
+                }
             }
+
+            // =========================
+// 🔥 CHEQUE PENDING CALCULATION
+// =========================
+           
+
+            int studentId = studentID;
+
+// 1. Get all cheque round master IDs
+            List<Integer> masterIds = em.createNativeQuery(
+                    "SELECT student_fee_round_payment_master_id "
+                    + "FROM student_fee_round_payment_master "
+                    + "WHERE student_id=? AND payment_mode='CHEQUE' AND status=1"
+            )
+                    .setParameter(1, studentId)
+                    .getResultList();
+
+            if (masterIds != null && !masterIds.isEmpty()) {
+
+                // 2. Build IN clause
+                StringBuilder inClause = new StringBuilder();
+
+                for (int i = 0; i < masterIds.size(); i++) {
+                    inClause.append(masterIds.get(i));
+                    if (i < masterIds.size() - 1) {
+                        inClause.append(",");
+                    }
+                }
+
+                // 3. Execute sum query
+                String sql = "SELECT IFNULL(SUM(cheque_amount),0) "
+                        + "FROM student_fee_cheque_details "
+                        + "WHERE UPPER(reference_type)='ROUND' "
+                        + "AND UPPER(category)='STUDENT' "
+                        + "AND UPPER(cheque_status)='PENDING' "
+                        + "AND reference_id IN (" + inClause.toString() + ")";
+
+                Object result = em.createNativeQuery(sql).getSingleResult();
+
+                totalPendingCheque = result != null
+                        ? ((Number) result).doubleValue()
+                        : 0;
+            }
+
+// =========================
+// 🔥 SET VALUE
+// =========================
+            mm_fees_Monthly_tot_cheque_pending_Textfield.setText(
+                    String.format("%.2f", totalPendingCheque)
+            );
+
+            // =========================
+            // 🔥 SET VALUES
+            // =========================
+            mm_fees_Monthly_tot_paid_months_Textfield.setText(String.valueOf(paidMonths));
+            mm_fees_Monthly_tot_pending_months_Textfield.setText(String.valueOf(pendingMonths));
+
+            mm_fees_Monthly_tot_totPaid_Textfield.setText(GeneralMethods.formatWithComma(totalPaidAmount));
+
+            mm_fees_Monthly_tot_pending_balancee_Textfield.setText(GeneralMethods.formatWithComma(totalPendingBalance));
+
+            mm_fees_Monthly_tot_cheque_pending_Textfield.setText(GeneralMethods.formatWithComma(totalPendingCheque));
+            
+            double tot = GeneralMethods.parseCommaNumber(mm_fees_Monthly_tot_totPaid_Textfield.getText());
+            double chq = GeneralMethods.parseCommaNumber(mm_fees_Monthly_tot_cheque_pending_Textfield.getText());
+            mm_fees_Monthly_tot_paid_amount_Textfield.setText(GeneralMethods.formatWithComma(tot - chq));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            em.close();
         }
-
-        // ============================
-        // 🔥 GET PENDING CHEQUE FROM DB
-        // ============================
-        StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
-        int pendingCheque = dao.getPendingChequeAmount(enrollmentId);
-
-        // ============================
-        // SET TEXTFIELDS
-        // ============================
-        paidMonthsField.setText(String.valueOf(paidMonths));
-        paidAmountField.setText(GeneralMethods.formatWithComma(totalPaidAmount - pendingCheque));
-
-        // 🔥 SET CHEQUE PENDING
-        mm_fees_Monthly_tot_cheque_pending_Textfield
-                .setText(GeneralMethods.formatWithComma(pendingCheque));
-
-        // 🔥 TOTAL PAID (CASH + CHEQUE)
-        mm_fees_Monthly_tot_totPaid_Textfield.setText(
-                GeneralMethods.formatWithComma(totalPaidAmount)
-        );
-
-        pendingMonthsField.setText(String.valueOf(pendingMonths));
-
-       // double month_fee = tot_sum;
-
-        mm_fees_Monthly_tot_pending_balancee_Textfield.setText(
-                GeneralMethods.formatWithComma((pendingMonths + paidMonths) * tot_sum - totalPaidAmount)
-        );
-
-       // mm_fees_Monthly_total_balance_Textfield.setText(GeneralMethods.formatWithComma(pendingMonths * month_fee));
-        //System.out.println("pendingMonths * month_fee = " + pendingMonths * month_fee);
     }
 
-
+//   public void loadMonthCountsFromTable() {
+//
+//        JTable table = mm_fees_monthly_table;
+//
+//        int paidMonths = 0;
+//        int pendingMonths = 0;
+//
+//        double totalPaidAmount = 0;
+//        double totalPendingBalance = 0;
+//
+//        for (int i = 0; i < table.getRowCount(); i++) {
+//
+//            // =========================
+//            // BALANCE (col 8)
+//            // =========================
+//            Object balanceObj = table.getValueAt(i, 8);
+//
+//            boolean isPaidRow = false;
+//
+//            if (balanceObj != null) {
+//
+//                double balance = GeneralMethods.parseCommaNumber(balanceObj.toString());
+//
+//                if (balance == 0.00) {
+//                    paidMonths++;
+//                    isPaidRow = true;
+//                }
+//            }
+//
+//            // =========================
+//            // SUM PAID AMOUNT (col 6) ONLY IF PAID ROW
+//            // =========================
+//            if (isPaidRow) {
+//                Object paidObj = table.getValueAt(i, 6);
+//
+//                if (paidObj != null && !paidObj.toString().trim().isEmpty()) {
+//                    totalPaidAmount += GeneralMethods.parseCommaNumber(paidObj.toString());
+//                }
+//            }
+//
+//            // =========================
+//            // PENDING MONTHS + BALANCE
+//            // =========================
+//            Object statusObj = table.getValueAt(i, 9);
+//
+//            if (statusObj != null
+//                    && statusObj.toString().equalsIgnoreCase("PENDING")) {
+//
+//                pendingMonths++;
+//
+//                // 👉 SUM column 3 for pending rows
+//                Object pendingBalObj = table.getValueAt(i, 3);
+//
+//                if (pendingBalObj != null && !pendingBalObj.toString().trim().isEmpty()) {
+//                    totalPendingBalance += GeneralMethods.parseCommaNumber(pendingBalObj.toString());
+//                }
+//            }
+//        }
+//
+//        // =========================
+//        // SET VALUES
+//        // =========================
+//        mm_fees_Monthly_tot_paid_months_Textfield.setText(String.valueOf(paidMonths));
+//
+//        mm_fees_Monthly_tot_pending_months_Textfield.setText(String.valueOf(pendingMonths));
+//
+//        mm_fees_Monthly_tot_totPaid_Textfield.setText(
+//                String.format("%.2f", totalPaidAmount)
+//        );
+//
+//        mm_fees_Monthly_tot_pending_balancee_Textfield.setText(
+//                String.format("%.2f", totalPendingBalance)
+//        );
+//    }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -1031,8 +1254,16 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
         jScrollPane1 = new javax.swing.JScrollPane();
         mm_fees_monthly_table = new javax.swing.JTable();
         jPanel11 = new javax.swing.JPanel();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        mm_fees_Monthly_fee_note_Textarea = new javax.swing.JEditorPane();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
+        jLabel8 = new javax.swing.JLabel();
+        jLabel9 = new javax.swing.JLabel();
+        jLabel10 = new javax.swing.JLabel();
         jPanel6 = new javax.swing.JPanel();
         firstName_label9 = new javax.swing.JLabel();
         firstName_label10 = new javax.swing.JLabel();
@@ -1047,6 +1278,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
         firstName_label16 = new javax.swing.JLabel();
         mm_fees_Monthly_tot_pending_months_Textfield = new javax.swing.JTextField();
         mm_fees_Monthly_tot_pending_balancee_Textfield = new javax.swing.JTextField();
+        mm_fees_Monthly_checkbox = new javax.swing.JCheckBox();
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Payment Information", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
@@ -1055,11 +1287,11 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
 
             },
             new String [] {
-                "#", "Year", "Month", "Paid Fee", "Payment Method", "Cheque Status"
+                "#", "Year", "Month", "Monthly Fee  ", "Adjustment (Discount/Waive)  ", "Final Fee", "Paid Amont", "Credit", "Balance", "Status", "Cheque Status"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, true, true, false
+                false, false, false, false, false, false, false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -1074,9 +1306,19 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
         jScrollPane1.setViewportView(mm_fees_monthly_table);
         if (mm_fees_monthly_table.getColumnModel().getColumnCount() > 0) {
             mm_fees_monthly_table.getColumnModel().getColumn(0).setPreferredWidth(50);
-            mm_fees_monthly_table.getColumnModel().getColumn(1).setPreferredWidth(150);
-            mm_fees_monthly_table.getColumnModel().getColumn(2).setPreferredWidth(150);
-            mm_fees_monthly_table.getColumnModel().getColumn(3).setPreferredWidth(120);
+            mm_fees_monthly_table.getColumnModel().getColumn(1).setPreferredWidth(80);
+            mm_fees_monthly_table.getColumnModel().getColumn(2).setPreferredWidth(80);
+            mm_fees_monthly_table.getColumnModel().getColumn(4).setMinWidth(0);
+            mm_fees_monthly_table.getColumnModel().getColumn(4).setPreferredWidth(0);
+            mm_fees_monthly_table.getColumnModel().getColumn(4).setMaxWidth(0);
+            mm_fees_monthly_table.getColumnModel().getColumn(6).setPreferredWidth(120);
+            mm_fees_monthly_table.getColumnModel().getColumn(7).setMinWidth(0);
+            mm_fees_monthly_table.getColumnModel().getColumn(7).setPreferredWidth(0);
+            mm_fees_monthly_table.getColumnModel().getColumn(7).setMaxWidth(0);
+            mm_fees_monthly_table.getColumnModel().getColumn(9).setPreferredWidth(120);
+            mm_fees_monthly_table.getColumnModel().getColumn(10).setMinWidth(0);
+            mm_fees_monthly_table.getColumnModel().getColumn(10).setPreferredWidth(0);
+            mm_fees_monthly_table.getColumnModel().getColumn(10).setMaxWidth(0);
         }
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
@@ -1085,7 +1327,7 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 450, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 830, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel5Layout.setVerticalGroup(
@@ -1096,9 +1338,27 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                 .addContainerGap())
         );
 
-        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Fee Note", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
+        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Color Info", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
-        jScrollPane2.setViewportView(mm_fees_Monthly_fee_note_Textarea);
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/pendingorange16.png"))); // NOI18N
+
+        jLabel2.setText("PENDING (cheque)");
+
+        jLabel3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/greencircle.png"))); // NOI18N
+
+        jLabel4.setText("PAID (cash / card / transfer / cleared cheque)");
+
+        jLabel5.setText("WAIVED");
+
+        jLabel6.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/waivedgrey16.png"))); // NOI18N
+
+        jLabel7.setText("DISCOUNT");
+
+        jLabel8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/discountpurple16.png"))); // NOI18N
+
+        jLabel9.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/duered16.png"))); // NOI18N
+
+        jLabel10.setText("DUE MONTHS");
 
         javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
         jPanel11.setLayout(jPanel11Layout);
@@ -1106,14 +1366,50 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
             jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel11Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                .addContainerGap())
+                .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel11Layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel2)
+                        .addGap(18, 18, 18)
+                        .addComponent(jLabel8)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel7)
+                        .addGap(18, 18, 18)
+                        .addComponent(jLabel6)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel5)
+                        .addGap(18, 18, 18)
+                        .addComponent(jLabel9)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel10))
+                    .addGroup(jPanel11Layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel4)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel11Layout.setVerticalGroup(
             jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel11Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 101, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel11Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 20, Short.MAX_VALUE)
+                        .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
 
@@ -1317,6 +1613,9 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
+        mm_fees_Monthly_checkbox.setFont(new java.awt.Font("Roboto", 0, 14)); // NOI18N
+        mm_fees_Monthly_checkbox.setText("Show Full Details");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -1328,8 +1627,11 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(386, 386, 386))
+                    .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(mm_fees_Monthly_checkbox)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1337,12 +1639,14 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addGap(0, 41, Short.MAX_VALUE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(0, 14, Short.MAX_VALUE)
+                        .addComponent(mm_fees_Monthly_checkbox)
+                        .addGap(73, 73, 73)
                         .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
@@ -1443,14 +1747,23 @@ public class MonthlyFeePanel extends javax.swing.JPanel {
     private javax.swing.JLabel firstName_label15;
     private javax.swing.JLabel firstName_label16;
     private javax.swing.JLabel firstName_label9;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel11;
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanel8;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
-    public static javax.swing.JEditorPane mm_fees_Monthly_fee_note_Textarea;
+    private javax.swing.JCheckBox mm_fees_Monthly_checkbox;
     public static javax.swing.JTextField mm_fees_Monthly_tot_cheque_pending_Textfield;
     public static javax.swing.JTextField mm_fees_Monthly_tot_paid_amount_Textfield;
     public static javax.swing.JTextField mm_fees_Monthly_tot_paid_months_Textfield;

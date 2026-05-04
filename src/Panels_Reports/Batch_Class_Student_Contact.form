@@ -97,7 +97,7 @@
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Component id="jLabel4" alignment="0" min="-2" max="-2" attributes="0"/>
                                   <Group type="102" alignment="0" attributes="0">
-                                      <Component id="btc_st_batch_combo" min="-2" pref="213" max="-2" attributes="0"/>
+                                      <Component id="btc_st_con_batch_combo" min="-2" pref="213" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="jButton7" min="-2" pref="40" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
@@ -107,13 +107,13 @@
                               <EmptySpace type="separate" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
-                                  <Component id="btc_st_course_text" min="-2" pref="298" max="-2" attributes="0"/>
+                                  <Component id="btc_st_con_course_text" min="-2" pref="298" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Component id="jLabel2" alignment="0" min="-2" max="-2" attributes="0"/>
                                   <Group type="102" alignment="0" attributes="0">
-                                      <Component id="btc_st_class_combo" min="-2" pref="118" max="-2" attributes="0"/>
+                                      <Component id="btc_st_con_class_combo" min="-2" pref="118" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="jButton5" min="-2" pref="40" max="-2" attributes="0"/>
                                   </Group>
@@ -138,14 +138,14 @@
                               <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="btc_st_class_combo" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
-                                  <Component id="btc_st_course_text" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
+                                  <Component id="btc_st_con_class_combo" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
+                                  <Component id="btc_st_con_course_text" alignment="3" min="-2" pref="35" max="-2" attributes="0"/>
                               </Group>
                           </Group>
                           <Group type="102" attributes="0">
                               <Component id="jLabel4" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
-                              <Component id="btc_st_batch_combo" min="-2" pref="35" max="-2" attributes="0"/>
+                              <Component id="btc_st_con_batch_combo" min="-2" pref="35" max="-2" attributes="0"/>
                           </Group>
                           <Group type="102" attributes="0">
                               <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
@@ -171,18 +171,19 @@
 
               <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
               <SubComponents>
-                <Component class="javax.swing.JTable" name="btc_st_table">
+                <Component class="javax.swing.JTable" name="btc_st_con_table">
                   <Properties>
                     <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                      <Table columnCount="8" rowCount="0">
+                      <Table columnCount="9" rowCount="0">
                         <Column editable="false" title="#" type="java.lang.Object"/>
                         <Column editable="false" title="Admission" type="java.lang.Object"/>
                         <Column editable="false" title="Student Name" type="java.lang.Object"/>
                         <Column editable="false" title="Class" type="java.lang.Object"/>
-                        <Column editable="false" title="Date of Birth" type="java.lang.Object"/>
-                        <Column editable="false" title="NIC" type="java.lang.Object"/>
-                        <Column editable="false" title="Joined Date" type="java.lang.Object"/>
-                        <Column editable="false" title="Contact" type="java.lang.Object"/>
+                        <Column editable="false" title="Student Contact" type="java.lang.Object"/>
+                        <Column editable="false" title="Mother Contact" type="java.lang.Object"/>
+                        <Column editable="false" title="Father Contact" type="java.lang.Object"/>
+                        <Column editable="false" title="Guardian Contact" type="java.lang.Object"/>
+                        <Column editable="false" title="Address" type="java.lang.Object"/>
                       </Table>
                     </Property>
                     <Property name="columnModel" type="javax.swing.table.TableColumnModel" editor="org.netbeans.modules.form.editors2.TableColumnModelEditor">
@@ -227,6 +228,11 @@
                           <Editor/>
                           <Renderer/>
                         </Column>
+                        <Column maxWidth="-1" minWidth="-1" prefWidth="150" resizable="true">
+                          <Title/>
+                          <Editor/>
+                          <Renderer/>
+                        </Column>
                       </TableColumnModel>
                     </Property>
                     <Property name="rowHeight" type="int" value="25"/>
@@ -235,7 +241,7 @@
                     </Property>
                   </Properties>
                   <Events>
-                    <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="btc_st_tableMouseClicked"/>
+                    <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="btc_st_con_tableMouseClicked"/>
                   </Events>
                   <AuxValues>
                     <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="9"/>
@@ -259,7 +265,7 @@
                 <Property name="text" type="java.lang.String" value="Class"/>
               </Properties>
             </Component>
-            <Component class="javax.swing.JComboBox" name="btc_st_class_combo">
+            <Component class="javax.swing.JComboBox" name="btc_st_con_class_combo">
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Light" size="14" style="0"/>
@@ -292,7 +298,7 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton5ActionPerformed"/>
               </Events>
             </Component>
-            <Component class="javax.swing.JComboBox" name="btc_st_batch_combo">
+            <Component class="javax.swing.JComboBox" name="btc_st_con_batch_combo">
               <Properties>
                 <Property name="editable" type="boolean" value="true"/>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
@@ -355,14 +361,14 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton7ActionPerformed"/>
               </Events>
             </Component>
-            <Component class="javax.swing.JTextField" name="btc_st_course_text">
+            <Component class="javax.swing.JTextField" name="btc_st_con_course_text">
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Light" size="14" style="0"/>
                 </Property>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btc_st_course_textActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btc_st_con_course_textActionPerformed"/>
               </Events>
               <AuxValues>
                 <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="9"/>

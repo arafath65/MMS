@@ -9,7 +9,9 @@ import Panels.Fees_Management;
 import Panels.Inventory;
 import Panels.Register_Course;
 import Panels.Student_Management;
+import Panels_Reports.Batch_Class_Student_Contact;
 import Panels_Reports.Batch_Class_Student_report;
+import Panels_Reports.Entire_Students_Report;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
@@ -29,11 +31,16 @@ public class Dashboard extends javax.swing.JFrame {
     Student_Management studentManagement;
     Register_Course register_Courses;
     Fees_Management fees_Management;
-    Batch_Class_Student_report batch_Class_Student_report;
     Inventory inventory;
     Cheque_Handling cheque_Handling;
     Additional_Payments additional_Payments;
+    Batch_Transfer batch_Transfer;
     // Course_enrolment course_enrolment;
+
+    // REPORTS
+    Batch_Class_Student_report batch_Class_Student_report;
+    Batch_Class_Student_Contact batch_Class_Student_Contact;
+    Entire_Students_Report entire_Students_Report;
 
     String username;
     String role;
@@ -55,22 +62,30 @@ public class Dashboard extends javax.swing.JFrame {
         studentManagement = new Student_Management(username, role);
         register_Courses = new Register_Course(username, role);
         fees_Management = new Fees_Management(username, role);
-        batch_Class_Student_report = new Batch_Class_Student_report(username, role);
         inventory = new Inventory(username, role);
         cheque_Handling = new Cheque_Handling(username, role);
         additional_Payments = new Additional_Payments(username, role);
+        batch_Transfer = new Batch_Transfer(username, role);
         // course_enrolment = new Course_enrolment();
+
+        batch_Class_Student_report = new Batch_Class_Student_report(username, role);
+        batch_Class_Student_Contact = new Batch_Class_Student_Contact(username, role);
+        entire_Students_Report = new Entire_Students_Report(username, role);
 
         // ADD PANEL TO CARDLAYOUT (ONLY ONCE)
         main_panels.add(dashboard_Panel, "DASHBOARD_PANEL");
         main_panels.add(studentManagement, "STUDENT_ADMISSION");
         main_panels.add(register_Courses, "REGISTER_COURSE");
         main_panels.add(fees_Management, "FEES_MANAGEMENT");
-        main_panels.add(batch_Class_Student_report, "BATCH/CLASS_STUDENT_REPORT");
         main_panels.add(inventory, "INVENTORY");
         main_panels.add(cheque_Handling, "CHEQUE_HANDLING");
         main_panels.add(additional_Payments, "ADDITIONAL_PAYMENTS");
+        main_panels.add(batch_Transfer, "BATCH_TRANSFER");
         // main_panels.add(course_enrolment, "COURSE_ENROLMENT");
+
+        main_panels.add(batch_Class_Student_report, "BATCH/CLASS_STUDENT_REPORT");
+        main_panels.add(batch_Class_Student_Contact, "BATCH/CLASS_STUDENT_CONTACT");
+        main_panels.add(entire_Students_Report, "ENTIRE_STUDENTS_REPORT");
 
         showPanel("DASHBOARD_PANEL"); // default
 

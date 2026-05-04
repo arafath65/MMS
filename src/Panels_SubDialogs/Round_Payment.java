@@ -458,56 +458,48 @@ public class Round_Payment extends javax.swing.JDialog {
                 String monthStr = String.format("%02d", m);
                 String full = y + "-" + monthStr;
 
-                // =====================================================
-                // 🔥 CHECK MONTH STATUS
-                // =====================================================
-                Object[] result = (Object[]) em.createNativeQuery(
-                        "SELECT "
-                        + "COALESCE(SUM(amount_paid),0), "
-                        + "MAX(payment_type) "
-                        + "FROM student_fee_installments "
-                        + "WHERE enrollment_id=? "
-                        + "AND month_for=? "
-                        + "AND status=1"
-                )
-                        .setParameter(1, enrollmentId)
-                        .setParameter(2, full)
-                        .getSingleResult();
+                // ============================
+                // 🔥 USE NEW DATA MODEL
+                // ============================
+                double monthlyFee = data.monthlyFeeMap.containsKey(full)
+                        ? data.monthlyFeeMap.get(full)
+                        : data.baseMonthlyFee;
 
-                double paid = ((Number) result[0]).doubleValue();
-                String type = result[1] != null ? result[1].toString() : "";
+                double adjustment = data.adjustmentMap.getOrDefault(full, 0.0);
+                double paid = data.paidMap.getOrDefault(full, 0.0);
 
-                // =====================================================
-                // 🔥 PENDING LOGIC (FINAL RULE)
-                // =====================================================
-                if (paid == 0) {
+                double finalFee = monthlyFee - adjustment;
 
-                    // ❌ ZERO → NOT pending
-                    if (!"ZERO".equalsIgnoreCase(type)) {
-                        pendingCount++;
+                boolean isPending = false;
+
+                // ============================
+                // 🔥 FINAL PENDING LOGIC
+                // ============================
+                if (adjustment > 0) {
+
+                    // WAIVED → NOT pending
+                    if (finalFee == 0) {
+                        isPending = false;
+                    } // DISCOUNT → check remaining
+                    else if (paid < finalFee) {
+                        isPending = true;
                     }
 
                 } else {
 
-                    // ❌ DISCOUNT → NOT pending
-                    if (!"DISCOUNT".equalsIgnoreCase(type)) {
-
-                        // partial payment → pending
-                        if (data.monthAmountMap.containsKey(full)) {
-                            double monthlyFee = data.monthAmountMap.get(full);
-
-                            if (paid < monthlyFee) {
-                                pendingCount++;
-                            }
-                        } else {
-                            pendingCount++;
-                        }
+                    // NO ADJUSTMENT → normal check
+                    if (paid < monthlyFee) {
+                        isPending = true;
                     }
                 }
 
-                // =====================================================
+                if (isPending) {
+                    pendingCount++;
+                }
+
+                // ============================
                 // STOP CONDITION
-                // =====================================================
+                // ============================
                 if (y == data.endYear && m == data.endMonth) {
                     break;
                 }
@@ -529,66 +521,97 @@ public class Round_Payment extends javax.swing.JDialog {
         }
     }
 
-//    public double getTotalPendingRoundCheque(int studentId) {
+//    public int getPendingMonthCount(int enrollmentId) {
 //
 //        EntityManager em = HibernateConfig.getEntityManager();
 //
 //        try {
-//            Object result = em.createNativeQuery(
-//                    "SELECT COALESCE(SUM(cheque_amount),0) "
-//                    + "FROM student_fee_cheque_details "
-//                    + "WHERE reference_type='ROUND' "
-//                    + "AND cheque_status='PENDING' "
-//                    + "AND status=1 "
-//                    + "AND reference_id IN ("
-//                    + "   SELECT student_fee_round_payment_master_id "
-//                    + "   FROM student_fee_round_payment_master "
-//                    + "   WHERE student_id=?"
-//                    + ")"
-//            )
-//                    .setParameter(1, studentId)
-//                    .getSingleResult();
 //
-//            return ((Number) result).doubleValue();
+//            StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
+//            StudentFeeInstallmentsDAO.MonthDataDTO data = dao.getMonthData(enrollmentId);
 //
+//            int pendingCount = 0;
+//
+//            int y = data.startYear;
+//            int m = data.startMonth;
+//
+//            while (true) {
+//
+//                String monthStr = String.format("%02d", m);
+//                String full = y + "-" + monthStr;
+//
+//                // =====================================================
+//                // 🔥 CHECK MONTH STATUS
+//                // =====================================================
+//                Object[] result = (Object[]) em.createNativeQuery(
+//                        "SELECT "
+//                        + "COALESCE(SUM(amount_paid),0), "
+//                        + "MAX(payment_type) "
+//                        + "FROM student_fee_installments "
+//                        + "WHERE enrollment_id=? "
+//                        + "AND month_for=? "
+//                        + "AND status=1"
+//                )
+//                        .setParameter(1, enrollmentId)
+//                        .setParameter(2, full)
+//                        .getSingleResult();
+//
+//                double paid = ((Number) result[0]).doubleValue();
+//                String type = result[1] != null ? result[1].toString() : "";
+//
+//                // =====================================================
+//                // 🔥 PENDING LOGIC (FINAL RULE)
+//                // =====================================================
+//                if (paid == 0) {
+//
+//                    // ❌ ZERO → NOT pending
+//                    if (!"ZERO".equalsIgnoreCase(type)) {
+//                        pendingCount++;
+//                    }
+//
+//                } else {
+//
+//                    // ❌ DISCOUNT → NOT pending
+//                    if (!"DISCOUNT".equalsIgnoreCase(type)) {
+//
+//                        // partial payment → pending
+    ////                        if (data.monthAmountMap.containsKey(full)) {
+////                            double monthlyFee = data.monthAmountMap.get(full);
+////
+////                            if (paid < monthlyFee) {
+////                                pendingCount++;
+////                            }
+////                        } else {
+////                            pendingCount++;
+////                        }
+//                    }
+//                }
+//
+//                // =====================================================
+//                // STOP CONDITION
+//                // =====================================================
+//                if (y == data.endYear && m == data.endMonth) {
+//                    break;
+//                }
+//
+//                m++;
+//                if (m > 12) {
+//                    m = 1;
+//                    y++;
+//                }
+//            }
+//
+//            return pendingCount;
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return 0;
 //        } finally {
 //            em.close();
 //        }
 //    }
-//    public int getPendingMonthCount(int enrollmentId) {
-//
-//        StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
-//        StudentFeeInstallmentsDAO.MonthDataDTO data = dao.getMonthData(enrollmentId);
-//
-//        int pendingCount = 0;
-//
-//        int y = data.startYear;
-//        int m = data.startMonth;
-//
-//        while (true) {
-//
-//            String monthStr = String.format("%02d", m);
-//            String full = y + "-" + monthStr;
-//
-//            // ❌ NOT PAID → NOT IN MAP
-//            if (!data.monthAmountMap.containsKey(full)) {
-//                pendingCount++;
-//            }
-//
-//            // stop condition
-//            if (y == data.endYear && m == data.endMonth) {
-//                break;
-//            }
-//
-//            m++;
-//            if (m > 12) {
-//                m = 1;
-//                y++;
-//            }
-//        }
-//
-//        return pendingCount;
-//    }
+
+
     private void calculateTotal() {
 
         DefaultTableModel model = (DefaultTableModel) rp_due_table.getModel();
@@ -858,27 +881,22 @@ public class Round_Payment extends javax.swing.JDialog {
                         StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
                         StudentFeeInstallmentsDAO.MonthDataDTO dto = dao.getMonthData(enrollmentId);
 
-                        // =====================================================
-                        // 1. GET TOTAL FEE
-                        // =====================================================
+                        // =========================
+                        // TOTAL FEE
+                        // =========================
                         double totalFee = ((Number) em.createNativeQuery(
-                                "SELECT total_fee "
-                                + "FROM student_fee_payments "
-                                + "WHERE enrollment_id=? AND status=1"
-                        )
-                                .setParameter(1, enrollmentId)
-                                .getSingleResult()).doubleValue();
+                                "SELECT total_fee FROM student_fee_payments WHERE enrollment_id=? AND status=1"
+                        ).setParameter(1, enrollmentId).getSingleResult()).doubleValue();
 
-                        // =====================================================
-                        // 2. CALCULATE TOTAL MONTHS
-                        // =====================================================
+                        // =========================
+                        // TOTAL MONTHS
+                        // =========================
                         int totalMonths = 0;
                         int ty = dto.startYear;
                         int tm = dto.startMonth;
 
                         while (true) {
                             totalMonths++;
-
                             if (ty == dto.endYear && tm == dto.endMonth) {
                                 break;
                             }
@@ -892,45 +910,27 @@ public class Round_Payment extends javax.swing.JDialog {
 
                         double monthlyFee = totalMonths == 0 ? 0 : (totalFee / totalMonths);
 
-                        if (monthlyFee <= 0) {
-                            System.out.println("Invalid monthly fee");
-                            return;
-                        }
-
-                        // =====================================================
-                        // 3. PAYMENT ID
-                        // =====================================================
+                        // =========================
+                        // PAYMENT ID
+                        // =========================
                         int paymentId = ((Number) em.createNativeQuery(
-                                "SELECT student_fee_payments_id "
-                                + "FROM student_fee_payments "
-                                + "WHERE enrollment_id=? AND status=1"
-                        )
-                                .setParameter(1, enrollmentId)
-                                .getSingleResult()).intValue();
+                                "SELECT student_fee_payments_id FROM student_fee_payments WHERE enrollment_id=? AND status=1"
+                        ).setParameter(1, enrollmentId).getSingleResult()).intValue();
 
                         int installmentNo = ((Number) em.createNativeQuery(
-                                "SELECT COALESCE(MAX(installment_no),0) "
-                                + "FROM student_fee_installments "
-                                + "WHERE enrollment_id=?"
-                        )
-                                .setParameter(1, enrollmentId)
-                                .getSingleResult()).intValue();
+                                "SELECT COALESCE(MAX(installment_no),0) FROM student_fee_installments WHERE enrollment_id=?"
+                        ).setParameter(1, enrollmentId).getSingleResult()).intValue();
 
-                        // =====================================================
-                        // 4. FETCH VALID MONTHLY PAYMENTS ONLY
-                        // Ignore:
-                        // - ZERO
-                        // - DISCOUNT
-                        // - status = 0 (returned cheque rows)
-                        // =====================================================
+                        // =========================
+                        // MAPS
+                        // =========================
+                        // 🔹 Paid Map (REAL payments only)
                         Map<String, Double> paidMap = new HashMap<>();
 
                         List<Object[]> paidRows = em.createNativeQuery(
                                 "SELECT month_for, COALESCE(SUM(amount_paid),0) "
                                 + "FROM student_fee_installments "
-                                + "WHERE enrollment_id=? "
-                                + "AND status=1 "
-                                + "AND month_for IS NOT NULL "
+                                + "WHERE enrollment_id=? AND status=1 "
                                 + "AND payment_type NOT IN ('ZERO','DISCOUNT') "
                                 + "GROUP BY month_for"
                         )
@@ -938,15 +938,44 @@ public class Round_Payment extends javax.swing.JDialog {
                                 .getResultList();
 
                         for (Object[] r : paidRows) {
-                            String month = r[0].toString();
-                            double amt = ((Number) r[1]).doubleValue();
-                            paidMap.put(month, amt);
+                            paidMap.put(r[0].toString(), ((Number) r[1]).doubleValue());
                         }
 
-                        // =====================================================
-                        // 5. FIFO PAYMENT ALLOCATION
-                        // oldest unpaid first
-                        // =====================================================
+                        // 🔹 Payment Type Map
+                        Map<String, String> typeMap = new HashMap<>();
+
+                        List<Object[]> typeRows = em.createNativeQuery(
+                                "SELECT month_for, MAX(payment_type) "
+                                + "FROM student_fee_installments "
+                                + "WHERE enrollment_id=? AND status=1 "
+                                + "GROUP BY month_for"
+                        )
+                                .setParameter(1, enrollmentId)
+                                .getResultList();
+
+                        for (Object[] r : typeRows) {
+                            typeMap.put(r[0].toString(), r[1] != null ? r[1].toString() : "");
+                        }
+
+                        // 🔹 Adjustment Map
+                        Map<String, Double> adjustmentMap = new HashMap<>();
+
+                        List<Object[]> adjRows = em.createNativeQuery(
+                                "SELECT month_for, adjustment_amount "
+                                + "FROM fee_adjustment "
+                                + "WHERE enrollment_id=? AND status=1"
+                        )
+                                .setParameter(1, enrollmentId)
+                                .getResultList();
+
+                        for (Object[] r : adjRows) {
+                            adjustmentMap.put(r[0].toString(),
+                                    r[1] != null ? ((Number) r[1]).doubleValue() : 0);
+                        }
+
+                        // =========================
+                        // FIFO LOGIC
+                        // =========================
                         double remainingAmount = payableAmount;
 
                         int y = dto.startYear;
@@ -960,8 +989,24 @@ public class Round_Payment extends javax.swing.JDialog {
 
                             String monthKey = String.format("%04d-%02d", y, m);
 
+                            String type = typeMap.getOrDefault(monthKey, "");
                             double alreadyPaid = paidMap.getOrDefault(monthKey, 0.0);
-                            double balance = monthlyFee - alreadyPaid;
+                            double adjustment = adjustmentMap.getOrDefault(monthKey, 0.0);
+
+                            double finalFee = monthlyFee - adjustment;
+
+                            // ❌ SKIP ZERO
+                            if ("ZERO".equalsIgnoreCase(type)) {
+                                m++;
+                                if (m > 12) {
+                                    m = 1;
+                                    y++;
+                                }
+                                continue;
+                            }
+
+                            // 🔥 BALANCE CALCULATION
+                            double balance = finalFee - alreadyPaid;
 
                             if (balance > 0) {
 
@@ -988,7 +1033,6 @@ public class Round_Payment extends javax.swing.JDialog {
                                         .executeUpdate();
 
                                 paidMap.put(monthKey, alreadyPaid + payNow);
-
                                 remainingAmount -= payNow;
                             }
 
@@ -999,9 +1043,9 @@ public class Round_Payment extends javax.swing.JDialog {
                             }
                         }
 
-                        // =====================================================
-                        // 6. FINAL UPDATE
-                        // =====================================================
+                        // =========================
+                        // FINAL UPDATE
+                        // =========================
                         double finalPaid = ((Number) em.createNativeQuery(
                                 "SELECT COALESCE(SUM(amount_paid),0) "
                                 + "FROM student_fee_installments "
@@ -1016,9 +1060,7 @@ public class Round_Payment extends javax.swing.JDialog {
 
                         em.createNativeQuery(
                                 "UPDATE student_fee_payments "
-                                + "SET total_paid=?, "
-                                + "total_balance=?, "
-                                + "payment_status=? "
+                                + "SET total_paid=?, total_balance=?, payment_status=? "
                                 + "WHERE enrollment_id=?"
                         )
                                 .setParameter(1, finalPaid)
@@ -1101,370 +1143,6 @@ public class Round_Payment extends javax.swing.JDialog {
         }
     }
 
-//    public void saveRoundPayment(int studentId, JTable table,
-//            String paymentMode, double totalPaid, double roundingAdj, String user) {
-//
-//        DefaultTableModel model = (DefaultTableModel) table.getModel();
-//
-//        int COL_SERVICENAME = 3;
-//        int COL_PAYABLE = 9;
-//        int COL_IDS = 11;
-//
-//        EntityManager em = HibernateConfig.getEntityManager();
-//        EntityTransaction tx = em.getTransaction();
-//
-//        try {
-//
-//            tx.begin();
-//
-//            // =========================
-//            // 1. MASTER
-//            // =========================
-//            StudentFeeRoundPaymentMaster master = new StudentFeeRoundPaymentMaster();
-//            master.setStudentId(studentId);
-//            master.setPaymentDate(new java.util.Date());
-//            master.setPaymentMode("ROUND");
-//            master.setTotalPaid(totalPaid);
-//            master.setRoundingAdjustment(roundingAdj);
-//            master.setUser(user);
-//            master.setStatus(1);
-//
-//            em.persist(master);
-//            em.flush();
-//
-//            System.out.println("MASTER ID: " + master.getStudentFeeRoundPaymentMasterId());
-//            Integer roundMasterId = master.getStudentFeeRoundPaymentMasterId();
-//
-//            System.out.println("ROUND MASTER ID: " + roundMasterId);
-//
-    ////            // =========================
-////            // CHEQUE MASTER SAVE (ONLY ONCE)
-////            // =========================
-////            if ("CHEQUE".equalsIgnoreCase(paymentMode)) {
-////
-////                em.createNativeQuery(
-////                        "INSERT INTO student_fee_cheque_details "
-////                        + "(reference_id, reference_type, category, cheque_no, bank, branch, cheque_date, cheque_amount, cheque_status, status) "
-////                        + "VALUES (?, 'ROUND', ?, ?, ?, ?, ?, ?, 'PENDING', 1)"
-////                )
-////                        .setParameter(1, roundMasterId)
-////                        .setParameter(2, "STUDENT")
-////                        .setParameter(3, rp_round_cheque_number_text.getText())
-////                        .setParameter(4, rp_round_bank_name_combo.getEditor().getItem().toString())
-////                        .setParameter(5, rp_round_cheque_branch.getText())
-////                        .setParameter(6, rp_round_cheque_date.getDate())
-////                        .setParameter(7, totalPaid)
-////                        .executeUpdate();
-////
-////                System.out.println("CHEQUE SAVED FOR ROUND MASTER ID: " + roundMasterId);
-////            }
-//            System.out.println("CHEQUE SAVED FOR ROUND MASTER ID: " + roundMasterId);
-//
-//            // =========================
-//            // 2. LOOP TABLE
-//            // =========================
-//            for (int i = 0; i < model.getRowCount(); i++) {
-//
-//                Object payableObj = model.getValueAt(i, COL_PAYABLE);
-//                Object refObj = model.getValueAt(i, COL_IDS);
-//
-//                if (payableObj == null || payableObj.toString().trim().isEmpty()) {
-//                    continue;
-//                }
-//                if (refObj == null) {
-//                    continue;
-//                }
-//
-//                double payableAmount = GeneralMethods.parseCommaNumber(payableObj.toString());
-//                if (payableAmount <= 0) {
-//                    continue;
-//                }
-//
-//                String ref = refObj.toString();
-//
-//                // =====================================================
-//                // COURSE
-//                // =====================================================
-//                if (ref.startsWith("COURSE_")) {
-//
-//                    int enrollmentId = Integer.parseInt(ref.replace("COURSE_", ""));
-//                    String serviceName = model.getValueAt(i, COL_SERVICENAME).toString();
-//
-//                    // =====================================================
-//                    // ONE-TIME COURSE
-//                    // =====================================================
-//                    if (serviceName.toUpperCase().contains("ONE-TIME")) {
-//
-//                        Object[] paymentRow = (Object[]) em.createNativeQuery(
-//                                "SELECT student_fee_payments_id, total_paid, total_balance "
-//                                + "FROM student_fee_payments "
-//                                + "WHERE enrollment_id = ? AND status = 1"
-//                        )
-//                                .setParameter(1, enrollmentId)
-//                                .getSingleResult();
-//
-//                        int paymentId = Integer.parseInt(paymentRow[0].toString());
-//                        double currentPaid = Double.parseDouble(paymentRow[1].toString());
-//                        double currentBalance = Double.parseDouble(paymentRow[2].toString());
-//
-//                        double newPaid = currentPaid + payableAmount;
-//                        double newBalance = Math.max(currentBalance - payableAmount, 0);
-//
-//                        String status = (newBalance == 0) ? "COMPLETE" : "ACTIVE";
-//
-//                        em.createNativeQuery(
-//                                "UPDATE student_fee_payments "
-//                                + "SET total_paid=?, total_balance=?, payment_status=?, last_mofidied=NOW() "
-//                                + "WHERE student_fee_payments_id=?"
-//                        )
-//                                .setParameter(1, newPaid)
-//                                .setParameter(2, newBalance)
-//                                .setParameter(3, status)
-//                                .setParameter(4, paymentId)
-//                                .executeUpdate();
-//
-//                        Integer nextInstallmentNo = ((Number) em.createNativeQuery(
-//                                "SELECT COALESCE(MAX(installment_no),0)+1 "
-//                                + "FROM student_fee_installments WHERE student_fee_payments_id=?"
-//                        )
-//                                .setParameter(1, paymentId)
-//                                .getSingleResult()).intValue();
-//
-//                        em.createNativeQuery(
-//                                "INSERT INTO student_fee_installments "
-//                                + "(student_fee_payments_id, enrollment_id, student_fee_round_payment_master_id, installment_no, amount_paid, "
-//                                + "payment_date, payment_method, payment_type, remarks, status) "
-//                                + "VALUES (?, ?, ?, ?, ?, NOW(), ?, 'ROUND', 'Round Payment', 1)"
-//                        )
-//                                .setParameter(1, paymentId)
-//                                .setParameter(2, enrollmentId)
-//                                .setParameter(3, roundMasterId)
-//                                .setParameter(4, nextInstallmentNo)
-//                                .setParameter(5, payableAmount)
-//                                .setParameter(6, paymentMode)
-//                                .executeUpdate();
-//
-//                    } // =========================
-//                    // MONTHLY COURSE SUPPORT (IMPORTANT ADDITION)
-//                    // =========================
-//                    else if (serviceName.toUpperCase().contains("MONTHLY")) {
-//
-//                        StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
-//                        StudentFeeInstallmentsDAO.MonthDataDTO dto = dao.getMonthData(enrollmentId);
-//
-//                        // =====================================================
-//                        // FIX 1: GET TOTAL FEE
-//                        // =====================================================
-//                        double totalFee = ((Number) em.createNativeQuery(
-//                                "SELECT total_fee FROM student_fee_payments WHERE enrollment_id=? AND status=1"
-//                        )
-//                                .setParameter(1, enrollmentId)
-//                                .getSingleResult()).doubleValue();
-//
-//                        // =====================================================
-//                        // FIX 2: CALCULATE MONTH COUNT
-//                        // =====================================================
-//                        int totalMonths = 0;
-//                        int ty = dto.startYear;
-//                        int tm = dto.startMonth;
-//
-//                        while (true) {
-//                            totalMonths++;
-//
-//                            if (ty == dto.endYear && tm == dto.endMonth) {
-//                                break;
-//                            }
-//
-//                            tm++;
-//                            if (tm > 12) {
-//                                tm = 1;
-//                                ty++;
-//                            }
-//                        }
-//
-//                        double monthlyFee = totalMonths == 0 ? 0 : (totalFee / totalMonths);
-//
-//                        if (monthlyFee <= 0) {
-//                            System.out.println("❌ STOP: Monthly fee is 0 or invalid");
-//                            return;
-//                        }
-//
-//                        // LAST PAID MONTH
-//                        String lastPaidMonth = dto.monthAmountMap.keySet()
-//                                .stream()
-//                                .max(String::compareTo)
-//                                .orElse(null);
-//
-//                        int pendingMonths = getPendingMonthCount(enrollmentId);
-//                        System.out.println("PENDING MONTH COUNT: " + pendingMonths);
-//
-//                        Number paymentRow = (Number) em.createNativeQuery(
-//                                "SELECT student_fee_payments_id FROM student_fee_payments "
-//                                + "WHERE enrollment_id=? AND status=1"
-//                        )
-//                                .setParameter(1, enrollmentId)
-//                                .getSingleResult();
-//
-//                        int paymentId = paymentRow.intValue();
-//
-//                        int installmentNo = ((Number) em.createNativeQuery(
-//                                "SELECT COALESCE(MAX(installment_no),0) "
-//                                + "FROM student_fee_installments WHERE enrollment_id=?"
-//                        )
-//                                .setParameter(1, enrollmentId)
-//                                .getSingleResult()).intValue();
-//
-//                        double remainingAmount = payableAmount;
-//
-//                        int y = dto.startYear;
-//                        int m = dto.startMonth;
-//
-//                        while (remainingAmount > 0) {
-//
-//                            if (y > dto.endYear || (y == dto.endYear && m > dto.endMonth)) {
-//                                break;
-//                            }
-//
-//                            String monthKey = String.format("%04d-%02d", y, m);
-//
-//                            double alreadyPaid = dto.monthAmountMap.getOrDefault(monthKey, 0);
-//                            double balance = monthlyFee - alreadyPaid;
-//
-//                            if (balance > 0) {
-//
-//                                double payNow = Math.min(balance, remainingAmount);
-//
-//                                installmentNo++;
-//
-//                                int inserted = em.createNativeQuery(
-//                                        "INSERT INTO student_fee_installments "
-//                                        + "(student_fee_payments_id, enrollment_id, student_fee_round_payment_master_id, installment_no, amount_paid, "
-//                                        + "payment_date, payment_method, payment_type, month_for, remarks, status) "
-//                                        + "VALUES (?, ?, ?, ?, ?, NOW(), ?, 'ROUND', ?, 'Round Monthly Payment', 1)"
-//                                )
-//                                        .setParameter(1, paymentId)
-//                                        .setParameter(2, enrollmentId)
-//                                        .setParameter(3, roundMasterId)
-//                                        .setParameter(4, installmentNo)
-//                                        .setParameter(5, payNow)
-//                                        .setParameter(6, paymentMode)
-//                                        .setParameter(7, monthKey)
-//                                        .executeUpdate();
-//
-//                                // IMPORTANT: update map to avoid duplicate allocation in same run
-////                                dto.monthAmountMap.put(monthKey, alreadyPaid + payNow);
-//                                double sum = alreadyPaid + payNow;
-//                                int updatedAmount = (int) sum;
-//                                dto.monthAmountMap.put(monthKey, updatedAmount);
-//
-//                                remainingAmount -= payNow;
-//                            }
-//
-//                            m++;
-//                            if (m > 12) {
-//                                m = 1;
-//                                y++;
-//                            }
-//                        }
-//
-//                        // =====================================================
-//                        // FINAL CALCULATION (FIXED)
-//                        // =====================================================
-//                        double totalPaids = ((Number) em.createNativeQuery(
-//                                "SELECT COALESCE(SUM(amount_paid),0) "
-//                                + "FROM student_fee_installments WHERE enrollment_id=?"
-//                        )
-//                                .setParameter(1, enrollmentId)
-//                                .getSingleResult()).doubleValue();
-//
-//                        double finalTotalFee = totalFee; // IMPORTANT FIX
-//
-//                        em.createNativeQuery(
-//                                "UPDATE student_fee_payments "
-//                                + "SET total_paid=?, total_balance=?, payment_status=? "
-//                                + "WHERE enrollment_id=?"
-//                        )
-//                                .setParameter(1, totalPaids)
-//                                .setParameter(2, finalTotalFee - totalPaids)
-//                                .setParameter(3, totalPaids >= finalTotalFee ? "COMPLETED" : "ACTIVE")
-//                                .setParameter(4, enrollmentId)
-//                                .executeUpdate();
-//
-//                    }
-//
-//                    // =========================
-//                    // ROUND MASTER DETAILS
-//                    // =========================
-//                    StudentFeeRoundPaymentMasterDetails d = new StudentFeeRoundPaymentMasterDetails();
-//                    d.setStudentFeeRoundPaymentMaster(master);
-//                    d.setEnrollmentId(enrollmentId);
-//                    d.setReferenceType("COURSE");
-//                    d.setPaidAmount(payableAmount);
-//                    d.setStatus(1);
-//
-//                    em.persist(d);
-//                } // =====================================================
-//                // ADDITIONAL / INVENTORY
-//                // =====================================================
-//                else if (ref.startsWith("ADD_")) {
-//
-//                    int safId = Integer.parseInt(ref.replace("ADD_", ""));
-//
-//                    em.createNativeQuery(
-//                            "INSERT INTO student_additional_fee_payments "
-//                            + "(student_additional_fees_id, student_fee_round_payment_master_id, paid_date, amount_paid, payment_method, user, status) "
-//                            + "VALUES (?, ?, NOW(), ?, ?, ?, 1)"
-//                    )
-//                            .setParameter(1, safId)
-//                            .setParameter(2, roundMasterId)
-//                            .setParameter(3, payableAmount)
-//                            .setParameter(4, paymentMode)
-//                            .setParameter(5, user)
-//                            .executeUpdate();
-//
-//                    StudentFeeRoundPaymentMasterDetails d = new StudentFeeRoundPaymentMasterDetails();
-//                    d.setStudentFeeRoundPaymentMaster(master);
-//                    d.setEnrollmentId(null);
-//                    d.setReferenceId(safId);
-//                    d.setReferenceType("ADDITIONAL");
-//                    d.setPaidAmount(payableAmount);
-//                    d.setStatus(1);
-//
-//                    em.persist(d);
-//                }
-//            }
-//
-//            // ✅ AUDIT LOG: Bulk Round Payment
-//            // Grab the name safely
-//            String studentName = (rp_student_name_text.getText() != null)
-//                    ? rp_student_name_text.getText() : "";
-//
-//            String description = String.format(
-//                    "Round Payment: Student=%s, Mode=%s, Amount=%.2f, Student ID: %d",
-//                    studentName, paymentMode, totalPaid, studentId
-//            );
-//
-//            logHelper.log(
-//                    "ROUND_PAYMENT",
-//                    studentId,
-//                    "PAYMENT", // Usually the 'Action' column looks better as a single verb like 'PAYMENT' or 'COLLECT'
-//                    paymentMode,
-//                    totalPaid,
-//                    description,
-//                    user
-//            );
-//
-//            tx.commit();
-//            JOptionPane.showMessageDialog(this, "Payment saved successfully.", "Payment Processed", JOptionPane.INFORMATION_MESSAGE);
-//
-//        } catch (Exception e) {
-//            tx.rollback();
-//            e.printStackTrace();
-//        } finally {
-//            em.close();
-//        }
-//    }
-
     public void saveRoundPaymentCheque(int studentId, JTable table,
             String paymentMode, double totalPaid, double roundingAdj, String user) {
 
@@ -1477,18 +1155,16 @@ public class Round_Payment extends javax.swing.JDialog {
         EntityManager em = HibernateConfig.getEntityManager();
         EntityTransaction tx = em.getTransaction();
 
-        Map<Integer, Integer> paymentCache = new HashMap<>();
-
         try {
             tx.begin();
 
             // =========================
-            // MASTER
+            // 1. MASTER
             // =========================
             StudentFeeRoundPaymentMaster master = new StudentFeeRoundPaymentMaster();
             master.setStudentId(studentId);
             master.setPaymentDate(new java.util.Date());
-            master.setPaymentMode("CHEQUE");
+            master.setPaymentMode("CHEQUE"); // ✅ IMPORTANT
             master.setTotalPaid(totalPaid);
             master.setRoundingAdjustment(roundingAdj);
             master.setUser(user);
@@ -1500,7 +1176,7 @@ public class Round_Payment extends javax.swing.JDialog {
             int roundMasterId = master.getStudentFeeRoundPaymentMasterId();
 
             // =========================
-            // CHEQUE HEADER (ONLY ONCE)
+            // 2. CHEQUE HEADER (ONLY ONCE)
             // =========================
             em.createNativeQuery(
                     "INSERT INTO student_fee_cheque_details "
@@ -1516,251 +1192,201 @@ public class Round_Payment extends javax.swing.JDialog {
                     .executeUpdate();
 
             // =========================
-            // LOOP TABLE
+            // 3. LOOP TABLE
             // =========================
             for (int i = 0; i < model.getRowCount(); i++) {
 
+                Object payableObj = model.getValueAt(i, COL_PAYABLE);
                 Object refObj = model.getValueAt(i, COL_IDS);
-                Object payObj = model.getValueAt(i, COL_PAYABLE);
-                Object nameObj = model.getValueAt(i, COL_SERVICENAME);
 
-                if (refObj == null || payObj == null) {
+                if (payableObj == null || refObj == null) {
+                    continue;
+                }
+
+                double payableAmount = GeneralMethods.parseCommaNumber(payableObj.toString());
+                if (payableAmount <= 0) {
                     continue;
                 }
 
                 String ref = refObj.toString();
-                double amount = GeneralMethods.parseCommaNumber(payObj.toString());
-                String serviceName = nameObj != null ? nameObj.toString() : "";
-
-                if (amount <= 0) {
-                    continue;
-                }
 
                 // =====================================================
-                // ONE TIME COURSE
+                // COURSE
                 // =====================================================
-                if (ref.startsWith("COURSE_") && serviceName.toUpperCase().contains("ONE-TIME")) {
-
-                    int enrollmentId = Integer.parseInt(ref.replace("COURSE_", ""));
-
-                    int paymentId = getPaymentId(em, paymentCache, enrollmentId);
-                    int nextNo = getNextInstallmentNo(em, paymentId);
-
-                    em.createNativeQuery(
-                            "INSERT INTO student_fee_installments "
-                            + "(student_fee_payments_id, enrollment_id, student_fee_round_payment_master_id, "
-                            + "installment_no, amount_paid, payment_date, payment_method, payment_type, remarks, status) "
-                            + "VALUES (?, ?, ?, ?, ?, NOW(), ?, 'ROUND', 'ROUND CHEQUE', 1)"
-                    )
-                            .setParameter(1, paymentId)
-                            .setParameter(2, enrollmentId)
-                            .setParameter(3, roundMasterId)
-                            .setParameter(4, nextNo)
-                            .setParameter(5, amount)
-                            .setParameter(6, paymentMode)
-                            .executeUpdate();
-                } // =====================================================
-                // MONTHLY COURSE (IMPORTANT FIXED LOGIC)
-                // =====================================================
-                // =====================================================
-                // MONTHLY COURSE (FIFO + RETURNED CHEQUE FIX)
-                // =====================================================
-                else if (ref.startsWith("COURSE_") && serviceName.toUpperCase().contains("MONTHLY")) {
-
-                    int enrollmentId = Integer.parseInt(ref.replace("COURSE_", ""));
-
-                    StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
-                    StudentFeeInstallmentsDAO.MonthDataDTO dto = dao.getMonthData(enrollmentId);
-
-                    // =====================================================
-                    // 1. GET TOTAL FEE
-                    // =====================================================
-                    double totalFee = ((Number) em.createNativeQuery(
-                            "SELECT total_fee "
-                            + "FROM student_fee_payments "
-                            + "WHERE enrollment_id=? AND status=1"
-                    )
-                            .setParameter(1, enrollmentId)
-                            .getSingleResult()).doubleValue();
-
-                    // =====================================================
-                    // 2. CALCULATE TOTAL MONTHS
-                    // =====================================================
-                    int totalMonths = 0;
-                    int ty = dto.startYear;
-                    int tm = dto.startMonth;
-
-                    while (true) {
-                        totalMonths++;
-
-                        if (ty == dto.endYear && tm == dto.endMonth) {
-                            break;
-                        }
-
-                        tm++;
-                        if (tm > 12) {
-                            tm = 1;
-                            ty++;
-                        }
-                    }
-
-                    double monthlyFee = totalMonths == 0 ? 0 : (totalFee / totalMonths);
-
-                    if (monthlyFee <= 0) {
-                        System.out.println("Invalid monthly fee");
-                        return;
-                    }
-
-                    // =====================================================
-                    // 3. PAYMENT ID + INSTALLMENT NO
-                    // =====================================================
-                    int paymentId = getPaymentId(em, paymentCache, enrollmentId);
-                    int installmentNo = getNextInstallmentNo(em, paymentId);
-
-                    // =====================================================
-                    // 4. FETCH VALID PAID MONTHS ONLY
-                    // Ignore:
-                    // - ZERO
-                    // - DISCOUNT
-                    // - status = 0 (returned cheque rows)
-                    // =====================================================
-                    Map<String, Double> paidMap = new HashMap<>();
-
-                    List<Object[]> paidRows = em.createNativeQuery(
-                            "SELECT month_for, COALESCE(SUM(amount_paid),0) "
-                            + "FROM student_fee_installments "
-                            + "WHERE enrollment_id=? "
-                            + "AND status=1 "
-                            + "AND month_for IS NOT NULL "
-                            + "AND payment_type NOT IN ('ZERO','DISCOUNT') "
-                            + "GROUP BY month_for"
-                    )
-                            .setParameter(1, enrollmentId)
-                            .getResultList();
-
-                    for (Object[] r : paidRows) {
-                        String month = r[0].toString();
-                        double amt = ((Number) r[1]).doubleValue();
-                        paidMap.put(month, amt);
-                    }
-
-                    // =====================================================
-                    // 5. FIFO ALLOCATION
-                    // oldest unpaid first
-                    // =====================================================
-                    double remaining = amount;
-
-                    int y = dto.startYear;
-                    int m = dto.startMonth;
-
-                    while (remaining > 0) {
-
-                        if (y > dto.endYear || (y == dto.endYear && m > dto.endMonth)) {
-                            break;
-                        }
-
-                        String monthKey = String.format("%04d-%02d", y, m);
-
-                        double alreadyPaid = paidMap.getOrDefault(monthKey, 0.0);
-                        double balance = monthlyFee - alreadyPaid;
-
-                        if (balance > 0) {
-
-                            double payNow = Math.min(balance, remaining);
-
-                            installmentNo++;
-
-                            em.createNativeQuery(
-                                    "INSERT INTO student_fee_installments "
-                                    + "(student_fee_payments_id, enrollment_id, "
-                                    + "student_fee_round_payment_master_id, installment_no, "
-                                    + "amount_paid, payment_date, payment_method, "
-                                    + "payment_type, month_for, remarks, status) "
-                                    + "VALUES (?, ?, ?, ?, ?, NOW(), ?, "
-                                    + "'ROUND', ?, 'ROUND CHEQUE', 1)"
-                            )
-                                    .setParameter(1, paymentId)
-                                    .setParameter(2, enrollmentId)
-                                    .setParameter(3, roundMasterId)
-                                    .setParameter(4, installmentNo)
-                                    .setParameter(5, payNow)
-                                    .setParameter(6, paymentMode)
-                                    .setParameter(7, monthKey)
-                                    .executeUpdate();
-
-                            paidMap.put(monthKey, alreadyPaid + payNow);
-
-                            remaining -= payNow;
-                        }
-
-                        m++;
-                        if (m > 12) {
-                            m = 1;
-                            y++;
-                        }
-                    }
-                }
-
-                // =========================
-// ROUND DETAIL (COURSE + ADDITIONAL)
-// =========================
                 if (ref.startsWith("COURSE_")) {
 
+                    int enrollmentId = Integer.parseInt(ref.replace("COURSE_", ""));
+                    String serviceName = model.getValueAt(i, COL_SERVICENAME).toString();
+
+                    // =====================================================
+                    // MONTHLY COURSE (FINAL FIXED LOGIC)
+                    // =====================================================
+                    if (serviceName.toUpperCase().contains("MONTHLY")) {
+
+                        StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
+                        StudentFeeInstallmentsDAO.MonthDataDTO dto = dao.getMonthData(enrollmentId);
+
+                        double totalFee = ((Number) em.createNativeQuery(
+                                "SELECT total_fee FROM student_fee_payments WHERE enrollment_id=? AND status=1"
+                        ).setParameter(1, enrollmentId).getSingleResult()).doubleValue();
+
+                        // ===== TOTAL MONTHS =====
+                        int totalMonths = 0;
+                        int ty = dto.startYear;
+                        int tm = dto.startMonth;
+
+                        while (true) {
+                            totalMonths++;
+                            if (ty == dto.endYear && tm == dto.endMonth) {
+                                break;
+                            }
+                            tm++;
+                            if (tm > 12) {
+                                tm = 1;
+                                ty++;
+                            }
+                        }
+
+                        double monthlyFee = totalFee / totalMonths;
+
+                        int paymentId = ((Number) em.createNativeQuery(
+                                "SELECT student_fee_payments_id FROM student_fee_payments WHERE enrollment_id=? AND status=1"
+                        ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+
+                        int installmentNo = ((Number) em.createNativeQuery(
+                                "SELECT COALESCE(MAX(installment_no),0) FROM student_fee_installments WHERE enrollment_id=?"
+                        ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+
+                        // =========================
+                        // MAPS (IMPORTANT)
+                        // =========================
+                        // ✅ Paid map (ONLY REAL PAYMENTS)
+                        Map<String, Double> paidMap = new HashMap<>();
+
+                        List<Object[]> paidRows = em.createNativeQuery(
+                                "SELECT month_for, COALESCE(SUM(amount_paid),0) "
+                                + "FROM student_fee_installments "
+                                + "WHERE enrollment_id=? AND status=1 "
+                                + "AND payment_type NOT IN ('ZERO','DISCOUNT') "
+                                + "GROUP BY month_for"
+                        ).setParameter(1, enrollmentId).getResultList();
+
+                        for (Object[] r : paidRows) {
+                            paidMap.put(r[0].toString(), ((Number) r[1]).doubleValue());
+                        }
+
+                        // ✅ Type map
+                        Map<String, String> typeMap = new HashMap<>();
+
+                        List<Object[]> typeRows = em.createNativeQuery(
+                                "SELECT month_for, MAX(payment_type) "
+                                + "FROM student_fee_installments "
+                                + "WHERE enrollment_id=? AND status=1 "
+                                + "GROUP BY month_for"
+                        ).setParameter(1, enrollmentId).getResultList();
+
+                        for (Object[] r : typeRows) {
+                            typeMap.put(r[0].toString(), r[1] != null ? r[1].toString() : "");
+                        }
+
+                        // ✅ Adjustment map
+                        Map<String, Double> adjustmentMap = new HashMap<>();
+
+                        List<Object[]> adjRows = em.createNativeQuery(
+                                "SELECT month_for, adjustment_amount "
+                                + "FROM fee_adjustment WHERE enrollment_id=? AND status=1"
+                        ).setParameter(1, enrollmentId).getResultList();
+
+                        for (Object[] r : adjRows) {
+                            adjustmentMap.put(r[0].toString(),
+                                    r[1] != null ? ((Number) r[1]).doubleValue() : 0);
+                        }
+
+                        // =========================
+                        // FIFO LOGIC
+                        // =========================
+                        double remaining = payableAmount;
+
+                        int y = dto.startYear;
+                        int m = dto.startMonth;
+
+                        while (remaining > 0) {
+
+                            if (y > dto.endYear || (y == dto.endYear && m > dto.endMonth)) {
+                                break;
+                            }
+
+                            String monthKey = String.format("%04d-%02d", y, m);
+
+                            String type = typeMap.getOrDefault(monthKey, "");
+                            double alreadyPaid = paidMap.getOrDefault(monthKey, 0.0);
+                            double adjustment = adjustmentMap.getOrDefault(monthKey, 0.0);
+
+                            double finalFee = monthlyFee - adjustment;
+
+                            // ❌ SKIP ZERO
+                            if ("ZERO".equalsIgnoreCase(type)) {
+                                m++;
+                                if (m > 12) {
+                                    m = 1;
+                                    y++;
+                                }
+                                continue;
+                            }
+
+                            double balance = finalFee - alreadyPaid;
+
+                            if (balance > 0) {
+
+                                double payNow = Math.min(balance, remaining);
+
+                                installmentNo++;
+
+                                em.createNativeQuery(
+                                        "INSERT INTO student_fee_installments "
+                                        + "(student_fee_payments_id, enrollment_id, "
+                                        + "student_fee_round_payment_master_id, installment_no, "
+                                        + "amount_paid, payment_date, payment_method, "
+                                        + "payment_type, month_for, remarks, status) "
+                                        + "VALUES (?, ?, ?, ?, ?, NOW(), ?, "
+                                        + "'ROUND', ?, 'Round Cheque Payment', 1)"
+                                )
+                                        .setParameter(1, paymentId)
+                                        .setParameter(2, enrollmentId)
+                                        .setParameter(3, roundMasterId)
+                                        .setParameter(4, installmentNo)
+                                        .setParameter(5, payNow)
+                                        .setParameter(6, paymentMode)
+                                        .setParameter(7, monthKey)
+                                        .executeUpdate();
+
+                                paidMap.put(monthKey, alreadyPaid + payNow);
+                                remaining -= payNow;
+                            }
+
+                            m++;
+                            if (m > 12) {
+                                m = 1;
+                                y++;
+                            }
+                        }
+                    }
+
+                    // =========================
+                    // ROUND DETAILS
+                    // =========================
                     StudentFeeRoundPaymentMasterDetails d = new StudentFeeRoundPaymentMasterDetails();
                     d.setStudentFeeRoundPaymentMaster(master);
                     d.setEnrollmentId(Integer.parseInt(ref.replace("COURSE_", "")));
                     d.setReferenceType("COURSE");
-                    d.setPaidAmount(amount);
-                    d.setStatus(1);
-
-                    em.persist(d);
-
-                } else if (ref.startsWith("ADD_")) {
-
-                    int additionalId = Integer.parseInt(ref.replace("ADD_", ""));
-
-                    StudentFeeRoundPaymentMasterDetails d = new StudentFeeRoundPaymentMasterDetails();
-                    d.setStudentFeeRoundPaymentMaster(master);
-
-                    d.setEnrollmentId(null); // important
-                    d.setReferenceId(additionalId); // 🔥 MUST STORE THIS
-                    d.setReferenceType("ADDITIONAL");
-
-                    d.setPaidAmount(amount);
+                    d.setPaidAmount(payableAmount);
                     d.setStatus(1);
 
                     em.persist(d);
                 }
             }
 
-            // ✅ AUDIT LOG: Round Cheque Payment
-            // 1. Capture details from the UI components
-            String studentName = (rp_student_name_text.getText() != null) ? rp_student_name_text.getText() : "Unknown";
-            String chqNo = rp_round_cheque_number_text.getText();
-            String bank = rp_round_bank_name_combo.getEditor().getItem().toString();
-
-            // 2. Format the description to include Cheque and Rounding details
-            String description = String.format(
-                    "Round Cheque Payment: Student=%s, Chq#=%s, Bank=%s, Amount=%.2f, Adj=%.2f, Student ID: %d",
-                    studentName, chqNo, bank, totalPaid, roundingAdj, studentId
-            );
-
-            // 3. Call your logHelper (Same format as Cash/Round payment)
-            logHelper.log(
-                    "ROUND_PAYMENT", // action_type
-                    studentId, // student_id
-                    "ROUND PAYMENT", // action_performed
-                    "CHEQUE", // payment_mode
-                    totalPaid, // amount
-                    description, // description
-                    user // user
-            );
-
-            // Now commit everything
             tx.commit();
-
-            tx.commit();
-
             JOptionPane.showMessageDialog(null, "Round Cheque Payment Saved Successfully!");
 
         } catch (Exception e) {
@@ -1771,29 +1397,312 @@ public class Round_Payment extends javax.swing.JDialog {
         }
     }
 
-    private int calculateMonths(StudentFeeInstallmentsDAO.MonthDataDTO dto) {
+//    public void saveRoundPaymentCheque(int studentId, JTable table,
+//            String paymentMode, double totalPaid, double roundingAdj, String user) {
+//
+//        DefaultTableModel model = (DefaultTableModel) table.getModel();
+//
+//        int COL_SERVICENAME = 3;
+//        int COL_PAYABLE = 9;
+//        int COL_IDS = 11;
+//
+//        EntityManager em = HibernateConfig.getEntityManager();
+//        EntityTransaction tx = em.getTransaction();
+//
+//        Map<Integer, Integer> paymentCache = new HashMap<>();
+//
+//        try {
+//            tx.begin();
+//
+//            // =========================
+//            // MASTER
+//            // =========================
+//            StudentFeeRoundPaymentMaster master = new StudentFeeRoundPaymentMaster();
+//            master.setStudentId(studentId);
+//            master.setPaymentDate(new java.util.Date());
+//            master.setPaymentMode("CHEQUE");
+//            master.setTotalPaid(totalPaid);
+//            master.setRoundingAdjustment(roundingAdj);
+//            master.setUser(user);
+//            master.setStatus(1);
+//
+//            em.persist(master);
+//            em.flush();
+//
+//            int roundMasterId = master.getStudentFeeRoundPaymentMasterId();
+//
+//            // =========================
+//            // CHEQUE HEADER (ONLY ONCE)
+//            // =========================
+//            em.createNativeQuery(
+//                    "INSERT INTO student_fee_cheque_details "
+//                    + "(reference_id, reference_type, category, cheque_no, bank, branch, cheque_date, cheque_amount, cheque_status, status) "
+//                    + "VALUES (?, 'ROUND', 'STUDENT', ?, ?, ?, ?, ?, 'PENDING', 1)"
+//            )
+//                    .setParameter(1, roundMasterId)
+//                    .setParameter(2, rp_round_cheque_number_text.getText())
+//                    .setParameter(3, rp_round_bank_name_combo.getEditor().getItem().toString())
+//                    .setParameter(4, rp_round_cheque_branch.getText())
+//                    .setParameter(5, rp_round_cheque_date.getDate())
+//                    .setParameter(6, totalPaid)
+//                    .executeUpdate();
+//
+//            // =========================
+//            // LOOP TABLE
+//            // =========================
+//            for (int i = 0; i < model.getRowCount(); i++) {
+//
+//                Object refObj = model.getValueAt(i, COL_IDS);
+//                Object payObj = model.getValueAt(i, COL_PAYABLE);
+//                Object nameObj = model.getValueAt(i, COL_SERVICENAME);
+//
+//                if (refObj == null || payObj == null) {
+//                    continue;
+//                }
+//
+//                String ref = refObj.toString();
+//                double amount = GeneralMethods.parseCommaNumber(payObj.toString());
+//                String serviceName = nameObj != null ? nameObj.toString() : "";
+//
+//                if (amount <= 0) {
+//                    continue;
+//                }
+//
+//                // =====================================================
+//                // ONE TIME COURSE
+//                // =====================================================
+//                if (ref.startsWith("COURSE_") && serviceName.toUpperCase().contains("ONE-TIME")) {
+//
+//                    int enrollmentId = Integer.parseInt(ref.replace("COURSE_", ""));
+//
+//                    int paymentId = getPaymentId(em, paymentCache, enrollmentId);
+//                    int nextNo = getNextInstallmentNo(em, paymentId);
+//
+//                    em.createNativeQuery(
+//                            "INSERT INTO student_fee_installments "
+//                            + "(student_fee_payments_id, enrollment_id, student_fee_round_payment_master_id, "
+//                            + "installment_no, amount_paid, payment_date, payment_method, payment_type, remarks, status) "
+//                            + "VALUES (?, ?, ?, ?, ?, NOW(), ?, 'ROUND', 'ROUND CHEQUE', 1)"
+//                    )
+//                            .setParameter(1, paymentId)
+//                            .setParameter(2, enrollmentId)
+//                            .setParameter(3, roundMasterId)
+//                            .setParameter(4, nextNo)
+//                            .setParameter(5, amount)
+//                            .setParameter(6, paymentMode)
+//                            .executeUpdate();
+//                } // =====================================================
+//                // MONTHLY COURSE (IMPORTANT FIXED LOGIC)
+//                // =====================================================
+//                // =====================================================
+//                // MONTHLY COURSE (FIFO + RETURNED CHEQUE FIX)
+//                // =====================================================
+//                else if (ref.startsWith("COURSE_") && serviceName.toUpperCase().contains("MONTHLY")) {
+//
+//                    int enrollmentId = Integer.parseInt(ref.replace("COURSE_", ""));
+//
+//                    StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
+//                    StudentFeeInstallmentsDAO.MonthDataDTO dto = dao.getMonthData(enrollmentId);
+//
+//                    // =====================================================
+//                    // 1. GET TOTAL FEE
+//                    // =====================================================
+//                    double totalFee = ((Number) em.createNativeQuery(
+//                            "SELECT total_fee "
+//                            + "FROM student_fee_payments "
+//                            + "WHERE enrollment_id=? AND status=1"
+//                    )
+//                            .setParameter(1, enrollmentId)
+//                            .getSingleResult()).doubleValue();
+//
+//                    // =====================================================
+//                    // 2. CALCULATE TOTAL MONTHS
+//                    // =====================================================
+//                    int totalMonths = 0;
+//                    int ty = dto.startYear;
+//                    int tm = dto.startMonth;
+//
+//                    while (true) {
+//                        totalMonths++;
+//
+//                        if (ty == dto.endYear && tm == dto.endMonth) {
+//                            break;
+//                        }
+//
+//                        tm++;
+//                        if (tm > 12) {
+//                            tm = 1;
+//                            ty++;
+//                        }
+//                    }
+//
+//                    double monthlyFee = totalMonths == 0 ? 0 : (totalFee / totalMonths);
+//
+//                    if (monthlyFee <= 0) {
+//                        System.out.println("Invalid monthly fee");
+//                        return;
+//                    }
+//
+//                    // =====================================================
+//                    // 3. PAYMENT ID + INSTALLMENT NO
+//                    // =====================================================
+//                    int paymentId = getPaymentId(em, paymentCache, enrollmentId);
+//                    int installmentNo = getNextInstallmentNo(em, paymentId);
+//
+//                    // =====================================================
+//                    // 4. FETCH VALID PAID MONTHS ONLY
+//                    // Ignore:
+//                    // - ZERO
+//                    // - DISCOUNT
+//                    // - status = 0 (returned cheque rows)
+//                    // =====================================================
+//                    Map<String, Double> paidMap = new HashMap<>();
+//
+//                    List<Object[]> paidRows = em.createNativeQuery(
+//                            "SELECT month_for, COALESCE(SUM(amount_paid),0) "
+//                            + "FROM student_fee_installments "
+//                            + "WHERE enrollment_id=? "
+//                            + "AND status=1 "
+//                            + "AND month_for IS NOT NULL "
+//                            + "AND payment_type NOT IN ('ZERO','DISCOUNT') "
+//                            + "GROUP BY month_for"
+//                    )
+//                            .setParameter(1, enrollmentId)
+//                            .getResultList();
+//
+//                    for (Object[] r : paidRows) {
+//                        String month = r[0].toString();
+//                        double amt = ((Number) r[1]).doubleValue();
+//                        paidMap.put(month, amt);
+//                    }
+//
+//                    // =====================================================
+//                    // 5. FIFO ALLOCATION
+//                    // oldest unpaid first
+//                    // =====================================================
+//                    double remaining = amount;
+//
+//                    int y = dto.startYear;
+//                    int m = dto.startMonth;
+//
+//                    while (remaining > 0) {
+//
+//                        if (y > dto.endYear || (y == dto.endYear && m > dto.endMonth)) {
+//                            break;
+//                        }
+//
+//                        String monthKey = String.format("%04d-%02d", y, m);
+//
+//                        double alreadyPaid = paidMap.getOrDefault(monthKey, 0.0);
+//                        double balance = monthlyFee - alreadyPaid;
+//
+//                        if (balance > 0) {
+//
+//                            double payNow = Math.min(balance, remaining);
+//
+//                            installmentNo++;
+//
+//                            em.createNativeQuery(
+//                                    "INSERT INTO student_fee_installments "
+//                                    + "(student_fee_payments_id, enrollment_id, "
+//                                    + "student_fee_round_payment_master_id, installment_no, "
+//                                    + "amount_paid, payment_date, payment_method, "
+//                                    + "payment_type, month_for, remarks, status) "
+//                                    + "VALUES (?, ?, ?, ?, ?, NOW(), ?, "
+//                                    + "'ROUND', ?, 'ROUND CHEQUE', 1)"
+//                            )
+//                                    .setParameter(1, paymentId)
+//                                    .setParameter(2, enrollmentId)
+//                                    .setParameter(3, roundMasterId)
+//                                    .setParameter(4, installmentNo)
+//                                    .setParameter(5, payNow)
+//                                    .setParameter(6, paymentMode)
+//                                    .setParameter(7, monthKey)
+//                                    .executeUpdate();
+//
+//                            paidMap.put(monthKey, alreadyPaid + payNow);
+//
+//                            remaining -= payNow;
+//                        }
+//
+//                        m++;
+//                        if (m > 12) {
+//                            m = 1;
+//                            y++;
+//                        }
+//                    }
+//                }
+//
+//                // =========================
+    //// ROUND DETAIL (COURSE + ADDITIONAL)
+//// =========================
+//                if (ref.startsWith("COURSE_")) {
+//
+//                    StudentFeeRoundPaymentMasterDetails d = new StudentFeeRoundPaymentMasterDetails();
+//                    d.setStudentFeeRoundPaymentMaster(master);
+//                    d.setEnrollmentId(Integer.parseInt(ref.replace("COURSE_", "")));
+//                    d.setReferenceType("COURSE");
+//                    d.setPaidAmount(amount);
+//                    d.setStatus(1);
+//
+//                    em.persist(d);
+//
+//                } else if (ref.startsWith("ADD_")) {
+//
+//                    int additionalId = Integer.parseInt(ref.replace("ADD_", ""));
+//
+//                    StudentFeeRoundPaymentMasterDetails d = new StudentFeeRoundPaymentMasterDetails();
+//                    d.setStudentFeeRoundPaymentMaster(master);
+//
+//                    d.setEnrollmentId(null); // important
+//                    d.setReferenceId(additionalId); // 🔥 MUST STORE THIS
+//                    d.setReferenceType("ADDITIONAL");
+//
+//                    d.setPaidAmount(amount);
+//                    d.setStatus(1);
+//
+//                    em.persist(d);
+//                }
+//            }
+//
+//            // ✅ AUDIT LOG: Round Cheque Payment
+//            // 1. Capture details from the UI components
+//            String studentName = (rp_student_name_text.getText() != null) ? rp_student_name_text.getText() : "Unknown";
+//            String chqNo = rp_round_cheque_number_text.getText();
+//            String bank = rp_round_bank_name_combo.getEditor().getItem().toString();
+//
+//            // 2. Format the description to include Cheque and Rounding details
+//            String description = String.format(
+//                    "Round Cheque Payment: Student=%s, Chq#=%s, Bank=%s, Amount=%.2f, Adj=%.2f, Student ID: %d",
+//                    studentName, chqNo, bank, totalPaid, roundingAdj, studentId
+//            );
+//
+//            // 3. Call your logHelper (Same format as Cash/Round payment)
+//            logHelper.log(
+//                    "ROUND_PAYMENT", // action_type
+//                    studentId, // student_id
+//                    "ROUND PAYMENT", // action_performed
+//                    "CHEQUE", // payment_mode
+//                    totalPaid, // amount
+//                    description, // description
+//                    user // user
+//            );
+//
+//            // Now commit everything
+//            tx.commit();
+//
+//            tx.commit();
+//
+//            JOptionPane.showMessageDialog(null, "Round Cheque Payment Saved Successfully!");
+//
+//        } catch (Exception e) {
+//            tx.rollback();
+//            e.printStackTrace();
+//        } finally {
+//            em.close();
+//        }
+//    }
 
-        int count = 0;
-        int y = dto.startYear;
-        int m = dto.startMonth;
-
-        while (true) {
-
-            count++;
-
-            if (y == dto.endYear && m == dto.endMonth) {
-                break;
-            }
-
-            m++;
-            if (m > 12) {
-                m = 1;
-                y++;
-            }
-        }
-
-        return count;
-    }
 
     private int getNextInstallmentNo(EntityManager em, int paymentId) {
 

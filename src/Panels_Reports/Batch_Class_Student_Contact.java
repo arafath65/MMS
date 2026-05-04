@@ -26,7 +26,7 @@ import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.table.DefaultTableModel;
 
-public class Batch_Class_Student_report extends javax.swing.JPanel {
+public class Batch_Class_Student_Contact extends javax.swing.JPanel {
 
     styleDateChooser styleDateChooser = new styleDateChooser();
     GeneralMethods generalMethods = new GeneralMethods();
@@ -37,23 +37,23 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
     String username;
     String role;
 
-    public Batch_Class_Student_report(String username, String role) {
+    public Batch_Class_Student_Contact(String username, String role) {
         this.username = username;
         this.role = role;
         initComponents();
 
         loadClassCombo();
 
-        btc_st_table.setDefaultRenderer(Object.class, new TableGradientCell());
-        btc_st_table.getTableHeader().putClientProperty(FlatClientProperties.STYLE, ""
+        btc_st_con_table.setDefaultRenderer(Object.class, new TableGradientCell());
+        btc_st_con_table.getTableHeader().putClientProperty(FlatClientProperties.STYLE, ""
                 + "hoverBackground:null;"
                 + "pressedBackground:null;"
                 + "separatorColor:$TableHeader.background");
-        btc_st_table.setRowHeight(30);
+        btc_st_con_table.setRowHeight(30);
 
-        btc_st_table.getTableHeader().setPreferredSize(
+        btc_st_con_table.getTableHeader().setPreferredSize(
                 new Dimension(
-                        btc_st_table.getTableHeader().getPreferredSize().width,
+                        btc_st_con_table.getTableHeader().getPreferredSize().width,
                         35
                 )
         );
@@ -64,7 +64,7 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
         pagination1.addEventPagination(new EventPagination() {
             @Override
             public void pageChanged(int page) {
-                loadBatchStudents(btc_st_table, btc_st_batch_combo, currentSelectedClass, page);
+                loadBatchStudents(btc_st_con_table, btc_st_con_batch_combo, currentSelectedClass, page);
             }
         });
 
@@ -72,14 +72,14 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
 
     private void JComboPopulates() {
         // Medicine brand combo
-        btc_st_batch_combo.getEditor().getEditorComponent().addKeyListener(new KeyAdapter() {
+        btc_st_con_batch_combo.getEditor().getEditorComponent().addKeyListener(new KeyAdapter() {
             public void keyReleased(KeyEvent e) {
-                String input = btc_st_batch_combo.getEditor().getItem().toString();
-                generalMethods.loadMatchingComboItemswithID(btc_st_batch_combo, "course_id", "batch", "course", input);
+                String input = btc_st_con_batch_combo.getEditor().getItem().toString();
+                generalMethods.loadMatchingComboItemswithID(btc_st_con_batch_combo, "course_id", "batch", "course", input);
             }
 
         });
-        setupComboSelectionListener(btc_st_batch_combo, btc_st_course_text);
+        setupComboSelectionListener(btc_st_con_batch_combo, btc_st_con_course_text);
 
     }
 
@@ -150,7 +150,7 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
                     : "";
 
             if (selected.isEmpty() || !selected.contains("[") || !selected.contains("]")) {
-                btc_st_course_text.setText("");
+                btc_st_con_course_text.setText("");
                 return;
             }
 
@@ -174,7 +174,7 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
                     .getSingleResult();
 
             String courseName = courseNameObj != null ? courseNameObj.toString() : "";
-            btc_st_course_text.setText(courseName);
+            btc_st_con_course_text.setText(courseName);
 
             int limit = 14;
             int offset = (page - 1) * limit;
@@ -210,24 +210,29 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
 
             int count = totalCount.intValue();
             lbl_total_rows.setText("Total : " + count + " Records");
-            int totalPage = (int) Math.ceil((double) count / limit);
 
+            int totalPage = (int) Math.ceil((double) count / limit);
             pagination1.setPagegination(page, totalPage);
 
             // =====================================================
-            // FETCH STUDENTS WITH PAGINATION
+            // FETCH STUDENTS WITH PARENT DETAILS
             // =====================================================
             String dataSql
                     = "SELECT "
-                    + "s.admission_no, "
-                    + "s.full_name, "
-                    + "ce.class_name, "
-                    + "s.dob, "
-                    + "s.nic, "
-                    + "s.admission_date, "
-                    + "s.contact_no "
+                    + "s.admission_no, " // 0
+                    + "s.full_name, " // 1
+                    + "ce.class_name, " // 2
+                    + "s.contact_no, " // 3
+                    + "sp.mother_contact, " // 4
+                    + "sp.father_contact, " // 5
+                    + "sp.guardian_contact, " // 6
+                    + "s.Address " // 7
                     + "FROM course_enrollment ce "
-                    + "INNER JOIN student s ON ce.student_id = s.student_id "
+                    + "INNER JOIN student s "
+                    + "ON ce.student_id = s.student_id "
+                    + "LEFT JOIN student_parents sp "
+                    + "ON s.student_parents_id = sp.student_parents_id "
+                    + "AND sp.status = 1 "
                     + "WHERE ce.course_id = ? "
                     + "AND ce.course_status = 'ACTIVE' "
                     + "AND ce.status = 1 "
@@ -261,20 +266,22 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
                 String admissionNo = row[0] != null ? row[0].toString() : "";
                 String studentName = row[1] != null ? row[1].toString() : "";
                 String studentClass = row[2] != null ? row[2].toString() : "";
-                String dob = row[3] != null ? row[3].toString() : "";
-                String nic = row[4] != null ? row[4].toString() : "";
-                String joinedDate = row[5] != null ? row[5].toString() : "";
-                String contact = row[6] != null ? row[6].toString() : "";
+                String studentContact = row[3] != null ? row[3].toString() : "";
+                String motherContact = row[4] != null ? row[4].toString() : "";
+                String fatherContact = row[5] != null ? row[5].toString() : "";
+                String guardianContact = row[6] != null ? row[6].toString() : "";
+                String address = row[7] != null ? row[7].toString() : "";
 
                 model.addRow(new Object[]{
                     rowNo++,
                     admissionNo,
                     studentName,
                     studentClass,
-                    dob,
-                    nic,
-                    joinedDate,
-                    contact
+                    studentContact,
+                    motherContact,
+                    fatherContact,
+                    guardianContact,
+                    address
                 });
             }
 
@@ -285,18 +292,17 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
         }
     }
 
-
     public void loadClassCombo() {
 
         EntityManager em = HibernateConfig.getEntityManager();
 
         try {
-            if (btc_st_class_combo == null) {
+            if (btc_st_con_class_combo == null) {
                 System.out.println("btc_st_class_combo is null");
                 return;
             }
 
-            btc_st_class_combo.removeAllItems();
+            btc_st_con_class_combo.removeAllItems();
 
             // Default item
             // btc_st_class_combo.addItem("Select Class");
@@ -314,13 +320,13 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
                 String className = row != null ? row.toString() : "";
 
                 if (!className.trim().isEmpty()) {
-                    btc_st_class_combo.addItem(className);
+                    btc_st_con_class_combo.addItem(className);
                     System.out.println("Loaded Class = " + className);
                 }
             }
 
-            btc_st_class_combo.revalidate();
-            btc_st_class_combo.repaint();
+            btc_st_con_class_combo.revalidate();
+            btc_st_con_class_combo.repaint();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -338,16 +344,16 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
         jPanel1 = new javax.swing.JPanel();
         jPanel5 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        btc_st_table = new javax.swing.JTable();
+        btc_st_con_table = new javax.swing.JTable();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
-        btc_st_class_combo = new javax.swing.JComboBox<>();
+        btc_st_con_class_combo = new javax.swing.JComboBox<>();
         jButton5 = new javax.swing.JButton();
-        btc_st_batch_combo = new javax.swing.JComboBox<>();
+        btc_st_con_batch_combo = new javax.swing.JComboBox<>();
         jLabel4 = new javax.swing.JLabel();
         jButton6 = new javax.swing.JButton();
         jButton7 = new javax.swing.JButton();
-        btc_st_course_text = new javax.swing.JTextField();
+        btc_st_con_course_text = new javax.swing.JTextField();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
         pagination1 = new Pagination.Pagination();
@@ -355,33 +361,34 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Student Information", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
-        btc_st_table.setModel(new javax.swing.table.DefaultTableModel(
+        btc_st_con_table.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
             new String [] {
-                "#", "Admission", "Student Name", "Class", "Date of Birth", "NIC", "Joined Date", "Contact"
+                "#", "Admission", "Student Name", "Class", "Student Contact", "Mother Contact", "Father Contact", "Guardian Contact", "Address"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false
+                false, false, false, false, false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
             }
         });
-        btc_st_table.setRowHeight(25);
-        btc_st_table.addMouseListener(new java.awt.event.MouseAdapter() {
+        btc_st_con_table.setRowHeight(25);
+        btc_st_con_table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                btc_st_tableMouseClicked(evt);
+                btc_st_con_tableMouseClicked(evt);
             }
         });
-        jScrollPane1.setViewportView(btc_st_table);
-        if (btc_st_table.getColumnModel().getColumnCount() > 0) {
-            btc_st_table.getColumnModel().getColumn(0).setPreferredWidth(30);
-            btc_st_table.getColumnModel().getColumn(1).setPreferredWidth(120);
-            btc_st_table.getColumnModel().getColumn(2).setPreferredWidth(200);
+        jScrollPane1.setViewportView(btc_st_con_table);
+        if (btc_st_con_table.getColumnModel().getColumnCount() > 0) {
+            btc_st_con_table.getColumnModel().getColumn(0).setPreferredWidth(30);
+            btc_st_con_table.getColumnModel().getColumn(1).setPreferredWidth(120);
+            btc_st_con_table.getColumnModel().getColumn(2).setPreferredWidth(200);
+            btc_st_con_table.getColumnModel().getColumn(8).setPreferredWidth(150);
         }
 
         jLabel1.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
@@ -390,7 +397,7 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
         jLabel2.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
         jLabel2.setText("Class");
 
-        btc_st_class_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        btc_st_con_class_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
 
         jButton5.setBackground(new java.awt.Color(102, 102, 102));
         jButton5.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -403,8 +410,8 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
             }
         });
 
-        btc_st_batch_combo.setEditable(true);
-        btc_st_batch_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        btc_st_con_batch_combo.setEditable(true);
+        btc_st_con_batch_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
 
         jLabel4.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
         jLabel4.setText("Batch");
@@ -431,10 +438,10 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
             }
         });
 
-        btc_st_course_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
-        btc_st_course_text.addActionListener(new java.awt.event.ActionListener() {
+        btc_st_con_course_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        btc_st_con_course_text.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btc_st_course_textActionPerformed(evt);
+                btc_st_con_course_textActionPerformed(evt);
             }
         });
 
@@ -468,7 +475,7 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel4)
                             .addGroup(jPanel5Layout.createSequentialGroup()
-                                .addComponent(btc_st_batch_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 213, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(btc_st_con_batch_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 213, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jButton7, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -476,12 +483,12 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
                         .addGap(18, 18, 18)
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel1)
-                            .addComponent(btc_st_course_text, javax.swing.GroupLayout.PREFERRED_SIZE, 298, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(btc_st_con_course_text, javax.swing.GroupLayout.PREFERRED_SIZE, 298, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel2)
                             .addGroup(jPanel5Layout.createSequentialGroup()
-                                .addComponent(btc_st_class_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(btc_st_con_class_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -500,12 +507,12 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(btc_st_class_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btc_st_course_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(btc_st_con_class_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btc_st_con_course_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btc_st_batch_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(btc_st_con_batch_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addGap(41, 41, 41))
@@ -569,19 +576,18 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
 
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    private void btc_st_tableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btc_st_tableMouseClicked
+    private void btc_st_con_tableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btc_st_con_tableMouseClicked
 
-    }//GEN-LAST:event_btc_st_tableMouseClicked
+    }//GEN-LAST:event_btc_st_con_tableMouseClicked
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
 
-        currentSelectedClass = btc_st_class_combo.getSelectedItem() != null
-                ? btc_st_class_combo.getSelectedItem().toString()
+        currentSelectedClass = btc_st_con_class_combo.getSelectedItem() != null
+                ? btc_st_con_class_combo.getSelectedItem().toString()
                 : "";
 
-        loadBatchStudents(
-                btc_st_table,
-                btc_st_batch_combo,
+        loadBatchStudents(btc_st_con_table,
+                btc_st_con_batch_combo,
                 currentSelectedClass,
                 1
         );
@@ -592,9 +598,8 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
 
         currentSelectedClass = "";
 
-        loadBatchStudents(
-                btc_st_table,
-                btc_st_batch_combo,
+        loadBatchStudents(btc_st_con_table,
+                btc_st_con_batch_combo,
                 currentSelectedClass,
                 1
         );
@@ -608,9 +613,9 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
         GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
     }//GEN-LAST:event_jButton7ActionPerformed
 
-    private void btc_st_course_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btc_st_course_textActionPerformed
+    private void btc_st_con_course_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btc_st_con_course_textActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_btc_st_course_textActionPerformed
+    }//GEN-LAST:event_btc_st_con_course_textActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         // TODO add your handling code here:
@@ -618,10 +623,10 @@ public class Batch_Class_Student_report extends javax.swing.JPanel {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    public static javax.swing.JComboBox<String> btc_st_batch_combo;
-    private javax.swing.JComboBox<String> btc_st_class_combo;
-    public static javax.swing.JTextField btc_st_course_text;
-    public static javax.swing.JTable btc_st_table;
+    public static javax.swing.JComboBox<String> btc_st_con_batch_combo;
+    private javax.swing.JComboBox<String> btc_st_con_class_combo;
+    public static javax.swing.JTextField btc_st_con_course_text;
+    public static javax.swing.JTable btc_st_con_table;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.JButton jButton1;

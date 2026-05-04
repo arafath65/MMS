@@ -96,7 +96,7 @@ public class CourseDAO {
 
         TypedQuery<Course> q = em.createQuery(
                 "SELECT c FROM Course c "
-                + "WHERE c.status = 1 AND "
+                + "WHERE c.status = 1 AND c.courseStatus = 'ACTIVE' AND "
                 + "(LOWER(c.courseName) LIKE :text OR LOWER(c.batch) LIKE :text) "
                 + "ORDER BY c.courseName",
                 Course.class

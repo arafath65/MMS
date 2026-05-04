@@ -81,9 +81,11 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
             new Item("Student Management", "student.svg")
             .subMenu("New Admission")
             .subMenu("Fees Handling")
-            .subMenu("Batch Fees Payment")
+            .subMenu("Batch Transfer / Payment")
             .subMenu(new Item("Reports")
-            .subMenu("Batch/Class Student Report")
+            .subMenu("Batch Student List")
+            .subMenu("Contact Details: Batch-wise")
+            .subMenu("Master Student Directory")
             ),
             
             new Item("Inventory", "invetory.svg")
@@ -136,15 +138,29 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
                 
                 // STUDENT MANAGEMENT -> Batch Fees Paymeny
                 if (index.length == 2 && index[0] == 1 && index[1] == 2) {
-                    dashboard.showPanel("BATCH_FEES_MANAGEMENT");
-                    Dashboard.Dashboard.Main_Lable.setText("BATCH FEES PAYMENT");
+                    dashboard.showPanel("BATCH_TRANSFER");
+                    Dashboard.Dashboard.Main_Lable.setText("BATCH TRANSFER / PAYMENTS");
                     return;
                 }
                 
-                // STUDENT MANAGEMENT -> Reports -> Single Student Financial
+                // STUDENT MANAGEMENT -> Reports -> Batch Student Report
                 if (index.length == 3 && index[0] == 1 && index[1] == 3 && index[2] == 0) {
                     dashboard.showPanel("BATCH/CLASS_STUDENT_REPORT");
-                    Dashboard.Dashboard.Main_Lable.setText("BATCH/CLASS STUDENT REPORT");
+                    Dashboard.Dashboard.Main_Lable.setText("BATCH STUDENT LIST");
+                    return;
+                }
+                
+                // STUDENT MANAGEMENT -> Reports -> Batch Student Contact List
+                if (index.length == 3 && index[0] == 1 && index[1] == 3 && index[2] == 1) {
+                    dashboard.showPanel("BATCH/CLASS_STUDENT_CONTACT");
+                    Dashboard.Dashboard.Main_Lable.setText("CONTACT DETAILS");
+                    return;
+                }
+                
+                // STUDENT MANAGEMENT -> Reports -> Master Student Directory
+                if (index.length == 3 && index[0] == 1 && index[1] == 3 && index[2] == 2) {
+                    dashboard.showPanel("ENTIRE_STUDENTS_REPORT");
+                    Dashboard.Dashboard.Main_Lable.setText("STUDENT DIRECTORY");
                     return;
                 }
 

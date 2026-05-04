@@ -256,8 +256,7 @@ public class StudentDAO {
 
         List<Student> list = em.createQuery(
                 "SELECT s FROM Student s "
-                + "WHERE s.currentStatus = 'ACTIVE' "
-                + "AND " + field + " LIKE :text",
+                + "WHERE " + field + " LIKE :text",
                 Student.class
         )
                 .setParameter("text", text + "%")

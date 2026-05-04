@@ -537,6 +537,67 @@ public class GeneralMethods {
         });
     }
 
+    public void loadMatchingCourseComboItems(JComboBox<String> comboBox,
+            String input) {
+
+        SwingUtilities.invokeLater(() -> {
+
+            EntityManager em = HibernateConfig.getEntityManager();
+
+            try {
+
+                // =====================================================
+                // FORMAT:
+                // Course Name [Batch] - CourseId
+                // Example:
+                // Hifz Course [BATCH-01] - 15
+                //
+                // FIX:
+                // MySQL DISTINCT + ORDER BY issue
+                // ORDER BY column must be included in SELECT
+                // =====================================================
+                String sql = "SELECT CONCAT("
+                        + "IFNULL(course_name, ''), "
+                        + "' [', IFNULL(batch, ''), ']', "
+                        + "' - ', IFNULL(course_id, 0)"
+                        + ") AS display_value "
+                        + "FROM course "
+                        + "WHERE (course_name LIKE ? OR batch LIKE ?) "
+                        + "AND status = 1 "
+                        + "ORDER BY course_name ASC";
+
+                List<String> results = em.createNativeQuery(sql)
+                        .setParameter(1, "%" + input + "%")
+                        .setParameter(2, "%" + input + "%")
+                        .getResultList();
+
+                DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+                boolean found = false;
+
+                for (String value : results) {
+                    model.addElement(value);
+                    found = true;
+                }
+
+                comboBox.setModel(model);
+                comboBox.setSelectedItem(input);
+
+                if (found) {
+                    comboBox.setPopupVisible(true);
+                } else {
+                    comboBox.hidePopup();
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+
+            } finally {
+                em.close();
+            }
+
+        });
+    }
+
     public String extractNameFromCombo(String combo) {
 
         if (combo == null) {

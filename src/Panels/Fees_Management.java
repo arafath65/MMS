@@ -54,6 +54,7 @@ public class Fees_Management extends javax.swing.JPanel {
     public static int selectedStudentIds = 0;
     public static int selectedEnrollmentId = 0;
     public static double admis_Fees = 0.0;
+    private static double monthly_fees = 0.0;
 
     GeneralMethods generalMethods = new GeneralMethods();
     styleDateChooser stDateChooser = new styleDateChooser();
@@ -191,7 +192,6 @@ public class Fees_Management extends javax.swing.JPanel {
                 MonthlyFeePanel.mm_fees_Monthly_tot_totPaid_Textfield.setText("");
                 MonthlyFeePanel.mm_fees_Monthly_tot_pending_months_Textfield.setText("");
                 MonthlyFeePanel.mm_fees_Monthly_tot_pending_balancee_Textfield.setText("");
-                MonthlyFeePanel.mm_fees_Monthly_fee_note_Textarea.setText("");
 
                 admis_Fees = 0.0;
                 selectedStudentIds = 0;
@@ -326,6 +326,8 @@ public class Fees_Management extends javax.swing.JPanel {
         int y = data.startYear;
         int m = data.startMonth;
 
+        double carryForwardCredit = 0; // 🔥 important
+
         while (true) {
 
             String monthStr = String.format("%02d", m);
@@ -333,49 +335,65 @@ public class Fees_Management extends javax.swing.JPanel {
 
             String monthName = java.time.Month.of(m).name().substring(0, 3);
 
-            int paidFee = data.monthAmountMap.getOrDefault(full, -1);
-            String paymentType = data.paymentTypeMap.getOrDefault(full, "");
+            // =====================================================
+            // 🔥 GET DATA FROM fee_adjustment
+            // =====================================================
+            //double monthlyFee = data.monthlyFeeMap.getOrDefault(full, 450.0);
+            double monthlyFee = data.monthlyFeeMap.containsKey(full)
+                    ? data.monthlyFeeMap.get(full)
+                    : data.baseMonthlyFee;
+            monthly_fees = monthlyFee;
+            double adjustment = data.adjustmentMap.getOrDefault(full, 0.0);
+            double paid = data.paidMap.getOrDefault(full, 0.0);
 
-            String status = "";
-            Object displayAmount = "";
+            // FINAL FEE
+            double finalFee = monthlyFee - adjustment;
 
-            // =====================================================
-            // 🔥 ZERO
-            // =====================================================
-            if ("ZERO".equalsIgnoreCase(paymentType)) {
-                status = "ZERO";
-                displayAmount = "0";
-            } // =====================================================
-            // 🔥 DISCOUNT
-            // =====================================================
-            else if ("DISCOUNT".equalsIgnoreCase(paymentType)) {
-                status = "DISCOUNT";
-                displayAmount = paidFee;
-            } // =====================================================
-            // NORMAL PAYMENT
-            // =====================================================
-            else if (paidFee >= 0) {
+// TOTAL AVAILABLE (IMPORTANT FIX)
+            double totalAvailable = paid + adjustment;
 
-                displayAmount = paidFee;
+// CREDIT & BALANCE
+            double credit = 0;
+            double balance = 0;
 
-                if (paidFee > 0) {
-                    status = "PAID";
-                }
-            } // =====================================================
-            // NOT PAID
-            // =====================================================
-            else {
-                displayAmount = "";
-                status = "";
+            if (totalAvailable > monthlyFee) {
+                credit = totalAvailable - monthlyFee;
+            } else if (totalAvailable < monthlyFee) {
+                balance = monthlyFee - totalAvailable;
             }
 
+            // =====================================================
+            // 🔥 STATUS LOGIC
+            // =====================================================
+            String status;
+
+            if (adjustment > 0 && finalFee == 0) {
+                status = "WAIVED";
+            } else if (adjustment > 0) {
+                status = "DISCOUNT";
+            } else if (paid >= monthlyFee && monthlyFee > 0) {
+                status = "PAID";
+            } else if (paid > 0) {
+                status = "PARTIAL";
+            } else {
+                status = "PENDING";
+            }
+
+            // =====================================================
+            // 🔥 ADD ROW (NEW STRUCTURE)
+            // =====================================================
             model.addRow(new Object[]{
                 rowNo++,
                 y,
                 monthName,
-                displayAmount,
+                GeneralMethods.formatWithComma(monthlyFee),
+                GeneralMethods.formatWithComma(adjustment),
+                GeneralMethods.formatWithComma(finalFee),
+                GeneralMethods.formatWithComma(paid),
+                GeneralMethods.formatWithComma(credit),
+                GeneralMethods.formatWithComma(balance),
                 status,
-                full
+                data.chequeStatusMap.getOrDefault(full, "")
             });
 
             if (y == data.endYear && m == data.endMonth) {
@@ -390,12 +408,13 @@ public class Fees_Management extends javax.swing.JPanel {
         }
 
         // =====================================================
-        // 🔥 RENDERER (CHEQUE ICON)
+        // 🔥 RENDERER (CHEQUE ICON COLUMN INDEX UPDATED)
         // =====================================================
-        table.getColumnModel().getColumn(3).setCellRenderer(
+        table.getColumnModel().getColumn(9).setCellRenderer(
                 new MonthlyFeeIconRenderer(data.chequeStatusMap)
         );
     }
+
 //    public static void loadMonthlyTable(int enrollmentId, JTable table) {
 //
 //        StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
@@ -416,25 +435,47 @@ public class Fees_Management extends javax.swing.JPanel {
 //
 //            String monthName = java.time.Month.of(m).name().substring(0, 3);
 //
-//            // ✅ GET EXACT AMOUNT FROM MAP
-//            int paidFee = data.monthAmountMap.getOrDefault(full, -1); // -1 → month not in DB
+//            int paidFee = data.monthAmountMap.getOrDefault(full, -1);
+//            String paymentType = data.paymentTypeMap.getOrDefault(full, "");
 //
 //            String status = "";
-//            if (paidFee > 0) {
-//                status = "PAID"; // normal payment
-//            } else if (paidFee == 0) {
-//                // month exists in DB with 0 payment → still mark as PAID
-//                status = "PAID";
-//            } else {
-//                // month not in DB → leave blank
-//                paidFee = 0; // show empty in table
+//            Object displayAmount = "";
+//
+//            // =====================================================
+//            // 🔥 ZERO
+//            // =====================================================
+//            if ("ZERO".equalsIgnoreCase(paymentType)) {
+//                status = "ZERO";
+//                displayAmount = "0";
+//            } // =====================================================
+//            // 🔥 DISCOUNT
+//            // =====================================================
+//            else if ("DISCOUNT".equalsIgnoreCase(paymentType)) {
+//                status = "DISCOUNT";
+//                displayAmount = paidFee;
+//            } // =====================================================
+//            // NORMAL PAYMENT
+//            // =====================================================
+//            else if (paidFee >= 0) {
+//
+//                displayAmount = paidFee;
+//
+//                if (paidFee > 0) {
+//                    status = "PAID";
+//                }
+//            } // =====================================================
+//            // NOT PAID
+//            // =====================================================
+//            else {
+//                displayAmount = "";
+//                status = "";
 //            }
 //
 //            model.addRow(new Object[]{
 //                rowNo++,
 //                y,
 //                monthName,
-//                paidFee > 0 || paidFee == 0 ? paidFee : "", // show empty if not saved
+//                displayAmount,
 //                status,
 //                full
 //            });
@@ -450,132 +491,13 @@ public class Fees_Management extends javax.swing.JPanel {
 //            }
 //        }
 //
+//        // =====================================================
+//        // 🔥 RENDERER (CHEQUE ICON)
+//        // =====================================================
 //        table.getColumnModel().getColumn(3).setCellRenderer(
 //                new MonthlyFeeIconRenderer(data.chequeStatusMap)
 //        );
 //    }
-    // ************ Working code without summing same year+month *************************
-//    public void loadMonthlyTable(int enrollmentId, JTable table) {
-//
-//        StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
-//        StudentFeeInstallmentsDAO.MonthDataDTO data = dao.getMonthData(enrollmentId);
-//
-//        DefaultTableModel model = (DefaultTableModel) table.getModel();
-//        model.setRowCount(0);
-//
-//        int rowNo = 1;
-//
-//        int y = data.startYear;
-//        int m = data.startMonth;
-//
-//        while (true) {
-//
-//            String monthStr = String.format("%02d", m);
-//            String full = y + "-" + monthStr;
-//
-//            String monthName = java.time.Month.of(m).name().substring(0, 3);
-//
-//            // ✅ GET EXACT AMOUNT FROM MAP
-//            int paidFee = data.monthAmountMap.getOrDefault(full, 0);
-//
-//            String status = paidFee > 0 ? "PAID" : "";
-//
-//            model.addRow(new Object[]{
-//                rowNo++,
-//                y,
-//                monthName,
-//                paidFee,
-//                status,
-//                full
-//            });
-
-    ////            model.addRow(new Object[]{
-////                rowNo++, // 0
-////                y, // 1
-////                monthName, // 2
-////                paidFee, // 3 (visible)
-////                full // 4 (yyyy-MM → needed for renderer)
-////            });
-//
-//            if (y == data.endYear && m == data.endMonth) {
-//                break;
-//            }
-//
-//            m++;
-//            if (m > 12) {
-//                m = 1;
-//                y++;
-//            }
-//        }
-//
-//        table.getColumnModel().getColumn(3).setCellRenderer(
-//                new MonthlyFeeIconRenderer(data.chequeStatusMap)
-//        );
-//    }
-
-    // ************************* VERY OLD ****************************************
-//    public void loadMonthlyTable(int enrollmentId, JTable table) {
-//
-//        StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
-//        StudentFeeInstallmentsDAO.MonthDataDTO data = dao.getMonthData(enrollmentId);
-//
-//        DefaultTableModel model = (DefaultTableModel) table.getModel();
-//        model.setRowCount(0); // clear table
-//
-//        int rowNo = 1;
-//
-//        int y = data.startYear;
-//        int m = data.startMonth;
-//
-//        while (true) {
-//
-//            // Format month (01,02...)
-//            String monthStr = String.format("%02d", m);
-//
-//            // Format full value yyyy-MM
-//            String full = y + "-" + monthStr;
-//
-//            // Month name (Jan, Feb...)
-//            String monthName = java.time.Month.of(m).name().substring(0, 3);
-//
-//            // Check paid
-//            boolean isPaid = data.paidMonths.contains(full);
-//
-//            int paidFee = isPaid ? data.monthlyFee : 0;
-//            String status = isPaid ? "PAID" : "";
-//
-//            // Add row
-//            model.addRow(new Object[]{
-//                rowNo++,
-//                y,
-//                monthName,
-//                paidFee,
-//                status
-//            });
-//            
-    ////            model.addRow(new Object[]{
-////                rowNo++,
-////                y,
-////                monthName,
-////                paidFee,
-////                ""
-////            });
-//
-//            // 🔥 BREAK CONDITION
-//            if (y == data.endYear && m == data.endMonth) {
-//                break;
-//            }
-//
-//            // 🔥 MOVE TO NEXT MONTH
-//            m++;
-//
-//            if (m > 12) {
-//                m = 1;
-//                y++;
-//            }
-//        }
-//    }
-
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -849,6 +771,8 @@ public class Fees_Management extends javax.swing.JPanel {
                 // =====================================================
                 // UI UPDATE
                 // =====================================================
+                
+                OneTimeFeePanel.fm_fees_oneTime_total_fee_text.setText(GeneralMethods.formatWithComma(tot_fee));
                 OneTimeFeePanel.fm_fees_oneTime_total_paid_text
                         .setText(GeneralMethods.formatWithComma(totalPaidNonCheque));
 
@@ -860,150 +784,6 @@ public class Fees_Management extends javax.swing.JPanel {
 
                 OneTimeFeePanel.fm_fees_oneTime_final_balance_text
                         .setText(GeneralMethods.formatWithComma(finalBalance));
-//
-//                List<Object[]> list = dao.getInstallments(en_id);
-//                DefaultTableModel model2 = (DefaultTableModel) fm_fees_oneTime_table.getModel();
-//                model2.setRowCount(0);
-//
-//                // 1. Initialize counters
-//                double totalPaidNonCheque = 0;
-//                double totalChequePaid = 0;
-//
-//                for (Object[] row : list) {
-//                    int installmentNo = Integer.parseInt(row[0].toString());
-//                    Date paymentDate = (Date) row[1];
-//                    double amount = row[2] != null ? Double.parseDouble(row[2].toString()) : 0;
-//                    String paymentMethod = row[3] != null ? row[3].toString() : "";
-//                    String chequeStatus = row[4] != null ? row[4].toString() : "";
-//
-//                    // 2. Logic to separate Cheque vs Non-Cheque
-//                    if ("CHEQUE".equalsIgnoreCase(paymentMethod)) {
-//                        totalChequePaid += amount;
-//                    } else {
-//                        totalPaidNonCheque += amount;
-//                    }
-//
-//                    model2.addRow(new Object[]{
-//                        installmentNo,
-//                        sdf.format(paymentDate),
-//                        GeneralMethods.formatWithComma(amount),
-//                        paymentMethod,
-//                        chequeStatus
-//                    });
-//                }
-//
-              //// 3. Final Calculations (Assuming totalFee variable is already defined in your scope)
-//                double balanceBeforeCheque = tot_fee - totalPaidNonCheque;
-//                double finalBalance = balanceBeforeCheque - totalChequePaid;
-//
-//// 4. Update UI Fields
-//                OneTimeFeePanel.fm_fees_oneTime_total_paid_text.setText(GeneralMethods.formatWithComma(totalPaidNonCheque));
-//                OneTimeFeePanel.fm_fees_oneTime_balance_text.setText(GeneralMethods.formatWithComma(balanceBeforeCheque));
-//                OneTimeFeePanel.fm_fees_oneTime_cheque_amount_text.setText(GeneralMethods.formatWithComma(totalChequePaid));
-//                OneTimeFeePanel.fm_fees_oneTime_final_balance_text.setText(GeneralMethods.formatWithComma(finalBalance));
-
-
-// ******************************* SEPERATE *************************************************************************************===========
-                //     int tabIndex = OneTimeFeePanel.jTabbedPane1.getSelectedIndex();
-//                if (tabIndex == 0) {
-//
-                ////                    fm_fees_oneTime_total_fee_Textfield.setText(GeneralMethods.formatWithComma(tot_fee));
-////                    OneTimeFeePanel.fm_fees_oneTime_total_balance_Textfield.setText(GeneralMethods.formatWithComma(tot_bal));
-////
-////                    OneTimeFeePanel.fm_fees_oneTime_total_paid_Textfield.setText("");
-////                    OneTimeFeePanel.fm_fees_oneTime_chq_sum_Textfield.setText("");
-////                    OneTimeFeePanel.fm_fees_oneTime_chq_sum_bal_Textfield.setText("");
-////
-////                    OneTimeFeePanel.fm_fees_oneTime_total_paid_Textfield.requestFocus();
-////
-////                    // set pending cheque field
-////                    OneTimeFeePanel.fm_fees_oneTime_chq_sum_Textfield
-////                            .setText(GeneralMethods.formatWithComma(pendingCheque));
-////                    System.out.println("pendingCheque - " + pendingCheque);
-//
-//                    // calculate remaining balance
-//                    double balanceAfterCheque = tot_bal - pendingCheque;
-//
-//                    if (balanceAfterCheque < 0) {
-//                        balanceAfterCheque = 0;
-//                    }
-//
-//                    // set remaining balance field
-////                    OneTimeFeePanel.fm_fees_oneTime_chq_sum_bal_Textfield
-////                            .setText(GeneralMethods.formatWithComma(balanceAfterCheque));
-////                    OneTimeFeePanel.fm_fees_cheq_cheque_sum_bal_Textfield
-////                            .setText(GeneralMethods.formatWithComma(balanceAfterCheque));
-//
-//                } else if (tabIndex == 1) {
-////                    OneTimeFeePanel.fm_fees_cheq_full_fees_Textfield.setText(GeneralMethods.formatWithComma(tot_fee));
-////                    OneTimeFeePanel.fm_fees_cheq_cheque_remaining.setText(GeneralMethods.formatWithComma(tot_bal));
-////                    OneTimeFeePanel.fm_fees_cheq_cheque_amount.setText("");
-////
-////                    OneTimeFeePanel.fm_fees_cheq_cheque_number.requestFocus();
-//
-//                    // set pending cheque field
-////                    OneTimeFeePanel.fm_fees_cheq_cheque_sum_Textfield
-////                            .setText(GeneralMethods.formatWithComma(pendingCheque));
-////                    System.out.println("pendingCheque - " + pendingCheque);
-//
-//                    // calculate remaining balance
-//                    double balanceAfterCheque = tot_bal - pendingCheque;
-//
-//                    if (balanceAfterCheque < 0) {
-//                        balanceAfterCheque = 0;
-//                    }
-//
-//                    // set remaining balance field
-////                    OneTimeFeePanel.fm_fees_oneTime_chq_sum_bal_Textfield
-////                            .setText(GeneralMethods.formatWithComma(balanceAfterCheque));
-////                    OneTimeFeePanel.fm_fees_cheq_cheque_sum_bal_Textfield
-////                            .setText(GeneralMethods.formatWithComma(balanceAfterCheque));
-//                }
-
-//            StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
-//                List<Object[]> list = dao.getInstallments(en_id);
-//
-//                DefaultTableModel model2 = (DefaultTableModel) fm_fees_oneTime_table.getModel();
-//                model2.setRowCount(0);
-//
-//                for (Object[] row : list) {
-//
-//                    String paymentMethod = row[3] != null ? row[3].toString() : "";
-//                    String chequeStatus = row[4] != null ? row[4].toString() : "";
-//
-//                    model2.addRow(new Object[]{
-//                        row[0],
-//                        sdf.format(row[1]),
-//                        GeneralMethods.formatWithComma(GeneralMethods.parseCommaNumber(row[2].toString())),
-//                        paymentMethod,
-//                        chequeStatus
-//                    });
-//                }
-//                List<Object[]> list = dao.getInstallments(en_id);
-//
-//                DefaultTableModel model2 = (DefaultTableModel) fm_fees_oneTime_table.getModel();
-//                model2.setRowCount(0);
-//
-//                for (Object[] row : list) {
-//
-//                    int installmentNo = Integer.parseInt(row[0].toString());
-//
-//                    Date paymentDate = (Date) row[1];
-//
-//                    double amount = row[2] != null ? Double.parseDouble(row[2].toString()) : 0;
-//
-//                    String paymentMethod = row[3] != null ? row[3].toString() : "";
-//
-//                    String chequeStatus = row[4] != null ? row[4].toString() : "";
-//
-//                    model2.addRow(new Object[]{
-//                        installmentNo,
-//                        sdf.format(paymentDate),
-//                        GeneralMethods.formatWithComma(amount),
-//                        paymentMethod,
-//                        chequeStatus
-//                    });
-//                }
 
             } else if (check.equalsIgnoreCase("MONTHLY")) {
 
@@ -1021,54 +801,18 @@ public class Fees_Management extends javax.swing.JPanel {
                 int rowCount = fee_install_table.getRowCount();
 //
                 double cal_sum = tot_fee / rowCount;
-                //  MonthlyFeePanel.mm_fees_Monthly_total_fee_Textfield.setText(GeneralMethods.formatWithComma(cal_sum));
-//                    MonthlyFeePanel.mm_fees_Monthly_total_balance_Textfield.setText(GeneralMethods.formatWithComma(tot_bal));
-//
-//                    System.out.println("tot_fee - " + tot_fee + " = rowCount - " + rowCount);
-//
-//                    MonthlyFeePanel.mm_fees_Monthly_fee_cal_Textfield.requestFocus();
-//                    MonthlyFeePanel.mm_fees_Monthly_fee_cal_Textfield.selectAll();
-//
-//                    SwingUtilities.invokeLater(() -> {
-//
-                monthlyFeePanel.updateMonthlySummaryFields(
-                        selectedEnrollmentId,
-                        MonthlyFeePanel.mm_fees_monthly_table,
-                        MonthlyFeePanel.mm_fees_Monthly_tot_paid_months_Textfield,
-                        MonthlyFeePanel.mm_fees_Monthly_tot_paid_amount_Textfield,
-                        MonthlyFeePanel.mm_fees_Monthly_tot_pending_months_Textfield,
-                        cal_sum
-                );
-//
-//                    });
-//
-//                } else if (tabIndex == 1) {
-//
-//                    int rowCount = fee_install_table.getRowCount();
-//
-//                    double cal_sum = tot_fee / rowCount;
-//                    MonthlyFeePanel.fm_fees_cheq_full_fees_Textfield.setText(GeneralMethods.formatWithComma(cal_sum));
-//                    MonthlyFeePanel.mm_fees_cheq_cheque_remaining.setText(GeneralMethods.formatWithComma(tot_bal));
-//
-//                    System.out.println("tot_fee - " + tot_fee + " = rowCount - " + rowCount);
-//
-//                    MonthlyFeePanel.fm_fees_cheq_full_fees_cal_Textfield.requestFocus();
-//                    MonthlyFeePanel.fm_fees_cheq_full_fees_cal_Textfield.selectAll();
-//
-//                    SwingUtilities.invokeLater(() -> {
-//
-//                        monthlyFeePanel.updateMonthlySummaryFields(
-//                                selectedEnrollmentId,
-//                                MonthlyFeePanel.mm_fees_monthly_table,
-//                                MonthlyFeePanel.mm_fees_Monthly_tot_paid_months_Textfield,
-//                                MonthlyFeePanel.mm_fees_Monthly_tot_paid_amount_Textfield,
-//                                MonthlyFeePanel.mm_fees_Monthly_tot_pending_months_Textfield
-//                        );
-//
-//                    });
-//
-//                }
+                //
+                //                monthlyFeePanel.updateMonthlySummaryFields(
+                //                        selectedEnrollmentId,
+                //                        MonthlyFeePanel.mm_fees_monthly_table,
+                //                        MonthlyFeePanel.mm_fees_Monthly_tot_paid_months_Textfield,
+                //                        MonthlyFeePanel.mm_fees_Monthly_tot_paid_amount_Textfield,
+                //                        MonthlyFeePanel.mm_fees_Monthly_tot_pending_months_Textfield,
+                //                        cal_sum
+                //                );
 
+                monthlyFeePanel.loadMonthCountsFromTableWithCheque(Integer.parseInt(model.getValueAt(fm_fees_course_table.getSelectedRow(), 11).toString()));
+                
             }
 
             admis_Fees = GeneralMethods.parseCommaNumber(model.getValueAt(fm_fees_course_table.getSelectedRow(), 6).toString());
@@ -1106,7 +850,6 @@ public class Fees_Management extends javax.swing.JPanel {
             MonthlyFeePanel.mm_fees_Monthly_tot_totPaid_Textfield.setText("");
             MonthlyFeePanel.mm_fees_Monthly_tot_pending_months_Textfield.setText("");
             MonthlyFeePanel.mm_fees_Monthly_tot_pending_balancee_Textfield.setText("");
-            MonthlyFeePanel.mm_fees_Monthly_fee_note_Textarea.setText("");
 
             admis_Fees = 0.0;
             selectedStudentIds = 0;

@@ -2109,16 +2109,17 @@ public class StudentFeeInstallmentsDAO {
         public int startMonth;
         public int endYear;
         public int endMonth;
+        public double baseMonthlyFee;
 
-        public int monthlyFee;
+        // 🔥 NEW (core data from fee_adjustment)
+        public Map<String, Double> monthlyFeeMap = new HashMap<>();
+        public Map<String, Double> paidMap = new HashMap<>();
+        public Map<String, Double> adjustmentMap = new HashMap<>();
+        public Map<String, Double> creditMap = new HashMap<>();
+        public Map<String, String> adjustmentStatusMap = new HashMap<>();
 
-        public Set<String> paidMonths = new HashSet<>();
-        public Map<String, Integer> monthAmountMap = new HashMap<>();
-
+        // ✅ Keep cheque status
         public Map<String, String> chequeStatusMap = new HashMap<>();
-
-        // 🔥 NEW
-        public Map<String, String> paymentTypeMap = new HashMap<>();
     }
 
     public MonthDataDTO getMonthData(int enrollmentId) {
@@ -2136,7 +2137,9 @@ public class StudentFeeInstallmentsDAO {
                     + "FROM course_enrollment ce "
                     + "JOIN course c ON ce.course_id = c.course_id "
                     + "WHERE ce.enrollment_id = ?"
-            ).setParameter(1, enrollmentId).getSingleResult();
+            )
+                    .setParameter(1, enrollmentId)
+                    .getSingleResult();
 
             dto.startYear = ((Number) course[0]).intValue();
             dto.startMonth = ((Number) course[1]).intValue();
@@ -2144,14 +2147,12 @@ public class StudentFeeInstallmentsDAO {
             dto.endMonth = ((Number) course[3]).intValue();
 
             // =====================================================
-            // 2. INSTALLMENTS DATA (AMOUNT + TYPE)
-            // =====================================================
+// 2. LOAD FROM fee_adjustment (ONLY fee + adjustment)
+// =====================================================
             List<Object[]> list = em.createNativeQuery(
-                    "SELECT month_for, amount_paid, payment_type "
-                    + "FROM student_fee_installments "
-                    + "WHERE enrollment_id = ? "
-                    + "AND status = 1 "
-                    + "AND month_for IS NOT NULL"
+                    "SELECT month_for, monthly_fee, adjustment_amount, adjustment_status "
+                    + "FROM fee_adjustment "
+                    + "WHERE enrollment_id = ? AND status = 1"
             )
                     .setParameter(1, enrollmentId)
                     .getResultList();
@@ -2159,17 +2160,40 @@ public class StudentFeeInstallmentsDAO {
             for (Object[] row : list) {
 
                 String month = row[0].toString();
-                int amount = ((Number) row[1]).intValue();
-                String type = row[2] != null ? row[2].toString() : "";
 
-                dto.monthAmountMap.put(month,
-                        dto.monthAmountMap.getOrDefault(month, 0) + amount);
+                double monthlyFee = row[1] != null ? ((Number) row[1]).doubleValue() : 0;
+                double adjustment = row[2] != null ? ((Number) row[2]).doubleValue() : 0;
+                String status = row[3] != null ? row[3].toString() : "";
 
-                dto.paymentTypeMap.put(month, type);
+                dto.monthlyFeeMap.put(month, monthlyFee);
+                dto.adjustmentMap.put(month, adjustment);
+                dto.adjustmentStatusMap.put(month, status);
             }
 
             // =====================================================
-            // 3. CHEQUE STATUS (ROUND ONLY)
+// 3. LOAD PAID FROM student_fee_installments
+// =====================================================
+            List<Object[]> paidRows = em.createNativeQuery(
+                    "SELECT month_for, COALESCE(SUM(amount_paid),0) "
+                    + "FROM student_fee_installments "
+                    + "WHERE enrollment_id=? "
+                    + "AND status=1 "
+                    + "AND month_for IS NOT NULL "
+                    + "AND payment_type NOT IN ('ZERO','DISCOUNT') "
+                    + "GROUP BY month_for"
+            )
+                    .setParameter(1, enrollmentId)
+                    .getResultList();
+
+            for (Object[] row : paidRows) {
+                dto.paidMap.put(
+                        row[0].toString(),
+                        ((Number) row[1]).doubleValue()
+                );
+            }
+
+            // =====================================================
+            // 4. CHEQUE STATUS (UNCHANGED)
             // =====================================================
             List<Object[]> chequeList = em.createNativeQuery(
                     "SELECT i.month_for, c.cheque_status "
@@ -2186,8 +2210,37 @@ public class StudentFeeInstallmentsDAO {
                     .getResultList();
 
             for (Object[] row : chequeList) {
-                dto.chequeStatusMap.put(row[0].toString(), row[1].toString());
+                dto.chequeStatusMap.put(
+                        row[0].toString(),
+                        row[1] != null ? row[1].toString() : ""
+                );
             }
+
+            // =====================================================
+            // 5. BASE MONTHLY FEE
+            // =====================================================
+            Object[] feeData = (Object[]) em.createNativeQuery(
+                    "SELECT ce.fee, c.enrol_year, c.enrol_month, c.comp_year, c.comp_month "
+                    + "FROM course_enrollment ce "
+                    + "JOIN course c ON ce.course_id = c.course_id "
+                    + "WHERE ce.enrollment_id = ?"
+            )
+                    .setParameter(1, enrollmentId)
+                    .getSingleResult();
+
+            double totalFee = feeData[0] != null ? ((Number) feeData[0]).doubleValue() : 0;
+
+            int sy = ((Number) feeData[1]).intValue();
+            int sm = ((Number) feeData[2]).intValue();
+            int ey = ((Number) feeData[3]).intValue();
+            int emn = ((Number) feeData[4]).intValue();
+
+            int totalMonths = ((ey - sy) * 12) + (emn - sm + 1);
+            if (totalMonths <= 0) {
+                totalMonths = 1;
+            }
+
+            dto.baseMonthlyFee = totalFee / totalMonths;
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -2197,6 +2250,121 @@ public class StudentFeeInstallmentsDAO {
 
         return dto;
     }
+
+//    public MonthDataDTO getMonthData(int enrollmentId) {
+//
+//        EntityManager em = HibernateConfig.getEntityManager();
+//        MonthDataDTO dto = new MonthDataDTO();
+//
+//        try {
+//
+//            // =====================================================
+//            // 1. COURSE RANGE
+//            // =====================================================
+//            Object[] course = (Object[]) em.createNativeQuery(
+//                    "SELECT c.enrol_year, c.enrol_month, c.comp_year, c.comp_month "
+//                    + "FROM course_enrollment ce "
+//                    + "JOIN course c ON ce.course_id = c.course_id "
+//                    + "WHERE ce.enrollment_id = ?"
+//            )
+//                    .setParameter(1, enrollmentId)
+//                    .getSingleResult();
+//
+//            dto.startYear = ((Number) course[0]).intValue();
+//            dto.startMonth = ((Number) course[1]).intValue();
+//            dto.endYear = ((Number) course[2]).intValue();
+//            dto.endMonth = ((Number) course[3]).intValue();
+//
+//            // =====================================================
+//            // 2. LOAD FROM fee_adjustment (MAIN SOURCE)
+//            // =====================================================
+//            List<Object[]> list = em.createNativeQuery(
+//                    "SELECT month_for, monthly_fee, paid_amount, "
+//                    + "adjustment_amount, credit_amount, adjustment_status "
+//                    + "FROM fee_adjustment "
+//                    + "WHERE enrollment_id = ? AND status = 1"
+//            )
+//                    .setParameter(1, enrollmentId)
+//                    .getResultList();
+//
+//            for (Object[] row : list) {
+//
+//                String month = row[0].toString();
+//
+//                double monthlyFee = row[1] != null ? ((Number) row[1]).doubleValue() : 0;
+//                double paid = row[2] != null ? ((Number) row[2]).doubleValue() : 0;
+//                double adjustment = row[3] != null ? ((Number) row[3]).doubleValue() : 0;
+//                double credit = row[4] != null ? ((Number) row[4]).doubleValue() : 0;
+//                String status = row[5] != null ? row[5].toString() : "";
+//
+//                dto.monthlyFeeMap.put(month, monthlyFee);
+//                dto.paidMap.put(month, paid);
+//                dto.adjustmentMap.put(month, adjustment);
+//                dto.creditMap.put(month, credit);
+//                dto.adjustmentStatusMap.put(month, status);
+//            }
+//
+//            // =====================================================
+//            // 3. CHEQUE STATUS (KEEP YOUR EXISTING LOGIC)
+//            // =====================================================
+//            List<Object[]> chequeList = em.createNativeQuery(
+//                    "SELECT i.month_for, c.cheque_status "
+//                    + "FROM student_fee_installments i "
+//                    + "JOIN student_fee_cheque_details c "
+//                    + "  ON c.reference_id = i.student_fee_round_payment_master_id "
+//                    + "  AND c.reference_type='ROUND' "
+//                    + "  AND c.category='STUDENT' "
+//                    + "  AND c.status=1 "
+//                    + "WHERE i.enrollment_id=? "
+//                    + "AND i.status=1"
+//            )
+//                    .setParameter(1, enrollmentId)
+//                    .getResultList();
+//
+//            // =====================================================
+    //// 🔥 BASE MONTHLY FEE (FROM ENROLLMENT)
+//// =====================================================
+//            Object feeObj = em.createNativeQuery(
+//                    "SELECT ce.fee, c.enrol_year, c.enrol_month, c.comp_year, c.comp_month "
+//                    + "FROM course_enrollment ce "
+//                    + "JOIN course c ON ce.course_id = c.course_id "
+//                    + "WHERE ce.enrollment_id = ?"
+//            )
+//                    .setParameter(1, enrollmentId)
+//                    .getSingleResult();
+//
+//            Object[] feeData = (Object[]) feeObj;
+//
+//            double totalFee = feeData[0] != null ? ((Number) feeData[0]).doubleValue() : 0;
+//
+//            int sy = ((Number) feeData[1]).intValue();
+//            int sm = ((Number) feeData[2]).intValue();
+//            int ey = ((Number) feeData[3]).intValue();
+//            int emn = ((Number) feeData[4]).intValue();
+//
+//            int totalMonths = ((ey - sy) * 12) + (emn - sm + 1);
+//            if (totalMonths <= 0) {
+//                totalMonths = 1;
+//            }
+//
+//            dto.baseMonthlyFee = totalFee / totalMonths;
+//
+//            for (Object[] row : chequeList) {
+//                dto.chequeStatusMap.put(
+//                        row[0].toString(),
+//                        row[1] != null ? row[1].toString() : ""
+//                );
+//            }
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        } finally {
+//            em.close();
+//        }
+//
+//        return dto;
+//    }
+
 //    public class MonthDataDTO {
 //
 //        public int startYear;
@@ -2204,46 +2372,27 @@ public class StudentFeeInstallmentsDAO {
 //        public int endYear;
 //        public int endMonth;
 //
-//        public int monthlyFee; // ✅ NEW
+//        public int monthlyFee;
 //
 //        public Set<String> paidMonths = new HashSet<>();
 //        public Map<String, Integer> monthAmountMap = new HashMap<>();
+//
 //        public Map<String, String> chequeStatusMap = new HashMap<>();
+//
+//        // 🔥 NEW
+//        public Map<String, String> paymentTypeMap = new HashMap<>();
 //    }
 //
 //    public MonthDataDTO getMonthData(int enrollmentId) {
+//
 //        EntityManager em = HibernateConfig.getEntityManager();
 //        MonthDataDTO dto = new MonthDataDTO();
 //
 //        try {
-//            // ====================================================================
-//            // 1. CHEQUE STATUS MAP (FIXED: Handles both Direct and Round Cheques)
-//            // ====================================================================
-//            String chequeSql = "SELECT i.month_for, "
-//                    + "COALESCE(c_dir.cheque_status, c_rnd.cheque_status) as final_status "
-//                    + "FROM student_fee_installments i "
-//                    + "LEFT JOIN student_fee_cheque_details c_dir "
-//                    + "  ON c_dir.student_fee_installments_id = i.student_fee_installments_id AND c_dir.status = 1 "
-//                    + "LEFT JOIN student_fee_cheque_details c_rnd "
-//                    + "  ON c_rnd.reference_id = i.student_fee_round_payment_master_id "
-//                    + "  AND c_rnd.reference_type = 'ROUND' AND c_rnd.status = 1 "
-//                    + "WHERE i.enrollment_id = ? AND i.status = 1 "
-//                    + "AND (c_dir.cheque_status IS NOT NULL OR c_rnd.cheque_status IS NOT NULL)";
 //
-//            List<Object[]> chequeList = em.createNativeQuery(chequeSql)
-//                    .setParameter(1, enrollmentId)
-//                    .getResultList();
-//
-//            for (Object[] row : chequeList) {
-//                if (row[0] != null) {
-//                    // If the status is 'PENDING', it will be stored here
-//                    dto.chequeStatusMap.put(row[0].toString(), row[1].toString());
-//                }
-//            }
-//
-//            // ============================
-//            // 2. COURSE RANGE (Same as before)
-//            // ============================
+//            // =====================================================
+//            // 1. COURSE RANGE
+//            // =====================================================
 //            Object[] course = (Object[]) em.createNativeQuery(
 //                    "SELECT c.enrol_year, c.enrol_month, c.comp_year, c.comp_month "
 //                    + "FROM course_enrollment ce "
@@ -2256,19 +2405,50 @@ public class StudentFeeInstallmentsDAO {
 //            dto.endYear = ((Number) course[2]).intValue();
 //            dto.endMonth = ((Number) course[3]).intValue();
 //
-//            // ============================
-//            // 3. SUM INSTALLMENTS
-//            // ============================
+//            // =====================================================
+//            // 2. INSTALLMENTS DATA (AMOUNT + TYPE)
+//            // =====================================================
 //            List<Object[]> list = em.createNativeQuery(
-//                    "SELECT month_for, amount_paid "
+//                    "SELECT month_for, amount_paid, payment_type "
 //                    + "FROM student_fee_installments "
-//                    + "WHERE enrollment_id = ? AND status = 1 AND month_for IS NOT NULL"
-//            ).setParameter(1, enrollmentId).getResultList();
+//                    + "WHERE enrollment_id = ? "
+//                    + "AND status = 1 "
+//                    + "AND month_for IS NOT NULL"
+//            )
+//                    .setParameter(1, enrollmentId)
+//                    .getResultList();
 //
 //            for (Object[] row : list) {
-//                String monthFor = row[0].toString();
+//
+//                String month = row[0].toString();
 //                int amount = ((Number) row[1]).intValue();
-//                dto.monthAmountMap.put(monthFor, dto.monthAmountMap.getOrDefault(monthFor, 0) + amount);
+//                String type = row[2] != null ? row[2].toString() : "";
+//
+//                dto.monthAmountMap.put(month,
+//                        dto.monthAmountMap.getOrDefault(month, 0) + amount);
+//
+//                dto.paymentTypeMap.put(month, type);
+//            }
+//
+//            // =====================================================
+//            // 3. CHEQUE STATUS (ROUND ONLY)
+//            // =====================================================
+//            List<Object[]> chequeList = em.createNativeQuery(
+//                    "SELECT i.month_for, c.cheque_status "
+//                    + "FROM student_fee_installments i "
+//                    + "JOIN student_fee_cheque_details c "
+//                    + "  ON c.reference_id = i.student_fee_round_payment_master_id "
+//                    + "  AND c.reference_type='ROUND' "
+//                    + "  AND c.category='STUDENT' "
+//                    + "  AND c.status=1 "
+//                    + "WHERE i.enrollment_id=? "
+//                    + "AND i.status=1"
+//            )
+//                    .setParameter(1, enrollmentId)
+//                    .getResultList();
+//
+//            for (Object[] row : chequeList) {
+//                dto.chequeStatusMap.put(row[0].toString(), row[1].toString());
 //            }
 //
 //        } catch (Exception e) {
@@ -2276,9 +2456,9 @@ public class StudentFeeInstallmentsDAO {
 //        } finally {
 //            em.close();
 //        }
+//
 //        return dto;
 //    }
-
     public int getPendingChequeAmount(int enrollmentId) {
 
         EntityManager em = HibernateConfig.getEntityManager();

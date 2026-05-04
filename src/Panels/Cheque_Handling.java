@@ -389,11 +389,12 @@ public class Cheque_Handling extends javax.swing.JPanel {
                                     em.createNativeQuery(
                                             "UPDATE student_fee_payments "
                                             + "SET total_paid = total_paid - ?, "
-                                            + "total_balance = total_fee - total_paid "
+                                            + "total_balance = total_balance + ? "
                                             + "WHERE enrollment_id=?"
                                     )
                                             .setParameter(1, paid)
-                                            .setParameter(2, targetEnrollmentId)
+                                            .setParameter(2, paid)
+                                            .setParameter(3, targetEnrollmentId)
                                             .executeUpdate();
                                 } // ADDITIONAL REVERSE
                                 else if (type.equalsIgnoreCase("ADDITIONAL")) {
@@ -510,11 +511,12 @@ public class Cheque_Handling extends javax.swing.JPanel {
                     em.createNativeQuery(
                             "UPDATE student_fee_payments "
                             + "SET total_paid = total_paid + ?, "
-                            + "total_balance = total_fee - total_paid "
+                            + "total_balance = total_balance - ? "
                             + "WHERE enrollment_id=?"
                     )
                             .setParameter(1, paid)
-                            .setParameter(2, targetEnrollmentId)
+                            .setParameter(2, paid)
+                            .setParameter(3, targetEnrollmentId)
                             .executeUpdate();
 
                     // ✅ FIX: status update

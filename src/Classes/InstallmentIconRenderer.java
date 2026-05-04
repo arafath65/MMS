@@ -33,28 +33,13 @@ public class InstallmentIconRenderer extends TableGradientCell {
 
         String paymentMethod = String.valueOf(table.getValueAt(row, 3));
         String paymentType = String.valueOf(table.getValueAt(row, 4));
-        String status = String.valueOf(table.getValueAt(row, 5));
+      //  String status = String.valueOf(table.getValueAt(row, 5));
 
         label.setIcon(null);
 
-        // =========================
-        // ZERO → GREY
-        // =========================
-        if ("ZERO".equalsIgnoreCase(paymentType)) {
-            label.setIcon(chequeIconGrey);
+         if ("CHEQUE".equalsIgnoreCase(paymentMethod)) {
 
-            // =========================
-            // DISCOUNT → BLUE
-            // =========================
-        } else if ("DISCOUNT".equalsIgnoreCase(paymentType)) {
-            label.setIcon(chequeIconBlue);
-
-            // =========================
-            // CHEQUE
-            // =========================
-        } else if ("CHEQUE".equalsIgnoreCase(paymentMethod)) {
-
-            if ("CLEARED".equalsIgnoreCase(status)) {
+            if ("CLEARED".equalsIgnoreCase("")) {
                 label.setIcon(chequeIconGreen);
             } else {
                 label.setIcon(chequeIconYellow);
@@ -72,27 +57,5 @@ public class InstallmentIconRenderer extends TableGradientCell {
         return label;
     }
 
-//    @Override
-//    public Component getTableCellRendererComponent(JTable table, Object value,
-//            boolean isSelected, boolean hasFocus, int row, int column) {
-//
-//        JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-//
-//        String paymentMethod = String.valueOf(table.getValueAt(row, 3));
-//        String chequeStatus = String.valueOf(table.getValueAt(row, 4));
-//
-//        label.setIcon(null);
-//
-//        if ("CHEQUE".equalsIgnoreCase(paymentMethod) && "PENDING".equalsIgnoreCase(chequeStatus)) {
-//            label.setIcon(chequeIcon);
-//            label.setIconTextGap(8);
-//        }else if ("CASH".equalsIgnoreCase(paymentMethod) || "CARD".equalsIgnoreCase(paymentMethod)) {
-//            label.setIcon(chequeIcon2);
-//            label.setIconTextGap(8);
-//        }
-//
-//        label.setHorizontalTextPosition(SwingConstants.LEFT);
-//
-//        return label;
-//    }
+
 }
