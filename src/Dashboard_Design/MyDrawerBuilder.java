@@ -86,10 +86,16 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
             .subMenu("Batch Student List")
             .subMenu("Contact Details: Batch-wise")
             .subMenu("Master Student Directory")
+            .subMenu("Students Due Report")
             ),
             
             new Item("Inventory", "invetory.svg")
-            .subMenu("Add Inventory"),
+            .subMenu("Add Inventory")
+            .subMenu(new Item("Reports")
+            .subMenu("Supplier List") 
+            .subMenu("Stock Movement") 
+            .subMenu("Low Stock") 
+            ),
             
             new Item("Accounts", "accountsvg.svg")
             .subMenu("Cheque Handling"),
@@ -163,11 +169,39 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
                     Dashboard.Dashboard.Main_Lable.setText("STUDENT DIRECTORY");
                     return;
                 }
+                
+                // STUDENT MANAGEMENT -> Reports -> Students Due Report
+                if (index.length == 3 && index[0] == 1 && index[1] == 3 && index[2] == 3) {
+                    dashboard.showPanel("STUDENT_WISE_DUE");
+                    Dashboard.Dashboard.Main_Lable.setText("STUDENTS DUE REPORT");
+                    return;
+                }
 
-                // Accounts -> CHEQUE HANDLING
+                // Inventory -> Inventory -> Add Inventory
                 if (index.length == 2 && index[0] == 2 && index[1] == 0) {
                     dashboard.showPanel("INVENTORY");
                     Dashboard.Dashboard.Main_Lable.setText("ADD INVENTORY");
+                    return;
+                }
+                
+                // Inventory -> Inventory -> Reports -> Supplier List
+                if (index.length == 3 && index[0] == 2 && index[1] == 1 && index[2] == 0) {
+                    dashboard.showPanel("SUPPLIER_LIST");
+                    Dashboard.Dashboard.Main_Lable.setText("SUPPLIER LIST");
+                    return;
+                }
+                
+                // Inventory -> Inventory -> Reports -> Stock Movement
+                if (index.length == 3 && index[0] == 2 && index[1] == 1 && index[2] == 1) {
+                    dashboard.showPanel("STOCK_MOVEMENT");
+                    Dashboard.Dashboard.Main_Lable.setText("STOCK MOVEMENT");
+                    return;
+                }
+                
+                // Inventory -> Inventory -> Reports -> Low Stock
+                if (index.length == 3 && index[0] == 2 && index[1] == 1 && index[2] == 2) {
+                    dashboard.showPanel("LOW_STOCK");
+                    Dashboard.Dashboard.Main_Lable.setText("LOW STOCK");
                     return;
                 }
 

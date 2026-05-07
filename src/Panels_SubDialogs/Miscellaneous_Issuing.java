@@ -711,7 +711,7 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
             )
                     .setParameter(1, item_id)
                     .setParameter(2, selectedStudentIds)
-                    .setParameter(3, finalTotal)
+                    .setParameter(3, qty)
                     .setParameter(4, username)
                     .executeUpdate();
 

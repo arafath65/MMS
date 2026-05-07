@@ -12,6 +12,10 @@ import Panels.Student_Management;
 import Panels_Reports.Batch_Class_Student_Contact;
 import Panels_Reports.Batch_Class_Student_report;
 import Panels_Reports.Entire_Students_Report;
+import Panels_Reports.Low_Stock;
+import Panels_Reports.Stock_Movement;
+import Panels_Reports.Student_Wise_Due;
+import Panels_Reports.Suppliers_List;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
@@ -41,6 +45,10 @@ public class Dashboard extends javax.swing.JFrame {
     Batch_Class_Student_report batch_Class_Student_report;
     Batch_Class_Student_Contact batch_Class_Student_Contact;
     Entire_Students_Report entire_Students_Report;
+    Student_Wise_Due student_Wise_Due;
+    Suppliers_List supplier_List;
+    Stock_Movement stock_Movement;
+    Low_Stock low_Stock;
 
     String username;
     String role;
@@ -71,6 +79,10 @@ public class Dashboard extends javax.swing.JFrame {
         batch_Class_Student_report = new Batch_Class_Student_report(username, role);
         batch_Class_Student_Contact = new Batch_Class_Student_Contact(username, role);
         entire_Students_Report = new Entire_Students_Report(username, role);
+        student_Wise_Due = new Student_Wise_Due(username, role);
+        supplier_List = new Suppliers_List(username, role);
+        stock_Movement = new Stock_Movement(username, role);
+        low_Stock = new Low_Stock(username, role);
 
         // ADD PANEL TO CARDLAYOUT (ONLY ONCE)
         main_panels.add(dashboard_Panel, "DASHBOARD_PANEL");
@@ -86,6 +98,10 @@ public class Dashboard extends javax.swing.JFrame {
         main_panels.add(batch_Class_Student_report, "BATCH/CLASS_STUDENT_REPORT");
         main_panels.add(batch_Class_Student_Contact, "BATCH/CLASS_STUDENT_CONTACT");
         main_panels.add(entire_Students_Report, "ENTIRE_STUDENTS_REPORT");
+        main_panels.add(student_Wise_Due, "STUDENT_WISE_DUE");
+        main_panels.add(supplier_List, "SUPPLIER_LIST");
+        main_panels.add(stock_Movement, "STOCK_MOVEMENT");
+        main_panels.add(low_Stock, "LOW_STOCK");
 
         showPanel("DASHBOARD_PANEL"); // default
 
