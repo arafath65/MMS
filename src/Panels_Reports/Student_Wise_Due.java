@@ -274,6 +274,7 @@ public class Student_Wise_Due extends javax.swing.JPanel {
                     + "IFNULL(SUM(sfp.total_paid),0), "
                     // 🔥 TOTAL BALANCE (ALL ENROLLMENTS)
                     + "IFNULL(SUM(sfp.total_balance),0), "
+                    + "IFNULL(SUM(sfp.total_fee),0), "
                     // 🔥 CHEQUE (ALL ENROLLMENTS)
                     + "IFNULL((SELECT SUM(cd.cheque_amount) "
                     + "FROM student_fee_cheque_details cd "
@@ -297,7 +298,14 @@ public class Student_Wise_Due extends javax.swing.JPanel {
                     + "FROM student_additional_fee_payments p "
                     + "INNER JOIN student_additional_fees saf2 "
                     + "ON p.student_additional_fees_id = saf2.student_additional_fees_id "
-                    + "WHERE saf2.student_id = s.student_id AND p.status=1),0) "
+                    + "WHERE saf2.student_id = s.student_id AND p.status=1),0), "
+                    // 🔥 ELIMINATION STATUS
+                    + "(SELECT se.eliminate_type "
+                    + "FROM student_eliminates se "
+                    + "WHERE se.student_id = s.student_id "
+                    + "AND se.status = 1 "
+                    + "ORDER BY se.student_eliminates_id DESC "
+                    + "LIMIT 1) "
                     + "FROM student_fee_payments sfp "
                     + "INNER JOIN course_enrollment ce ON sfp.enrollment_id = ce.enrollment_id "
                     + "INNER JOIN student s ON sfp.student_id = s.student_id "
@@ -339,8 +347,6 @@ public class Student_Wise_Due extends javax.swing.JPanel {
             // ================= LOAD TABLE =================
             for (Object[] row : list) {
 
-                int studentId = ((Number) row[0]).intValue();
-
                 String admissionNo = row[1] != null ? row[1].toString() : "";
                 String name = row[2] != null ? row[2].toString() : "";
                 String contact = row[3] != null ? row[3].toString() : "";
@@ -348,13 +354,28 @@ public class Student_Wise_Due extends javax.swing.JPanel {
 
                 double totalPaid = ((Number) row[5]).doubleValue();
                 double totalBalance = ((Number) row[6]).doubleValue();
-                double cheque = ((Number) row[7]).doubleValue();
-                double adjustment = ((Number) row[8]).doubleValue();
-                double credit = ((Number) row[9]).doubleValue();
-                double additionalBalance = ((Number) row[10]).doubleValue();
+                double totalFee = ((Number) row[7]).doubleValue();
+
+                double cheque = ((Number) row[8]).doubleValue();
+                double adjustment = ((Number) row[9]).doubleValue();
+                double credit = ((Number) row[10]).doubleValue();
+                double additionalBalance = ((Number) row[11]).doubleValue();
+
+                String eliminateType = row[12] != null
+                        ? row[12].toString()
+                        : "ACTIVE";
 
                 double totalPaidWithCheque = totalPaid + cheque;
+                // double finalDue = totalBalance + additionalBalance;
                 double finalDue = totalBalance + additionalBalance;
+
+                if (!"ACTIVE".equalsIgnoreCase(eliminateType)) {
+                    finalDue = 0;
+                }
+
+                swd_st_con_course_fee_text.setText(
+                        GeneralMethods.formatWithComma(totalFee)
+                );
 
                 model.addRow(new Object[]{
                     rowNo++,
@@ -368,7 +389,8 @@ public class Student_Wise_Due extends javax.swing.JPanel {
                     GeneralMethods.formatWithComma(additionalBalance),
                     GeneralMethods.formatWithComma(finalDue),
                     contact,
-                    fatherContact
+                    fatherContact,
+                    eliminateType
                 });
             }
 
@@ -380,498 +402,6 @@ public class Student_Wise_Due extends javax.swing.JPanel {
             em.close();
         }
     }
-
-//    public void loadStudentsWithDue(JTable table,
-//            JComboBox<String> swd_st_con_batch_combo,
-//            JComboBox<String> swd_st_con_class_combo,
-//            int page) {
-//
-//        EntityManager em = HibernateConfig.getEntityManager();
-//
-//        try {
-//            DefaultTableModel model = (DefaultTableModel) table.getModel();
-//            model.setRowCount(0);
-//
-//            System.out.println("\n========== DEBUG START ==========");
-//
-//            // ===================== COURSE =====================
-//            String selectedBatch = swd_st_con_batch_combo.getSelectedItem() != null
-//                    ? swd_st_con_batch_combo.getSelectedItem().toString()
-//                    : "";
-//
-//            Integer courseId = null;
-//
-//            if (selectedBatch.contains("[") && selectedBatch.contains("]")) {
-//                courseId = Integer.parseInt(
-//                        selectedBatch.substring(
-//                                selectedBatch.lastIndexOf("[") + 1,
-//                                selectedBatch.lastIndexOf("]")
-//                        ).trim()
-//                );
-//            }
-//
-//            System.out.println("DEBUG → courseId = " + courseId);
-//
-//            // ===================== CLASS =====================
-//            String selectedClass = swd_st_con_class_combo.getSelectedItem() != null
-//                    ? swd_st_con_class_combo.getSelectedItem().toString()
-//                    : "";
-//
-//            boolean filterClass = selectedClass != null
-//                    && !selectedClass.trim().isEmpty()
-//                    && !selectedClass.equalsIgnoreCase("Select Class");
-//
-//            System.out.println("DEBUG → class = " + selectedClass);
-//
-//            int limit = 14;
-//            int offset = (page - 1) * limit;
-//
-//            // ===================== DATA QUERY =====================
-//            String dataSql = "SELECT "
-//                    + "sfp.student_id, "
-//                    + "sfp.enrollment_id, "
-//                    + "sfp.total_paid, "
-//                    + "sfp.total_balance, "
-//                    + "s.admission_no, "
-//                    + "s.full_name, "
-//                    + "s.contact_no, "
-//                    + "sp.father_contact "
-//                    + "FROM student_fee_payments sfp "
-//                    + "INNER JOIN course_enrollment ce ON sfp.enrollment_id = ce.enrollment_id "
-//                    + "INNER JOIN student s ON sfp.student_id = s.student_id "
-//                    + "LEFT JOIN student_parents sp ON s.student_parents_id = sp.student_parents_id "
-//                    + "WHERE sfp.total_balance > 0 "
-//                    + "AND sfp.status = 1 "
-//                    + "AND ce.status = 1 ";
-//
-//            if (courseId != null) {
-//                dataSql += "AND ce.course_id = ? ";
-//            }
-//
-//            if (filterClass) {
-//                dataSql += "AND ce.class_name = ? ";
-//            }
-//
-//            dataSql += "ORDER BY s.admission_no ASC LIMIT ? OFFSET ?";
-//
-//            System.out.println("DEBUG SQL → " + dataSql);
-//
-//            Query dataQuery = em.createNativeQuery(dataSql);
-//
-//            int paramIndex = 1;
-//
-//            if (courseId != null) {
-//                dataQuery.setParameter(paramIndex++, courseId);
-//            }
-//
-//            if (filterClass) {
-//                dataQuery.setParameter(paramIndex++, selectedClass);
-//            }
-//
-//            dataQuery.setParameter(paramIndex++, limit);
-//            dataQuery.setParameter(paramIndex, offset);
-//
-//            List<Object[]> list = dataQuery.getResultList();
-//
-//            System.out.println("DEBUG → DB rows count = " + list.size());
-//
-//            int rowNo = offset + 1;
-//
-//            // ===================== LOOP =====================
-//            for (Object[] row : list) {
-//
-//                int studentId = ((Number) row[0]).intValue();
-//                int enrollmentId = ((Number) row[1]).intValue();
-//
-//                double totalPaid = row[2] != null ? ((Number) row[2]).doubleValue() : 0;
-//                double totalBalance = row[3] != null ? ((Number) row[3]).doubleValue() : 0;
-//
-//                System.out.println("\n----- ROW START -----");
-//                System.out.println("studentId = " + studentId);
-//                System.out.println("enrollmentId = " + enrollmentId);
-//                System.out.println("DB totalPaid = " + totalPaid);
-//
-//                // ================= CHEQUE =================
-//                double chequeAmount = 0;
-//
-//                List<Integer> masterIds = em.createNativeQuery(
-//                        "SELECT DISTINCT m.student_fee_round_payment_master_id "
-//                        + "FROM student_fee_round_payment_master m "
-//                        + "INNER JOIN student_fee_round_payment_master_details d "
-//                        + "ON m.student_fee_round_payment_master_id = d.student_fee_round_payment_master_id "
-//                        + "WHERE m.student_id=? "
-//                        + "AND m.payment_mode='CHEQUE' "
-//                        + "AND m.status=1 "
-//                        + "AND d.enrollment_id=? "
-//                        + "AND d.status=1"
-//                )
-//                        .setParameter(1, studentId)
-//                        .setParameter(2, enrollmentId)
-//                        .getResultList();
-//
-//                System.out.println("masterIds = " + masterIds);
-//
-//                if (masterIds != null && !masterIds.isEmpty()) {
-//
-//                    String inClause = masterIds.toString().replace("[", "").replace("]", "");
-//
-//                    Object result = em.createNativeQuery(
-//                            "SELECT IFNULL(SUM(cheque_amount),0) "
-//                            + "FROM student_fee_cheque_details "
-//                            + "WHERE reference_type='ROUND' "
-//                            + "AND category='STUDENT' "
-//                            + "AND cheque_status='PENDING' "
-//                            + "AND reference_id IN (" + inClause + ")"
-//                    ).getSingleResult();
-//
-//                    chequeAmount = result != null ? ((Number) result).doubleValue() : 0;
-//                }
-//
-//                System.out.println("chequeAmount = " + chequeAmount);
-//
-//                // ================= ADJUSTMENT =================
-//                Object[] adjRow = (Object[]) em.createNativeQuery(
-//                        "SELECT IFNULL(SUM(adjustment_amount),0), IFNULL(SUM(credit_amount),0) "
-//                        + "FROM fee_adjustment WHERE student_id=? AND status=1"
-//                )
-//                        .setParameter(1, studentId)
-//                        .getSingleResult();
-//
-//                double totalAdjustment = ((Number) adjRow[0]).doubleValue();
-//                double totalCredit = ((Number) adjRow[1]).doubleValue();
-//
-//                System.out.println("adjustment = " + totalAdjustment);
-//                System.out.println("credit = " + totalCredit);
-//
-//                // ================= ADDITIONAL =================
-//                double totalAdditional = ((Number) em.createNativeQuery(
-//                        "SELECT IFNULL(SUM(amount),0) FROM student_additional_fees WHERE student_id=? AND status=1"
-//                ).setParameter(1, studentId).getSingleResult()).doubleValue();
-//
-//                double totalAdditionalPaid = ((Number) em.createNativeQuery(
-//                        "SELECT IFNULL(SUM(safp.amount_paid),0) "
-//                        + "FROM student_additional_fee_payments safp "
-//                        + "INNER JOIN student_additional_fees saf "
-//                        + "ON safp.student_additional_fees_id = saf.student_additional_fees_id "
-//                        + "WHERE saf.student_id=? AND safp.status=1"
-//                ).setParameter(1, studentId).getSingleResult()).doubleValue();
-//
-//                double additionalBalance = totalAdditional - totalAdditionalPaid;
-//                if (additionalBalance < 0) {
-//                    additionalBalance = 0;
-//                }
-//
-//                System.out.println("additionalBalance = " + additionalBalance);
-//
-//                double totalPaidWithCheque = totalPaid + chequeAmount;
-//
-//                System.out.println("FINAL totalPaidWithCheque = " + totalPaidWithCheque);
-//                System.out.println("FINAL totalBalance = " + (totalBalance + additionalBalance));
-//
-//                // ================= ADD ROW =================
-//                model.addRow(new Object[]{
-//                    rowNo++,
-//                    row[4],
-//                    row[5],
-//                    totalPaid,
-//                    chequeAmount,
-//                    totalPaidWithCheque,
-//                    totalAdjustment,
-//                    totalCredit,
-//                    additionalBalance,
-//                    totalBalance + additionalBalance,
-//                    row[6],
-//                    row[7]
-//                });
-//
-//                System.out.println("----- ROW END -----");
-//            }
-//
-//            System.out.println("========== DEBUG END ==========\n");
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        } finally {
-//            em.close();
-//        }
-//    }
-    // ******************** NO ALL STUDENT SEARCH. ONLY BATCH WISE
-//    public void loadStudentsWithDue(JTable table,
-//            JComboBox<String> swd_st_con_batch_combo,
-//            JComboBox<String> swd_st_con_class_combo,
-//            int page) {
-//
-//        EntityManager em = HibernateConfig.getEntityManager();
-//
-//        try {
-//            DefaultTableModel model = (DefaultTableModel) table.getModel();
-//            model.setRowCount(0);
-//
-//            // =====================================================
-//            // 🔥 GET COURSE ID FROM BATCH COMBO
-//            // Format = BatchName [courseId]
-//            // =====================================================
-//            String selectedBatch = swd_st_con_batch_combo.getSelectedItem() != null
-//                    ? swd_st_con_batch_combo.getSelectedItem().toString()
-//                    : "";
-//
-//            if (!selectedBatch.contains("[") || !selectedBatch.contains("]")) {
-//                return;
-//            }
-//
-//            int courseId = Integer.parseInt(
-//                    selectedBatch.substring(
-//                            selectedBatch.lastIndexOf("[") + 1,
-//                            selectedBatch.lastIndexOf("]")
-//                    ).trim()
-//            );
-//
-//            Object courseNameObj = em.createNativeQuery(
-//                    "SELECT course_name FROM course WHERE course_id=? AND status=1"
-//            )
-//                    .setParameter(1, courseId)
-//                    .getSingleResult();
-//
-//            String courseName = courseNameObj != null ? courseNameObj.toString() : "";
-//            swd_st_con_course_text.setText(courseName);
-//
-//            // =====================================================
-//            // 🔥 CLASS FILTER
-//            // =====================================================
-//            String selectedClass = swd_st_con_class_combo.getSelectedItem() != null
-//                    ? swd_st_con_class_combo.getSelectedItem().toString()
-//                    : "";
-//
-//            boolean filterClass = selectedClass != null
-//                    && !selectedClass.trim().isEmpty()
-//                    && !selectedClass.equalsIgnoreCase("Select Class");
-//
-//            int limit = 14;
-//            int offset = (page - 1) * limit;
-//
-//            // =====================================================
-//            // 🔥 COUNT QUERY
-//            // =====================================================
-//            String countSql = "SELECT COUNT(*) "
-//                    + "FROM student_fee_payments sfp "
-//                    + "INNER JOIN course_enrollment ce ON sfp.enrollment_id = ce.enrollment_id "
-//                    + "WHERE ce.course_id = ? "
-//                    + "AND sfp.total_balance > 0 "
-//                    + "AND sfp.status = 1 "
-//                    + "AND ce.status = 1 ";
-//
-//            if (filterClass) {
-//                countSql += "AND ce.class_name = ? ";
-//            }
-//
-//            Query countQuery = em.createNativeQuery(countSql);
-//            countQuery.setParameter(1, courseId);
-//
-//            if (filterClass) {
-//                countQuery.setParameter(2, selectedClass);
-//            }
-//
-//            int totalRows = ((Number) countQuery.getSingleResult()).intValue();
-//
-//            lbl_total_rows.setText("Total : " + totalRows + " Records");
-//
-//            int totalPages = (int) Math.ceil((double) totalRows / limit);
-//            pagination1.setPagegination(page, totalPages);
-//
-//            // =====================================================
-//            // 🔥 DATA QUERY
-//            // =====================================================
-//            String dataSql = "SELECT "
-//                    + "sfp.student_id, " // 0
-//                    + "sfp.enrollment_id, " // 1
-//                    + "sfp.total_paid, " // 2
-//                    + "sfp.total_balance, " // 3
-//                    + "s.admission_no, " // 4
-//                    + "s.full_name, " // 5
-//                    + "s.contact_no, " // 6
-//                    + "sp.father_contact " // 7
-//                    + "FROM student_fee_payments sfp "
-//                    + "INNER JOIN course_enrollment ce ON sfp.enrollment_id = ce.enrollment_id "
-//                    + "INNER JOIN student s ON sfp.student_id = s.student_id "
-//                    + "LEFT JOIN student_parents sp ON s.student_parents_id = sp.student_parents_id "
-//                    + "WHERE ce.course_id = ? "
-//                    + "AND sfp.total_balance > 0 "
-//                    + "AND sfp.status = 1 "
-//                    + "AND ce.status = 1 ";
-//
-//            if (filterClass) {
-//                dataSql += "AND ce.class_name = ? ";
-//            }
-//
-//            dataSql += "ORDER BY s.admission_no ASC LIMIT ? OFFSET ?";
-//
-//            Query dataQuery = em.createNativeQuery(dataSql);
-//            dataQuery.setParameter(1, courseId);
-//
-//            int paramIndex = 2;
-//
-//            if (filterClass) {
-//                dataQuery.setParameter(paramIndex++, selectedClass);
-//            }
-//
-//            dataQuery.setParameter(paramIndex++, limit);
-//            dataQuery.setParameter(paramIndex, offset);
-//
-//            List<Object[]> list = dataQuery.getResultList();
-//
-//            int rowNo = offset + 1;
-//
-//            // =====================================================
-//            // 🔥 LOAD TABLE
-//            // =====================================================
-//            for (Object[] row : list) {
-//
-//                int studentId = ((Number) row[0]).intValue();
-//                int enrollmentId = ((Number) row[1]).intValue();
-//
-//                double totalPaid = row[2] != null ? ((Number) row[2]).doubleValue() : 0;
-//                double totalBalance = row[3] != null ? ((Number) row[3]).doubleValue() : 0;
-//
-//                String admissionNo = row[4] != null ? row[4].toString() : "";
-//                String name = row[5] != null ? row[5].toString() : "";
-//                String contact = row[6] != null ? row[6].toString() : "";
-//                String fatherContact = row[7] != null ? row[7].toString() : "";
-//
-//                // =====================================================
-//                // 🔥 GET PENDING CHEQUE AMOUNT (PER STUDENT)
-//                // =====================================================
-//                double chequeAmount = 0;
-//
-//                List<Integer> masterIds = em.createNativeQuery(
-//                        "SELECT student_fee_round_payment_master_id "
-//                        + "FROM student_fee_round_payment_master "
-//                        + "WHERE student_id=? AND payment_mode='CHEQUE' AND status=1"
-//                )
-//                        .setParameter(1, studentId)
-//                        .getResultList();
-//
-//                if (masterIds != null && !masterIds.isEmpty()) {
-//
-//                    StringBuilder inClause = new StringBuilder();
-//
-//                    for (int i = 0; i < masterIds.size(); i++) {
-//                        inClause.append(masterIds.get(i));
-//                        if (i < masterIds.size() - 1) {
-//                            inClause.append(",");
-//                        }
-//                    }
-//
-//                    Object result = em.createNativeQuery(
-//                            "SELECT IFNULL(SUM(cheque_amount),0) "
-//                            + "FROM student_fee_cheque_details "
-//                            + "WHERE reference_type='ROUND' "
-//                            + "AND category='STUDENT' "
-//                            + "AND cheque_status='PENDING' "
-//                            + "AND reference_id IN (" + inClause.toString() + ")"
-//                    ).getSingleResult();
-//
-//                    chequeAmount = result != null
-//                            ? ((Number) result).doubleValue()
-//                            : 0;
-//                }
-//
-//                // =====================================================
-//                // 🔥 FETCH ADJUSTMENT + CREDIT (PER STUDENT)
-    //// =====================================================
-//                double totalAdjustment = 0;
-//                double totalCredit = 0;
-//
-//                Object[] adjRow = (Object[]) em.createNativeQuery(
-//                        "SELECT "
-//                        + "IFNULL(SUM(adjustment_amount),0), "
-//                        + "IFNULL(SUM(credit_amount),0) "
-//                        + "FROM fee_adjustment "
-//                        + "WHERE student_id=? AND status=1"
-//                )
-//                        .setParameter(1, studentId)
-//                        .getSingleResult();
-//
-//                if (adjRow != null) {
-//                    totalAdjustment = adjRow[0] != null ? ((Number) adjRow[0]).doubleValue() : 0;
-//                    totalCredit = adjRow[1] != null ? ((Number) adjRow[1]).doubleValue() : 0;
-//                }
-//
-//                // =====================================================
-//// 🔥 ADDITIONAL FEES BALANCE (PER STUDENT)
-//// =====================================================
-//                double totalAdditionalAmount = 0;
-//                double totalAdditionalPaid = 0;
-//                double additionalBalance = 0;
-//
-//// 1. Total Additional Fees
-//                Object totalAddObj = em.createNativeQuery(
-//                        "SELECT IFNULL(SUM(amount),0) "
-//                        + "FROM student_additional_fees "
-//                        + "WHERE student_id=? AND status=1"
-//                )
-//                        .setParameter(1, studentId)
-//                        .getSingleResult();
-//
-//                if (totalAddObj != null) {
-//                    totalAdditionalAmount = ((Number) totalAddObj).doubleValue();
-//                }
-//
-//// 2. Total Additional Paid
-//                Object totalPaidObj = em.createNativeQuery(
-//                        "SELECT IFNULL(SUM(safp.amount_paid),0) "
-//                        + "FROM student_additional_fee_payments safp "
-//                        + "INNER JOIN student_additional_fees saf "
-//                        + "ON safp.student_additional_fees_id = saf.student_additional_fees_id "
-//                        + "WHERE saf.student_id=? AND safp.status=1"
-//                )
-//                        .setParameter(1, studentId)
-//                        .getSingleResult();
-//
-//                if (totalPaidObj != null) {
-//                    totalAdditionalPaid = ((Number) totalPaidObj).doubleValue();
-//                }
-//
-//// 3. Balance
-//                additionalBalance = totalAdditionalAmount - totalAdditionalPaid;
-//
-//                if (additionalBalance < 0) {
-//                    additionalBalance = 0;
-//                }
-//
-//                // =====================================================
-//                // 🔥 TOTAL PAID = PAID + CHEQUE
-//                // =====================================================
-//                double totalPaidWithCheque = totalPaid + chequeAmount;
-//
-//                // =====================================================
-//                // 🔥 ADD ROW (UPDATED COLUMNS)
-//                // =====================================================
-//                model.addRow(new Object[]{
-//                    rowNo++,
-//                    admissionNo,
-//                    name,
-//                    GeneralMethods.formatWithComma(totalPaid), // Paid
-//                    GeneralMethods.formatWithComma(chequeAmount), // Cheque
-//                    GeneralMethods.formatWithComma(totalPaidWithCheque), // Total Paid
-//
-//                    GeneralMethods.formatWithComma(totalAdjustment), // 🔥 Adjustment
-//                    GeneralMethods.formatWithComma(totalCredit), // 🔥 Credit
-//                    GeneralMethods.formatWithComma(additionalBalance),
-//                    GeneralMethods.formatWithComma(totalBalance + additionalBalance),
-//                    contact,
-//                    fatherContact
-//                });
-//            }
-//
-//            calculateStudentDueTotals(table);
-//
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        } finally {
-//            em.close();
-//        }
-//    }
 
     public void calculateStudentDueTotals(JTable table) {
 
@@ -977,6 +507,8 @@ public class Student_Wise_Due extends javax.swing.JPanel {
         swd_st_con_total_paid_text = new javax.swing.JTextField();
         jLabel10 = new javax.swing.JLabel();
         swd_st_con_total_additional_text = new javax.swing.JTextField();
+        swd_st_con_course_fee_text = new javax.swing.JTextField();
+        jLabel11 = new javax.swing.JLabel();
         pagination1 = new Pagination.Pagination();
         lbl_total_rows = new javax.swing.JLabel();
 
@@ -987,11 +519,11 @@ public class Student_Wise_Due extends javax.swing.JPanel {
 
             },
             new String [] {
-                "#", "Admission", "Student Name", "Paid", "Cheque", "Total Paid", "Adjustment", "Credit", "Additional", "Due", "Student Contact", "Father Contact"
+                "#", "Admission", "Student Name", "Paid", "Cheque", "Total Paid", "Adjustment", "Credit", "Additional", "Due", "Student Contact", "Father Contact", "Status"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false, false, false, false, false
+                false, false, false, false, false, false, false, false, false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -1009,6 +541,7 @@ public class Student_Wise_Due extends javax.swing.JPanel {
             swd_st_table.getColumnModel().getColumn(0).setPreferredWidth(20);
             swd_st_table.getColumnModel().getColumn(1).setPreferredWidth(100);
             swd_st_table.getColumnModel().getColumn(2).setPreferredWidth(150);
+            swd_st_table.getColumnModel().getColumn(12).setPreferredWidth(50);
         }
 
         jButton1.setBackground(new java.awt.Color(102, 102, 102));
@@ -1058,7 +591,7 @@ public class Student_Wise_Due extends javax.swing.JPanel {
         });
 
         jLabel1.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel1.setText("Course");
+        jLabel1.setText("Course Name");
 
         swd_st_con_course_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
         swd_st_con_course_text.addActionListener(new java.awt.event.ActionListener() {
@@ -1153,6 +686,16 @@ public class Student_Wise_Due extends javax.swing.JPanel {
             }
         });
 
+        swd_st_con_course_fee_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        swd_st_con_course_fee_text.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                swd_st_con_course_fee_textActionPerformed(evt);
+            }
+        });
+
+        jLabel11.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel11.setText("Course Fee");
+
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
@@ -1174,6 +717,10 @@ public class Student_Wise_Due extends javax.swing.JPanel {
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel1)
                             .addComponent(swd_st_con_course_text, javax.swing.GroupLayout.PREFERRED_SIZE, 298, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel11)
+                            .addComponent(swd_st_con_course_fee_text, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel2)
@@ -1222,22 +769,24 @@ public class Student_Wise_Due extends javax.swing.JPanel {
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(swd_st_con_class_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(swd_st_con_course_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(swd_st_con_course_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(swd_st_con_batch_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addGap(41, 41, 41))
                     .addComponent(jButton7, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel5Layout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(swd_st_con_class_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(swd_st_con_course_fee_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel5Layout.createSequentialGroup()
+                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel1)
+                            .addComponent(jLabel11))
+                        .addGap(41, 41, 41)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 465, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1369,6 +918,10 @@ public class Student_Wise_Due extends javax.swing.JPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_swd_st_con_total_additional_textActionPerformed
 
+    private void swd_st_con_course_fee_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_swd_st_con_course_fee_textActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_swd_st_con_course_fee_textActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroup1;
@@ -1380,6 +933,7 @@ public class Student_Wise_Due extends javax.swing.JPanel {
     private javax.swing.JButton jButton7;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -1395,6 +949,7 @@ public class Student_Wise_Due extends javax.swing.JPanel {
     private Pagination.Pagination pagination1;
     public static javax.swing.JComboBox<String> swd_st_con_batch_combo;
     private javax.swing.JComboBox<String> swd_st_con_class_combo;
+    public static javax.swing.JTextField swd_st_con_course_fee_text;
     public static javax.swing.JTextField swd_st_con_course_text;
     public static javax.swing.JTextField swd_st_con_grand_total_text;
     public static javax.swing.JTextField swd_st_con_total_additional_text;

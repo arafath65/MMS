@@ -920,9 +920,9 @@ public class Fees_Management extends javax.swing.JPanel {
     private javax.swing.ButtonGroup buttonGroup2;
     public static javax.swing.JComboBox<String> fm_fees_admission_no_combo;
     public static javax.swing.JTable fm_fees_course_table;
-    private javax.swing.JComboBox<String> fm_fees_name_combo;
+    public static javax.swing.JComboBox<String> fm_fees_name_combo;
     private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
+    public static javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
     private javax.swing.JLabel jLabel13;

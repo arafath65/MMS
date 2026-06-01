@@ -194,9 +194,10 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
                 // Inventory -> Inventory -> Reports -> Stock Movement
                 if (index.length == 3 && index[0] == 2 && index[1] == 1 && index[2] == 1) {
                     dashboard.showPanel("STOCK_MOVEMENT");
-                    Dashboard.Dashboard.Main_Lable.setText("STOCK MOVEMENT");
+                    Dashboard.Dashboard.Main_Lable.setText("STOCK MOVEMENT"); 
                     return;
                 }
+                
                 
                 // Inventory -> Inventory -> Reports -> Low Stock
                 if (index.length == 3 && index[0] == 2 && index[1] == 1 && index[2] == 2) {

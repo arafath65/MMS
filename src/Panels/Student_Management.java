@@ -1,5 +1,6 @@
 package Panels;
 
+import Classes.CameraCapture;
 import Classes.GeneralMethods;
 import Classes.GeneralMethods.StudentSearchType;
 import Classes.HibernateConfig;
@@ -14,6 +15,16 @@ import Panels_SubDialogs.Course_Enrollment;
 import Panels_SubDialogs.Eliminate_Student;
 import Panels_SubDialogs.Miscellaneous_Issuing;
 import Panels_SubDialogs.Siblings_Register;
+import com.github.sarxos.webcam.Webcam;
+import com.github.sarxos.webcam.WebcamResolution;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.Window;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -23,17 +34,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Date;
 import java.util.List;
 import javax.imageio.ImageIO;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.swing.ComboBoxModel;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
@@ -1299,6 +1313,130 @@ public class Student_Management extends javax.swing.JPanel {
         return false;
     }
 
+    private void showPhotoOptionDialog() {
+
+        Window parent = SwingUtilities.getWindowAncestor(this);
+
+        JDialog dialog = new JDialog(parent);
+        dialog.setUndecorated(true);
+        dialog.setSize(420, 220);
+        dialog.setLayout(null);
+        dialog.setBackground(new Color(0, 0, 0, 0));
+        dialog.setLocationRelativeTo(this);
+
+        JPanel panel = new JPanel(null) {
+
+            @Override
+            protected void paintComponent(Graphics g) {
+
+                Graphics2D g2 = (Graphics2D) g.create();
+
+                g2.setRenderingHint(
+                        RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON
+                );
+
+                g2.setColor(new Color(0, 0, 0, 120));
+                g2.fillRoundRect(10, 10, getWidth() - 10,
+                        getHeight() - 10, 30, 30);
+
+                g2.setColor(Color.decode("#2B2B2B"));
+                g2.fillRoundRect(0, 0,
+                        getWidth() - 10,
+                        getHeight() - 10,
+                        30, 30);
+
+                g2.dispose();
+            }
+        };
+
+        panel.setOpaque(false);
+        panel.setBounds(0, 0, 420, 220);
+
+        JLabel title = new JLabel("Select Photo Option");
+        title.setBounds(30, 25, 250, 30);
+        title.setForeground(Color.WHITE);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 18));
+
+        panel.add(title);
+
+        JButton takePhotoBtn = createAnimatedGradientButton(
+                "TAKE PHOTO",
+                new Color(0, 153, 102),
+                new Color(0, 204, 153)
+        );
+
+        takePhotoBtn.setBounds(40, 110, 150, 45);
+
+        JButton uploadBtn = createAnimatedGradientButton(
+                "UPLOAD",
+                new Color(0, 102, 204),
+                new Color(0, 180, 255)
+        );
+
+        uploadBtn.setBounds(220, 110, 150, 45);
+
+        panel.add(takePhotoBtn);
+        panel.add(uploadBtn);
+
+        dialog.add(panel);
+
+        uploadBtn.addActionListener(e -> {
+
+            selectedImageFile
+                    = GeneralMethods.chooseAndSetImageAutoResizeRemember(jLabel9);
+
+            dialog.dispose();
+
+        });
+
+        takePhotoBtn.addActionListener(e -> {
+
+            dialog.dispose();
+
+            openStudentCamera();
+
+        });
+
+        dialog.setVisible(true);
+    }
+
+    private void openStudentCamera() {
+
+        CameraCapture camera
+                = new CameraCapture(this, jLabel9);
+
+        camera.openCamera();
+    }
+
+    public void loadLatestAdmissionNo() {
+
+        EntityManager em = HibernateConfig.getEntityManager();
+
+        try {
+
+            Object admissionObj = em.createNativeQuery(
+                    "SELECT admission_no "
+                    + "FROM student "
+                    + "WHERE status = 1 "
+                    + "ORDER BY student_id DESC "
+                    + "LIMIT 1"
+            ).getSingleResult();
+
+            stm_ad_admission_no_combo.removeAllItems();
+
+            if (admissionObj != null) {
+                stm_ad_admission_no_combo.addItem(admissionObj.toString());
+                stm_ad_admission_no_combo.setSelectedItem(admissionObj.toString());
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -1330,6 +1468,7 @@ public class Student_Management extends javax.swing.JPanel {
         stm_ad_form_no_combo = new javax.swing.JComboBox<>();
         stm_ad_student_name_combo = new javax.swing.JComboBox<>();
         stm_ad_student_nic_combo = new javax.swing.JComboBox<>();
+        jButton5 = new javax.swing.JButton();
         jPanel5 = new javax.swing.JPanel();
         jLabel13 = new javax.swing.JLabel();
         jLabel14 = new javax.swing.JLabel();
@@ -1450,7 +1589,7 @@ public class Student_Management extends javax.swing.JPanel {
             }
         });
 
-        buttonGradient5.setText("UPLOAD");
+        buttonGradient5.setText("RESET");
         buttonGradient5.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonGradient5ActionPerformed(evt);
@@ -1503,6 +1642,17 @@ public class Student_Management extends javax.swing.JPanel {
         stm_ad_student_nic_combo.setEditable(true);
         stm_ad_student_nic_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
 
+        jButton5.setBackground(new java.awt.Color(102, 102, 102));
+        jButton5.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jButton5.setForeground(new java.awt.Color(255, 255, 255));
+        jButton5.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/search16.png"))); // NOI18N
+        jButton5.setToolTipText("Course Enrolment");
+        jButton5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton5ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -1511,14 +1661,6 @@ public class Student_Management extends javax.swing.JPanel {
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(stm_ad_student_address_text)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addComponent(stm_ad_admission_no_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(stm_ad_form_no_combo, 0, 240, Short.MAX_VALUE)))
                     .addComponent(stm_ad_student_name_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1530,8 +1672,21 @@ public class Student_Management extends javax.swing.JPanel {
                             .addGroup(jPanel2Layout.createSequentialGroup()
                                 .addComponent(jLabel5)
                                 .addGap(0, 0, Short.MAX_VALUE))))
-                    .addComponent(jLabel2)
-                    .addComponent(jLabel8))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addComponent(stm_ad_admission_no_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jLabel1)
+                            .addComponent(jLabel2)
+                            .addComponent(jLabel8))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addComponent(jLabel3)
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addComponent(stm_ad_form_no_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(stm_ad_student_contact_text)
@@ -1544,7 +1699,7 @@ public class Student_Management extends javax.swing.JPanel {
                             .addComponent(jLabel7)
                             .addComponent(jLabel25))
                         .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(stm_ad_student_nic_combo, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 176, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(stm_ad_student_nic_combo, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -1561,11 +1716,13 @@ public class Student_Management extends javax.swing.JPanel {
                             .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jLabel25, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(stm_ad_admission_date, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                .addComponent(stm_ad_admission_no_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(stm_ad_form_no_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(stm_ad_admission_date, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(stm_ad_admission_no_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(stm_ad_form_no_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel2)
@@ -1940,7 +2097,7 @@ public class Student_Management extends javax.swing.JPanel {
                                 .addComponent(stm_ad_student_father_living_yes_checkbox)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(stm_ad_student_father_living_no_checkbox)
-                                .addGap(0, 24, Short.MAX_VALUE))
+                                .addGap(0, 21, Short.MAX_VALUE))
                             .addComponent(stm_ad_student_father_living_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap())
         );
@@ -2051,7 +2208,7 @@ public class Student_Management extends javax.swing.JPanel {
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel9Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 516, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 513, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel9Layout.setVerticalGroup(
@@ -2072,7 +2229,7 @@ public class Student_Management extends javax.swing.JPanel {
             jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel11Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 790, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 787, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel11Layout.setVerticalGroup(
@@ -2129,9 +2286,6 @@ public class Student_Management extends javax.swing.JPanel {
                     .addComponent(jPanel8, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 7, Short.MAX_VALUE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(6, 6, 6)
                         .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -2140,7 +2294,8 @@ public class Student_Management extends javax.swing.JPanel {
                         .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -2207,8 +2362,9 @@ public class Student_Management extends javax.swing.JPanel {
 //            System.out.println("No image selected.");
 //        }
 
-        selectedImageFile = GeneralMethods.chooseAndSetImageAutoResizeRemember(jLabel9);
+        showPhotoOptionDialog();
 
+        //   selectedImageFile = GeneralMethods.chooseAndSetImageAutoResizeRemember(jLabel9);
 
     }//GEN-LAST:event_jLabel9MouseClicked
 
@@ -2723,6 +2879,12 @@ public class Student_Management extends javax.swing.JPanel {
 //        GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
     }//GEN-LAST:event_jButton4ActionPerformed
 
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+
+        loadLatestAdmissionNo();
+
+    }//GEN-LAST:event_jButton5ActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private Classes.ButtonGradient buttonGradient1;
@@ -2737,6 +2899,7 @@ public class Student_Management extends javax.swing.JPanel {
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
+    private javax.swing.JButton jButton5;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
@@ -2812,5 +2975,57 @@ public class Student_Management extends javax.swing.JPanel {
     private javax.swing.JComboBox<String> stm_ad_student_nic_combo;
     private javax.swing.JEditorPane stm_ad_student_remarks_text;
     // End of variables declaration//GEN-END:variables
+private JButton createAnimatedGradientButton(String text, Color c1, Color c2) {
 
+        JButton btn = new JButton(text) {
+
+            private float scale = 1f;
+
+            protected void paintComponent(Graphics g) {
+
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
+
+                int width = (int) (getWidth() * scale);
+                int height = (int) (getHeight() * scale);
+
+                int x = (getWidth() - width) / 2;
+                int y = (getHeight() - height) / 2;
+
+                GradientPaint gp = new GradientPaint(
+                        0, 0, c1,
+                        getWidth(), getHeight(), c2
+                );
+
+                g2.setPaint(gp);
+                g2.fillRoundRect(x, y, width, height, 20, 20);
+
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+
+        btn.setContentAreaFilled(false);
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setForeground(Color.WHITE);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+
+        // Hover Animation
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                btn.setSize(btn.getWidth() + 2, btn.getHeight() + 2);
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                btn.setSize(btn.getWidth() - 2, btn.getHeight() - 2);
+            }
+        });
+
+        return btn;
+    }
 }

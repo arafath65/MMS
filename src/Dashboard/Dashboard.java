@@ -1,5 +1,6 @@
 package Dashboard;
 
+import Dashboard_Design.AppNavigator;
 import Dashboard_Design.MyDrawerBuilder;
 import Panels.Additional_Payments;
 import Panels.Batch_Transfer;
@@ -65,11 +66,14 @@ public class Dashboard extends javax.swing.JFrame {
         // main_panels MUST already exist from NetBeans designer
         cardLayout = new CardLayout();
         main_panels.setLayout(cardLayout);
+        
+        AppNavigator.init(this);
 
         dashboard_Panel = new Dashboard_Panel();
         studentManagement = new Student_Management(username, role);
         register_Courses = new Register_Course(username, role);
         fees_Management = new Fees_Management(username, role);
+        AppNavigator.setFeesPanel(fees_Management);
         inventory = new Inventory(username, role);
         cheque_Handling = new Cheque_Handling(username, role);
         additional_Payments = new Additional_Payments(username, role);
