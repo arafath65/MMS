@@ -209,21 +209,6 @@ public class Round_Payment extends javax.swing.JDialog {
                 )
                         .setParameter(1, enrollmentId)
                         .getSingleResult()).doubleValue();
-//                double chequePendingCourse = ((Number) em.createNativeQuery(
-//                        "SELECT COALESCE(SUM(d.paid_amount),0) "
-//                        + "FROM student_fee_round_payment_master_details d "
-//                        + "JOIN student_fee_cheque_details c "
-//                        + "ON c.reference_id = d.student_fee_round_payment_master_id "
-//                        + "AND c.reference_type='ROUND' "
-//                        + "AND c.category='STUDENT' "
-//                        + "WHERE d.reference_type='COURSE' "
-//                        + "AND d.enrollment_id=? "
-//                        + "AND d.status=1 "
-//                        + "AND c.cheque_status='PENDING' "
-//                        + "AND c.status=1"
-//                )
-//                        .setParameter(1, enrollmentId)
-//                        .getSingleResult()).doubleValue();
 
                 double finalDueCourse = Math.max(balance - chequePendingCourse, 0);
 
@@ -254,151 +239,121 @@ public class Round_Payment extends javax.swing.JDialog {
             }
 
             // =====================================================
-            // 2. ADDITIONAL + INVENTORY (FINAL FIXED CHEQUE LOGIC)
-            // =====================================================
-            List<Object[]> issuedList = em.createNativeQuery(
-                    "SELECT fee_type_id, MIN(student_additional_fees_id), SUM(amount), MIN(issued_date) "
-                    + "FROM student_additional_fees "
-                    + "WHERE student_id=? AND status=1 "
-                    + "GROUP BY fee_type_id"
+// 2. ADDITIONAL / INVENTORY (ITEM LEVEL INVOICE STRUCTURE)
+// =====================================================
+            List<Object[]> invoiceList = em.createNativeQuery(
+                    "SELECT st_additional_fees_master_id, invoice_no, issued_date "
+                    + "FROM student_additional_fees_master "
+                    + "WHERE student_id=? "
+                    + "AND status=1 "
+                    //  + "AND total_due > 0 "
+                    + "ORDER BY issued_date ASC"
             )
                     .setParameter(1, studentId)
                     .getResultList();
 
-            for (Object[] addRow : issuedList) {
+            for (Object[] row : invoiceList) {
 
-                int feeTypeId = Integer.parseInt(addRow[0].toString());
-                int additionalFeeId = Integer.parseInt(addRow[1].toString());
-                double totalAmount = Double.parseDouble(addRow[2].toString());
+                int masterId = ((Number) row[0]).intValue();
 
-                String issuedDate = addRow[3] != null ? addRow[3].toString().split(" ")[0] : "";
+                String invoiceNo = row[1] != null ? row[1].toString() : "";
+                String issuedDate = row[2] != null ? row[2].toString().split(" ")[0] : "";
 
-//                System.out.println("\n=============================");
-//                System.out.println("ADD ID: " + additionalFeeId);
-//                System.out.println("FEE TYPE: " + feeTypeId);
-//                System.out.println("TOTAL AMOUNT: " + totalAmount);
                 // =====================================================
-                // CASH / CARD ONLY PAID
+                // LOAD ALL ITEMS OF THIS INVOICE
                 // =====================================================
-                Double totalPaidAdd = (Double) em.createNativeQuery(
-                        "SELECT COALESCE(SUM(p.amount_paid),0) "
-                        + "FROM student_additional_fee_payments p "
-                        + "JOIN student_additional_fees saf "
-                        + "ON p.student_additional_fees_id = saf.student_additional_fees_id "
-                        + "WHERE saf.fee_type_id=? AND saf.student_id=? "
-                        + "AND p.status=1 "
-                        + "AND p.payment_method <> 'CHEQUE'"
+                List<Object[]> detailList = em.createNativeQuery(
+                        "SELECT "
+                        + "d.st_additional_fees_details_id, "
+                        + "d.feetype_id, "
+                        + "ft.fee_name, "
+                        + "d.qty, "
+                        + "d.unit_price, "
+                        + "d.line_net_amount "
+                        + "FROM student_additional_fees_details d "
+                        + "INNER JOIN fee_types ft ON ft.fee_type_id = d.feetype_id "
+                        + "WHERE d.st_additional_fees_master_id=? "
+                        + "AND d.status=1"
                 )
-                        .setParameter(1, feeTypeId)
-                        .setParameter(2, studentId)
-                        .getSingleResult();
-
-                if (totalPaidAdd == null) {
-                    totalPaidAdd = 0.0;
-                }
-
-                //    System.out.println("TOTAL PAID (NON-CHEQUE): " + totalPaidAdd);
-                // =====================================================
-                // 🔥 CHEQUE LOGIC (FINAL FIX)
-                // =====================================================
-                double chequePendingAdd = 0;
-
-                // STEP 1: GET ROUND MASTER IDS (CHEQUE ONLY)
-                List<Integer> masterIds = em.createNativeQuery(
-                        "SELECT student_fee_round_payment_master_id "
-                        + "FROM student_fee_round_payment_master "
-                        + "WHERE student_id=? AND payment_mode='CHEQUE' AND status=1"
-                )
-                        .setParameter(1, studentId)
+                        .setParameter(1, masterId)
                         .getResultList();
 
-                //    System.out.println("ROUND MASTER IDS (CHEQUE): " + masterIds);
-                // STEP 2: FOR EACH MASTER → CHECK ADDITIONAL PAYMENTS
-                for (Integer masterId : masterIds) {
+                // =====================================================
+                // LOOP ITEMS (ITEM LEVEL DUE CALCULATION)
+                // =====================================================
+                for (Object[] dRow : detailList) {
 
-                    Object result = em.createNativeQuery(
+                    int detailId = ((Number) dRow[0]).intValue();
+                    String feeName = dRow[2] != null ? dRow[2].toString() : "";
+
+                    double qty = dRow[3] != null ? ((Number) dRow[3]).doubleValue() : 0;
+                    double unitPrice = dRow[4] != null ? ((Number) dRow[4]).doubleValue() : 0;
+                    double lineNet = dRow[5] != null ? ((Number) dRow[5]).doubleValue() : 0;
+
+                    // =====================================================
+                    // CASH / CARD PAID (DIRECT PAYMENTS ONLY)
+                    // =====================================================
+                    double paid = ((Number) em.createNativeQuery(
+                            "SELECT COALESCE(SUM(amount_paid),0) "
+                            + "FROM student_additional_fee_payments "
+                            + "WHERE st_additional_fees_details_id=? "
+                            + "AND status=1 "
+                            + "AND payment_method <> 'CHEQUE'"
+                    )
+                            .setParameter(1, detailId)
+                            .getSingleResult()).doubleValue();
+
+                    // =====================================================
+                    // CHEQUE PENDING (ROUND PAYMENT SYSTEM)
+                    // =====================================================
+                    double chequePending = ((Number) em.createNativeQuery(
                             "SELECT COALESCE(SUM(d.paid_amount),0) "
                             + "FROM student_fee_round_payment_master_details d "
-                            + "JOIN student_fee_cheque_details c "
-                            + "  ON c.reference_id = d.student_fee_round_payment_master_id "
-                            + "  AND c.reference_type='ROUND' "
-                            + "  AND c.category='STUDENT' "
-                            + "  AND c.status=1 "
-                            + "  AND c.cheque_status = 'PENDING' " // ✅ ONLY PENDING
-                            + "WHERE d.student_fee_round_payment_master_id=? "
-                            + "AND d.reference_type='ADDITIONAL' "
+                            + "INNER JOIN student_fee_cheque_details c "
+                            + "ON c.reference_id = d.student_fee_round_payment_master_id "
+                            + "AND c.reference_type='ROUND' "
+                            + "AND c.category='STUDENT' "
+                            + "AND c.cheque_status='PENDING' "
+                            + "AND c.status=1 "
+                            + "WHERE d.reference_type='ADDITIONAL' "
                             + "AND d.reference_id=? "
                             + "AND d.status=1"
                     )
-                            .setParameter(1, masterId)
-                            .setParameter(2, additionalFeeId)
-                            .getSingleResult();
-//                    Object result = em.createNativeQuery(
-//                            "SELECT COALESCE(SUM(d.paid_amount),0) "
-//                            + "FROM student_fee_round_payment_master_details d "
-//                            + "JOIN student_fee_cheque_details c "
-//                            + "ON c.reference_id = d.student_fee_round_payment_master_id "
-//                            + "AND c.reference_type='ROUND' "
-//                            + "AND c.category='STUDENT' "
-//                            + "WHERE d.student_fee_round_payment_master_id=? "
-//                            + "AND d.reference_type='ADDITIONAL' "
-//                            + "AND d.reference_id=? "
-//                            + "AND c.cheque_status='PENDING' "
-//                            + "AND d.status=1 "
-//                            + "AND c.status=1"
-//                    )
-//                            .setParameter(1, masterId)
-//                            .setParameter(2, additionalFeeId)
-//                            .getSingleResult();
+                            .setParameter(1, detailId)
+                            .getSingleResult()).doubleValue();
 
-                    double paidAmount = ((Number) result).doubleValue();
+                    // =====================================================
+                    // FINAL DUE CALCULATION
+                    // =====================================================
+                    double due = Math.max(lineNet - paid - chequePending, 0);
 
-//                    System.out.println("MASTER: " + masterId
-//                            + " | ADD_ID: " + additionalFeeId
-//                            + " | CHEQUE_PAID: " + paidAmount);
-                    chequePendingAdd += paidAmount;
+//                    if (due <= 0) {
+//                        continue;
+//                    }
+                    if (due <= 0 && chequePending <= 0) {
+                        continue;
+                    }
+
+                    // =====================================================
+                    // ADD TO TABLE
+                    // =====================================================
+                    model.addRow(new Object[]{
+                        count++,
+                        "INVOICE",
+                        issuedDate,
+                        invoiceNo + " - " + feeName,
+                        qty,
+                        GeneralMethods.formatWithComma(lineNet),
+                        GeneralMethods.formatWithComma(paid),
+                        GeneralMethods.formatWithComma(chequePending),
+                        GeneralMethods.formatWithComma(due),
+                        "",
+                        false,
+                        "ADD_" + detailId
+                    });
                 }
-
-                //    System.out.println("TOTAL CHEQUE (ADDITIONAL): " + chequePendingAdd);
-                // =====================================================
-                // FINAL CALCULATION
-                // =====================================================
-                double balanceAdd = totalAmount - totalPaidAdd;
-                double finalDueAdd = Math.max(balanceAdd - chequePendingAdd, 0);
-
-//                System.out.println("BALANCE: " + balanceAdd);
-//                System.out.println("FINAL CHEQUE: " + chequePendingAdd);
-//                System.out.println("FINAL DUE: " + finalDueAdd);
-                if (balanceAdd <= 0) {
-                    continue;
-                }
-
-                Object[] feeData = (Object[]) em.createNativeQuery(
-                        "SELECT fee_name, item_id FROM fee_types WHERE fee_type_id=?"
-                )
-                        .setParameter(1, feeTypeId)
-                        .getSingleResult();
-
-                String feeName = feeData[0].toString();
-                int itemId = feeData[1] != null ? Integer.parseInt(feeData[1].toString()) : 0;
-
-                String category = (itemId == 0) ? "SERVICE" : "INVENTORY";
-
-                model.addRow(new Object[]{
-                    count++,
-                    category,
-                    issuedDate,
-                    feeName,
-                    1,
-                    GeneralMethods.formatWithComma(totalAmount),
-                    GeneralMethods.formatWithComma(totalPaidAdd),
-                    GeneralMethods.formatWithComma(chequePendingAdd),
-                    GeneralMethods.formatWithComma(finalDueAdd),
-                    "",
-                    false,
-                    "ADD_" + additionalFeeId
-                });
             }
+//            
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -407,6 +362,211 @@ public class Round_Payment extends javax.swing.JDialog {
         }
     }
 
+//    public void loadCourseDuesToTable(int studentId) {
+//
+//        DefaultTableModel model = (DefaultTableModel) rp_due_table.getModel();
+//        model.setRowCount(0);
+//
+//        int count = 1;
+//
+//        EntityManager em = HibernateConfig.getEntityManager();
+//
+//        try {
+//
+//            // =====================================================
+//            // 1. COURSE LOGIC
+//            // =====================================================
+//            List<Object[]> courseList = em.createNativeQuery(
+//                    "SELECT student_fee_payments_id, enrollment_id, total_fee, total_paid, total_balance, course_type, created_at "
+//                    + "FROM student_fee_payments "
+//                    + "WHERE student_id=? AND status=1"
+//            )
+//                    .setParameter(1, studentId)
+//                    .getResultList();
+//
+//            for (Object[] courseRow : courseList) {
+//
+//                int enrollmentId = Integer.parseInt(courseRow[1].toString());
+//
+//                double totalFee = courseRow[2] != null ? Double.parseDouble(courseRow[2].toString()) : 0;
+//                double totalPaid = courseRow[3] != null ? Double.parseDouble(courseRow[3].toString()) : 0;
+//                double balance = courseRow[4] != null ? Double.parseDouble(courseRow[4].toString()) : 0;
+//
+//                String courseType = courseRow[5] != null ? courseRow[5].toString() : "";
+//                String date = courseRow[6] != null ? courseRow[6].toString().split(" ")[0] : "";
+//
+//                // ✅ CHEQUE (PENDING ONLY)
+//                double chequePendingCourse = ((Number) em.createNativeQuery(
+//                        "SELECT COALESCE(SUM(d.paid_amount),0) "
+//                        + "FROM student_fee_round_payment_master_details d "
+//                        + "JOIN student_fee_cheque_details c "
+//                        + "  ON c.reference_id = d.student_fee_round_payment_master_id "
+//                        + "  AND c.reference_type='ROUND' "
+//                        + "  AND c.category='STUDENT' "
+//                        + "  AND c.status=1 "
+//                        + "  AND c.cheque_status = 'PENDING' " // ✅ STRICT FILTER HERE
+//                        + "WHERE d.reference_type='COURSE' "
+//                        + "AND d.enrollment_id=? "
+//                        + "AND d.status=1"
+//                )
+//                        .setParameter(1, enrollmentId)
+//                        .getSingleResult()).doubleValue();
+//
+//
+//                double finalDueCourse = Math.max(balance - chequePendingCourse, 0);
+//
+//                // ✅ QTY (MONTHLY)
+//                int qty = 1;
+//                if ("MONTHLY".equalsIgnoreCase(courseType)) {
+//                    qty = getPendingMonthCount(enrollmentId);
+//                    if (qty <= 0) {
+//                        qty = 1;
+//                    }
+//                }
+//
+//                //    System.out.println("COURSE ROW: " + enrollmentId);
+//                model.addRow(new Object[]{
+//                    count++,
+//                    "COURSE",
+//                    date,
+//                    "Course (" + courseType + ")",
+//                    qty,
+//                    GeneralMethods.formatWithComma(totalFee),
+//                    GeneralMethods.formatWithComma(totalPaid),
+//                    GeneralMethods.formatWithComma(chequePendingCourse),
+//                    GeneralMethods.formatWithComma(finalDueCourse),
+//                    "",
+//                    false,
+//                    "COURSE_" + enrollmentId
+//                });
+//            }
+//
+//            // =====================================================
+//            // 2. ADDITIONAL + INVENTORY (FINAL FIXED CHEQUE LOGIC)
+//            // =====================================================
+//            List<Object[]> issuedList = em.createNativeQuery(
+//                    "SELECT fee_type_id, MIN(student_additional_fees_id), SUM(amount), MIN(issued_date) "
+//                    + "FROM student_additional_fees "
+//                    + "WHERE student_id=? AND status=1 "
+//                    + "GROUP BY fee_type_id"
+//            )
+//                    .setParameter(1, studentId)
+//                    .getResultList();
+//
+//            for (Object[] addRow : issuedList) {
+//
+//                int feeTypeId = Integer.parseInt(addRow[0].toString());
+//                int additionalFeeId = Integer.parseInt(addRow[1].toString());
+//                double totalAmount = Double.parseDouble(addRow[2].toString());
+//
+//                String issuedDate = addRow[3] != null ? addRow[3].toString().split(" ")[0] : "";
+//
+//                // =====================================================
+//                // CASH / CARD ONLY PAID
+//                // =====================================================
+//                Double totalPaidAdd = (Double) em.createNativeQuery(
+//                        "SELECT COALESCE(SUM(p.amount_paid),0) "
+//                        + "FROM student_additional_fee_payments p "
+//                        + "JOIN student_additional_fees saf "
+//                        + "ON p.student_additional_fees_id = saf.student_additional_fees_id "
+//                        + "WHERE saf.fee_type_id=? AND saf.student_id=? "
+//                        + "AND p.status=1 "
+//                        + "AND p.payment_method <> 'CHEQUE'"
+//                )
+//                        .setParameter(1, feeTypeId)
+//                        .setParameter(2, studentId)
+//                        .getSingleResult();
+//
+//                if (totalPaidAdd == null) {
+//                    totalPaidAdd = 0.0;
+//                }
+//
+//                //    System.out.println("TOTAL PAID (NON-CHEQUE): " + totalPaidAdd);
+//                // =====================================================
+//                // 🔥 CHEQUE LOGIC (FINAL FIX)
+//                // =====================================================
+//                double chequePendingAdd = 0;
+//
+//                // STEP 1: GET ROUND MASTER IDS (CHEQUE ONLY)
+//                List<Integer> masterIds = em.createNativeQuery(
+//                        "SELECT student_fee_round_payment_master_id "
+//                        + "FROM student_fee_round_payment_master "
+//                        + "WHERE student_id=? AND payment_mode='CHEQUE' AND status=1"
+//                )
+//                        .setParameter(1, studentId)
+//                        .getResultList();
+//
+//                //    System.out.println("ROUND MASTER IDS (CHEQUE): " + masterIds);
+//                // STEP 2: FOR EACH MASTER → CHECK ADDITIONAL PAYMENTS
+//                for (Integer masterId : masterIds) {
+//
+//                    Object result = em.createNativeQuery(
+//                            "SELECT COALESCE(SUM(d.paid_amount),0) "
+//                            + "FROM student_fee_round_payment_master_details d "
+//                            + "JOIN student_fee_cheque_details c "
+//                            + "  ON c.reference_id = d.student_fee_round_payment_master_id "
+//                            + "  AND c.reference_type='ROUND' "
+//                            + "  AND c.category='STUDENT' "
+//                            + "  AND c.status=1 "
+//                            + "  AND c.cheque_status = 'PENDING' " // ✅ ONLY PENDING
+//                            + "WHERE d.student_fee_round_payment_master_id=? "
+//                            + "AND d.reference_type='ADDITIONAL' "
+//                            + "AND d.reference_id=? "
+//                            + "AND d.status=1"
+//                    )
+//                            .setParameter(1, masterId)
+//                            .setParameter(2, additionalFeeId)
+//                            .getSingleResult();
+//
+//                    double paidAmount = ((Number) result).doubleValue();
+//
+//                    chequePendingAdd += paidAmount;
+//                }
+//
+//                //    System.out.println("TOTAL CHEQUE (ADDITIONAL): " + chequePendingAdd);
+//                // =====================================================
+//                // FINAL CALCULATION
+//                // =====================================================
+//                double balanceAdd = totalAmount - totalPaidAdd;
+//                double finalDueAdd = Math.max(balanceAdd - chequePendingAdd, 0);
+//
+//                if (balanceAdd <= 0) {
+//                    continue;
+//                }
+//
+//                Object[] feeData = (Object[]) em.createNativeQuery(
+//                        "SELECT fee_name, item_id FROM fee_types WHERE fee_type_id=?"
+//                )
+//                        .setParameter(1, feeTypeId)
+//                        .getSingleResult();
+//
+//                String feeName = feeData[0].toString();
+//                int itemId = feeData[1] != null ? Integer.parseInt(feeData[1].toString()) : 0;
+//
+//                String category = (itemId == 0) ? "SERVICE" : "INVENTORY";
+//
+//                model.addRow(new Object[]{
+//                    count++,
+//                    category,
+//                    issuedDate,
+//                    feeName,
+//                    1,
+//                    GeneralMethods.formatWithComma(totalAmount),
+//                    GeneralMethods.formatWithComma(totalPaidAdd),
+//                    GeneralMethods.formatWithComma(chequePendingAdd),
+//                    GeneralMethods.formatWithComma(finalDueAdd),
+//                    "",
+//                    false,
+//                    "ADD_" + additionalFeeId
+//                });
+//            }
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        } finally {
+//            em.close();
+//        }
+//    }
     public double getTotalPendingRoundCheque(int studentId) {
 
         EntityManager em = HibernateConfig.getEntityManager();
@@ -670,31 +830,6 @@ public class Round_Payment extends javax.swing.JDialog {
             System.out.println("MASTER ID: " + master.getStudentFeeRoundPaymentMasterId());
             Integer roundMasterId = master.getStudentFeeRoundPaymentMasterId();
 
-            System.out.println("ROUND MASTER ID: " + roundMasterId);
-
-//            // =========================
-//            // CHEQUE MASTER SAVE (ONLY ONCE)
-//            // =========================
-//            if ("CHEQUE".equalsIgnoreCase(paymentMode)) {
-//
-//                em.createNativeQuery(
-//                        "INSERT INTO student_fee_cheque_details "
-//                        + "(reference_id, reference_type, category, cheque_no, bank, branch, cheque_date, cheque_amount, cheque_status, status) "
-//                        + "VALUES (?, 'ROUND', ?, ?, ?, ?, ?, ?, 'PENDING', 1)"
-//                )
-//                        .setParameter(1, roundMasterId)
-//                        .setParameter(2, "STUDENT")
-//                        .setParameter(3, rp_round_cheque_number_text.getText())
-//                        .setParameter(4, rp_round_bank_name_combo.getEditor().getItem().toString())
-//                        .setParameter(5, rp_round_cheque_branch.getText())
-//                        .setParameter(6, rp_round_cheque_date.getDate())
-//                        .setParameter(7, totalPaid)
-//                        .executeUpdate();
-//
-//                System.out.println("CHEQUE SAVED FOR ROUND MASTER ID: " + roundMasterId);
-//            }
-            System.out.println("CHEQUE SAVED FOR ROUND MASTER ID: " + roundMasterId);
-
             // =========================
             // 2. LOOP TABLE
             // =========================
@@ -780,9 +915,6 @@ public class Round_Payment extends javax.swing.JDialog {
                                 .executeUpdate();
 
                     } // =========================
-                    // MONTHLY COURSE SUPPORT (IMPORTANT ADDITION)
-                    // =========================
-                    // =========================
                     // MONTHLY COURSE SUPPORT
                     // =========================
                     else if (serviceName.toUpperCase().contains("MONTHLY")) {
@@ -993,13 +1125,19 @@ public class Round_Payment extends javax.swing.JDialog {
                 } // =====================================================
                 // ADDITIONAL / INVENTORY
                 // =====================================================
+                // =====================================================
+                // ADDITIONAL / INVENTORY
+                // =====================================================
                 else if (ref.startsWith("ADD_")) {
 
                     int safId = Integer.parseInt(ref.replace("ADD_", ""));
 
+                    // =========================
+                    // 1. SAVE PAYMENT
+                    // =========================
                     em.createNativeQuery(
                             "INSERT INTO student_additional_fee_payments "
-                            + "(student_additional_fees_id, student_fee_round_payment_master_id, paid_date, amount_paid, payment_method, user, status) "
+                            + "(st_additional_fees_details_id, student_fee_round_payment_master_id, paid_date, amount_paid, payment_method, user, status) "
                             + "VALUES (?, ?, NOW(), ?, ?, ?, 1)"
                     )
                             .setParameter(1, safId)
@@ -1009,6 +1147,61 @@ public class Round_Payment extends javax.swing.JDialog {
                             .setParameter(5, user)
                             .executeUpdate();
 
+                    // =========================
+                    // 2. FIND MASTER ID
+                    // =========================
+                    Object masterObj = em.createNativeQuery(
+                            "SELECT st_additional_fees_master_id "
+                            + "FROM student_additional_fees_details "
+                            + "WHERE st_additional_fees_details_id=?"
+                    )
+                            .setParameter(1, safId)
+                            .getSingleResult();
+
+                    int masterId = ((Number) masterObj).intValue();
+
+                    // =========================
+                    // 3. RECALCULATE MASTER TOTALS
+                    // =========================
+                    Object[] totals = (Object[]) em.createNativeQuery(
+                            "SELECT "
+                            + "COALESCE(SUM(d.line_net_amount),0) AS total_amount, "
+                            + "COALESCE((SELECT SUM(p.amount_paid) "
+                            + "          FROM student_additional_fee_payments p "
+                            + "          WHERE p.st_additional_fees_details_id IN "
+                            + "                (SELECT st_additional_fees_details_id "
+                            + "                 FROM student_additional_fees_details "
+                            + "                 WHERE st_additional_fees_master_id=? AND status=1)"
+                            + "         ),0) AS total_paid "
+                            + "FROM student_additional_fees_details d "
+                            + "WHERE d.st_additional_fees_master_id=? "
+                            + "AND d.status=1"
+                    )
+                            .setParameter(1, masterId)
+                            .setParameter(2, masterId)
+                            .getSingleResult();
+
+                    double totalAmount = ((Number) totals[0]).doubleValue();
+                    double totalPaids = ((Number) totals[1]).doubleValue();
+                    double totalDue = Math.max(totalAmount - totalPaids, 0);
+
+                    // =========================
+                    // 4. UPDATE MASTER TABLE
+                    // =========================
+                    em.createNativeQuery(
+                            "UPDATE student_additional_fees_master "
+                            + "SET total_amount=?, total_paid=?, total_due=? "
+                            + "WHERE st_additional_fees_master_id=?"
+                    )
+                            .setParameter(1, totalAmount)
+                            .setParameter(2, totalPaids)
+                            .setParameter(3, totalDue)
+                            .setParameter(4, masterId)
+                            .executeUpdate();
+
+                    // =========================
+                    // 5. ROUND MASTER DETAILS
+                    // =========================
                     StudentFeeRoundPaymentMasterDetails d = new StudentFeeRoundPaymentMasterDetails();
                     d.setStudentFeeRoundPaymentMaster(master);
                     d.setEnrollmentId(null);
@@ -1019,6 +1212,32 @@ public class Round_Payment extends javax.swing.JDialog {
 
                     em.persist(d);
                 }
+//                else if (ref.startsWith("ADD_")) {
+//
+//                    int safId = Integer.parseInt(ref.replace("ADD_", ""));
+//
+//                    em.createNativeQuery(
+//                            "INSERT INTO student_additional_fee_payments "
+//                            + "(st_additional_fees_details_id, student_fee_round_payment_master_id, paid_date, amount_paid, payment_method, user, status) "
+//                            + "VALUES (?, ?, NOW(), ?, ?, ?, 1)"
+//                    )
+//                            .setParameter(1, safId)
+//                            .setParameter(2, roundMasterId)
+//                            .setParameter(3, payableAmount)
+//                            .setParameter(4, paymentMode)
+//                            .setParameter(5, user)
+//                            .executeUpdate();
+//
+//                    StudentFeeRoundPaymentMasterDetails d = new StudentFeeRoundPaymentMasterDetails();
+//                    d.setStudentFeeRoundPaymentMaster(master);
+//                    d.setEnrollmentId(null);
+//                    d.setReferenceId(safId);
+//                    d.setReferenceType("ADDITIONAL");
+//                    d.setPaidAmount(payableAmount);
+//                    d.setStatus(1);
+//
+//                    em.persist(d);
+//                }
             }
 
             // ✅ AUDIT LOG: Bulk Round Payment
@@ -1052,6 +1271,393 @@ public class Round_Payment extends javax.swing.JDialog {
         }
     }
 
+//    public void saveRoundPayment(int studentId, JTable table,
+//            String paymentMode, double totalPaid, double roundingAdj, String user) {
+//
+//        DefaultTableModel model = (DefaultTableModel) table.getModel();
+//
+//        int COL_SERVICENAME = 3;
+//        int COL_PAYABLE = 9;
+//        int COL_IDS = 11;
+//
+//        EntityManager em = HibernateConfig.getEntityManager();
+//        EntityTransaction tx = em.getTransaction();
+//
+//        try {
+//
+//            tx.begin();
+//
+//            // =========================
+//            // 1. MASTER
+//            // =========================
+//            StudentFeeRoundPaymentMaster master = new StudentFeeRoundPaymentMaster();
+//            master.setStudentId(studentId);
+//            master.setPaymentDate(new java.util.Date());
+//            master.setPaymentMode("ROUND");
+//            master.setTotalPaid(totalPaid);
+//            master.setRoundingAdjustment(roundingAdj);
+//            master.setUser(user);
+//            master.setStatus(1);
+//
+//            em.persist(master);
+//            em.flush();
+//
+//            System.out.println("MASTER ID: " + master.getStudentFeeRoundPaymentMasterId());
+//            Integer roundMasterId = master.getStudentFeeRoundPaymentMasterId();
+//
+//            // =========================
+//            // 2. LOOP TABLE
+//            // =========================
+//            for (int i = 0; i < model.getRowCount(); i++) {
+//
+//                Object payableObj = model.getValueAt(i, COL_PAYABLE);
+//                Object refObj = model.getValueAt(i, COL_IDS);
+//
+//                if (payableObj == null || payableObj.toString().trim().isEmpty()) {
+//                    continue;
+//                }
+//                if (refObj == null) {
+//                    continue;
+//                }
+//
+//                double payableAmount = GeneralMethods.parseCommaNumber(payableObj.toString());
+//                if (payableAmount <= 0) {
+//                    continue;
+//                }
+//
+//                String ref = refObj.toString();
+//
+//                // =====================================================
+//                // COURSE
+//                // =====================================================
+//                if (ref.startsWith("COURSE_")) {
+//
+//                    int enrollmentId = Integer.parseInt(ref.replace("COURSE_", ""));
+//                    String serviceName = model.getValueAt(i, COL_SERVICENAME).toString();
+//
+//                    // =====================================================
+//                    // ONE-TIME COURSE
+//                    // =====================================================
+//                    if (serviceName.toUpperCase().contains("ONE-TIME")) {
+//
+//                        Object[] paymentRow = (Object[]) em.createNativeQuery(
+//                                "SELECT student_fee_payments_id, total_paid, total_balance "
+//                                + "FROM student_fee_payments "
+//                                + "WHERE enrollment_id = ? AND status = 1"
+//                        )
+//                                .setParameter(1, enrollmentId)
+//                                .getSingleResult();
+//
+//                        int paymentId = Integer.parseInt(paymentRow[0].toString());
+//                        double currentPaid = Double.parseDouble(paymentRow[1].toString());
+//                        double currentBalance = Double.parseDouble(paymentRow[2].toString());
+//
+//                        double newPaid = currentPaid + payableAmount;
+//                        double newBalance = Math.max(currentBalance - payableAmount, 0);
+//
+//                        String status = (newBalance == 0) ? "COMPLETE" : "ACTIVE";
+//
+//                        em.createNativeQuery(
+//                                "UPDATE student_fee_payments "
+//                                + "SET total_paid=?, total_balance=?, payment_status=?, last_mofidied=NOW() "
+//                                + "WHERE student_fee_payments_id=?"
+//                        )
+//                                .setParameter(1, newPaid)
+//                                .setParameter(2, newBalance)
+//                                .setParameter(3, status)
+//                                .setParameter(4, paymentId)
+//                                .executeUpdate();
+//
+//                        Integer nextInstallmentNo = ((Number) em.createNativeQuery(
+//                                "SELECT COALESCE(MAX(installment_no),0)+1 "
+//                                + "FROM student_fee_installments WHERE student_fee_payments_id=?"
+//                        )
+//                                .setParameter(1, paymentId)
+//                                .getSingleResult()).intValue();
+//
+//                        em.createNativeQuery(
+//                                "INSERT INTO student_fee_installments "
+//                                + "(student_fee_payments_id, enrollment_id, student_fee_round_payment_master_id, installment_no, amount_paid, "
+//                                + "payment_date, payment_method, payment_type, remarks, status) "
+//                                + "VALUES (?, ?, ?, ?, ?, NOW(), ?, 'ROUND', 'Round Payment', 1)"
+//                        )
+//                                .setParameter(1, paymentId)
+//                                .setParameter(2, enrollmentId)
+//                                .setParameter(3, roundMasterId)
+//                                .setParameter(4, nextInstallmentNo)
+//                                .setParameter(5, payableAmount)
+//                                .setParameter(6, paymentMode)
+//                                .executeUpdate();
+//
+//                    } // =========================
+//                    // MONTHLY COURSE SUPPORT
+//                    // =========================
+//                    else if (serviceName.toUpperCase().contains("MONTHLY")) {
+//
+//                        StudentFeeInstallmentsDAO dao = new StudentFeeInstallmentsDAO();
+//                        StudentFeeInstallmentsDAO.MonthDataDTO dto = dao.getMonthData(enrollmentId);
+//
+//                        // =========================
+//                        // TOTAL FEE
+//                        // =========================
+//                        double totalFee = ((Number) em.createNativeQuery(
+//                                "SELECT total_fee FROM student_fee_payments WHERE enrollment_id=? AND status=1"
+//                        ).setParameter(1, enrollmentId).getSingleResult()).doubleValue();
+//
+//                        // =========================
+//                        // TOTAL MONTHS
+//                        // =========================
+//                        int totalMonths = 0;
+//                        int ty = dto.startYear;
+//                        int tm = dto.startMonth;
+//
+//                        while (true) {
+//                            totalMonths++;
+//                            if (ty == dto.endYear && tm == dto.endMonth) {
+//                                break;
+//                            }
+//
+//                            tm++;
+//                            if (tm > 12) {
+//                                tm = 1;
+//                                ty++;
+//                            }
+//                        }
+//
+//                        double monthlyFee = totalMonths == 0 ? 0 : (totalFee / totalMonths);
+//
+//                        // =========================
+//                        // PAYMENT ID
+//                        // =========================
+//                        int paymentId = ((Number) em.createNativeQuery(
+//                                "SELECT student_fee_payments_id FROM student_fee_payments WHERE enrollment_id=? AND status=1"
+//                        ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+//
+//                        int installmentNo = ((Number) em.createNativeQuery(
+//                                "SELECT COALESCE(MAX(installment_no),0) FROM student_fee_installments WHERE enrollment_id=?"
+//                        ).setParameter(1, enrollmentId).getSingleResult()).intValue();
+//
+//                        // =========================
+//                        // MAPS
+//                        // =========================
+//                        // 🔹 Paid Map (REAL payments only)
+//                        Map<String, Double> paidMap = new HashMap<>();
+//
+//                        List<Object[]> paidRows = em.createNativeQuery(
+//                                "SELECT month_for, COALESCE(SUM(amount_paid),0) "
+//                                + "FROM student_fee_installments "
+//                                + "WHERE enrollment_id=? AND status=1 "
+//                                + "AND payment_type NOT IN ('ZERO','DISCOUNT') "
+//                                + "GROUP BY month_for"
+//                        )
+//                                .setParameter(1, enrollmentId)
+//                                .getResultList();
+//
+//                        for (Object[] r : paidRows) {
+//                            paidMap.put(r[0].toString(), ((Number) r[1]).doubleValue());
+//                        }
+//
+//                        // 🔹 Payment Type Map
+//                        Map<String, String> typeMap = new HashMap<>();
+//
+//                        List<Object[]> typeRows = em.createNativeQuery(
+//                                "SELECT month_for, MAX(payment_type) "
+//                                + "FROM student_fee_installments "
+//                                + "WHERE enrollment_id=? AND status=1 "
+//                                + "GROUP BY month_for"
+//                        )
+//                                .setParameter(1, enrollmentId)
+//                                .getResultList();
+//
+//                        for (Object[] r : typeRows) {
+//                            typeMap.put(r[0].toString(), r[1] != null ? r[1].toString() : "");
+//                        }
+//
+//                        // 🔹 Adjustment Map
+//                        Map<String, Double> adjustmentMap = new HashMap<>();
+//
+//                        List<Object[]> adjRows = em.createNativeQuery(
+//                                "SELECT month_for, adjustment_amount "
+//                                + "FROM fee_adjustment "
+//                                + "WHERE enrollment_id=? AND status=1"
+//                        )
+//                                .setParameter(1, enrollmentId)
+//                                .getResultList();
+//
+//                        for (Object[] r : adjRows) {
+//                            adjustmentMap.put(r[0].toString(),
+//                                    r[1] != null ? ((Number) r[1]).doubleValue() : 0);
+//                        }
+//
+//                        // =========================
+//                        // FIFO LOGIC
+//                        // =========================
+//                        double remainingAmount = payableAmount;
+//
+//                        int y = dto.startYear;
+//                        int m = dto.startMonth;
+//
+//                        while (remainingAmount > 0) {
+//
+//                            if (y > dto.endYear || (y == dto.endYear && m > dto.endMonth)) {
+//                                break;
+//                            }
+//
+//                            String monthKey = String.format("%04d-%02d", y, m);
+//
+//                            String type = typeMap.getOrDefault(monthKey, "");
+//                            double alreadyPaid = paidMap.getOrDefault(monthKey, 0.0);
+//                            double adjustment = adjustmentMap.getOrDefault(monthKey, 0.0);
+//
+//                            double finalFee = monthlyFee - adjustment;
+//
+//                            // ❌ SKIP ZERO
+//                            if ("ZERO".equalsIgnoreCase(type)) {
+//                                m++;
+//                                if (m > 12) {
+//                                    m = 1;
+//                                    y++;
+//                                }
+//                                continue;
+//                            }
+//
+//                            // 🔥 BALANCE CALCULATION
+//                            double balance = finalFee - alreadyPaid;
+//
+//                            if (balance > 0) {
+//
+//                                double payNow = Math.min(balance, remainingAmount);
+//
+//                                installmentNo++;
+//
+//                                em.createNativeQuery(
+//                                        "INSERT INTO student_fee_installments "
+//                                        + "(student_fee_payments_id, enrollment_id, "
+//                                        + "student_fee_round_payment_master_id, installment_no, "
+//                                        + "amount_paid, payment_date, payment_method, "
+//                                        + "payment_type, month_for, remarks, status) "
+//                                        + "VALUES (?, ?, ?, ?, ?, NOW(), ?, "
+//                                        + "'ROUND', ?, 'Round Monthly Payment', 1)"
+//                                )
+//                                        .setParameter(1, paymentId)
+//                                        .setParameter(2, enrollmentId)
+//                                        .setParameter(3, roundMasterId)
+//                                        .setParameter(4, installmentNo)
+//                                        .setParameter(5, payNow)
+//                                        .setParameter(6, paymentMode)
+//                                        .setParameter(7, monthKey)
+//                                        .executeUpdate();
+//
+//                                paidMap.put(monthKey, alreadyPaid + payNow);
+//                                remainingAmount -= payNow;
+//                            }
+//
+//                            m++;
+//                            if (m > 12) {
+//                                m = 1;
+//                                y++;
+//                            }
+//                        }
+//
+//                        // =========================
+//                        // FINAL UPDATE
+//                        // =========================
+//                        double finalPaid = ((Number) em.createNativeQuery(
+//                                "SELECT COALESCE(SUM(amount_paid),0) "
+//                                + "FROM student_fee_installments "
+//                                + "WHERE enrollment_id=? "
+//                                + "AND status=1 "
+//                                + "AND payment_type NOT IN ('ZERO','DISCOUNT')"
+//                        )
+//                                .setParameter(1, enrollmentId)
+//                                .getSingleResult()).doubleValue();
+//
+//                        double finalBalance = Math.max(totalFee - finalPaid, 0);
+//
+//                        em.createNativeQuery(
+//                                "UPDATE student_fee_payments "
+//                                + "SET total_paid=?, total_balance=?, payment_status=? "
+//                                + "WHERE enrollment_id=?"
+//                        )
+//                                .setParameter(1, finalPaid)
+//                                .setParameter(2, finalBalance)
+//                                .setParameter(3, finalBalance == 0 ? "COMPLETED" : "ACTIVE")
+//                                .setParameter(4, enrollmentId)
+//                                .executeUpdate();
+//                    }
+//
+//                    // =========================
+//                    // ROUND MASTER DETAILS
+//                    // =========================
+//                    StudentFeeRoundPaymentMasterDetails d = new StudentFeeRoundPaymentMasterDetails();
+//                    d.setStudentFeeRoundPaymentMaster(master);
+//                    d.setEnrollmentId(enrollmentId);
+//                    d.setReferenceType("COURSE");
+//                    d.setPaidAmount(payableAmount);
+//                    d.setStatus(1);
+//
+//                    em.persist(d);
+//                } // =====================================================
+//                // ADDITIONAL / INVENTORY
+//                // =====================================================
+//                else if (ref.startsWith("ADD_")) {
+//
+//                    int safId = Integer.parseInt(ref.replace("ADD_", ""));
+//
+//                    em.createNativeQuery(
+//                            "INSERT INTO student_additional_fee_payments "
+//                            + "(student_additional_fees_id, student_fee_round_payment_master_id, paid_date, amount_paid, payment_method, user, status) "
+//                            + "VALUES (?, ?, NOW(), ?, ?, ?, 1)"
+//                    )
+//                            .setParameter(1, safId)
+//                            .setParameter(2, roundMasterId)
+//                            .setParameter(3, payableAmount)
+//                            .setParameter(4, paymentMode)
+//                            .setParameter(5, user)
+//                            .executeUpdate();
+//
+//                    StudentFeeRoundPaymentMasterDetails d = new StudentFeeRoundPaymentMasterDetails();
+//                    d.setStudentFeeRoundPaymentMaster(master);
+//                    d.setEnrollmentId(null);
+//                    d.setReferenceId(safId);
+//                    d.setReferenceType("ADDITIONAL");
+//                    d.setPaidAmount(payableAmount);
+//                    d.setStatus(1);
+//
+//                    em.persist(d);
+//                }
+//            }
+//
+//            // ✅ AUDIT LOG: Bulk Round Payment
+//            // Grab the name safely
+//            String studentName = (rp_student_name_text.getText() != null)
+//                    ? rp_student_name_text.getText() : "";
+//
+//            String description = String.format(
+//                    "Round Payment: Student=%s, Mode=%s, Amount=%.2f, Student ID: %d",
+//                    studentName, paymentMode, totalPaid, studentId
+//            );
+//
+//            logHelper.log(
+//                    "ROUND_PAYMENT",
+//                    studentId,
+//                    "PAYMENT", // Usually the 'Action' column looks better as a single verb like 'PAYMENT' or 'COLLECT'
+//                    paymentMode,
+//                    totalPaid,
+//                    description,
+//                    user
+//            );
+//
+//            tx.commit();
+//            JOptionPane.showMessageDialog(this, "Payment saved successfully.", "Payment Processed", JOptionPane.INFORMATION_MESSAGE);
+//
+//        } catch (Exception e) {
+//            tx.rollback();
+//            e.printStackTrace();
+//        } finally {
+//            em.close();
+//        }
+//    }
     public void saveRoundPaymentCheque(int studentId, JTable table,
             String paymentMode, double totalPaid, double roundingAdj, String user) {
 
@@ -1292,6 +1898,95 @@ public class Round_Payment extends javax.swing.JDialog {
                     d.setStatus(1);
 
                     em.persist(d);
+                } 
+                
+                else if (ref.startsWith("ADD_")) {
+
+                    int safId = Integer.parseInt(ref.replace("ADD_", ""));
+
+                    // =========================
+                    // SAVE ADDITIONAL PAYMENT
+                    // =========================
+                    em.createNativeQuery(
+                            "INSERT INTO student_additional_fee_payments "
+                            + "(st_additional_fees_details_id, "
+                            + "student_fee_round_payment_master_id, "
+                            + "paid_date, amount_paid, payment_method, user, status) "
+                            + "VALUES (?, ?, NOW(), ?, ?, ?, 1)"
+                    )
+                            .setParameter(1, safId)
+                            .setParameter(2, roundMasterId)
+                            .setParameter(3, payableAmount)
+                            .setParameter(4, paymentMode)
+                            .setParameter(5, user)
+                            .executeUpdate();
+
+                    // =========================
+                    // FIND MASTER ID
+                    // =========================
+                    Object masterObj = em.createNativeQuery(
+                            "SELECT st_additional_fees_master_id "
+                            + "FROM student_additional_fees_details "
+                            + "WHERE st_additional_fees_details_id=?"
+                    )
+                            .setParameter(1, safId)
+                            .getSingleResult();
+
+                    int masterId = ((Number) masterObj).intValue();
+
+                    // =========================
+                    // RECALCULATE TOTALS
+                    // =========================
+                    Object[] totals = (Object[]) em.createNativeQuery(
+                            "SELECT "
+                            + "COALESCE(SUM(d.line_net_amount),0), "
+                            + "COALESCE((SELECT SUM(p.amount_paid) "
+                            + "FROM student_additional_fee_payments p "
+                            + "WHERE p.st_additional_fees_details_id IN "
+                            + "(SELECT st_additional_fees_details_id "
+                            + "FROM student_additional_fees_details "
+                            + "WHERE st_additional_fees_master_id=? AND status=1)"
+                            + "),0) "
+                            + "FROM student_additional_fees_details d "
+                            + "WHERE d.st_additional_fees_master_id=? "
+                            + "AND d.status=1"
+                    )
+                            .setParameter(1, masterId)
+                            .setParameter(2, masterId)
+                            .getSingleResult();
+
+                    double totalAmount = ((Number) totals[0]).doubleValue();
+                    double totalPaidAmount = ((Number) totals[1]).doubleValue();
+                    double totalDue = Math.max(totalAmount - totalPaidAmount, 0);
+
+                    // =========================
+                    // UPDATE MASTER
+                    // =========================
+                    em.createNativeQuery(
+                            "UPDATE student_additional_fees_master "
+                            + "SET total_amount=?, total_paid=?, total_due=? "
+                            + "WHERE st_additional_fees_master_id=?"
+                    )
+                            .setParameter(1, totalAmount)
+                            .setParameter(2, totalPaidAmount)
+                            .setParameter(3, totalDue)
+                            .setParameter(4, masterId)
+                            .executeUpdate();
+
+                    // =========================
+                    // ROUND MASTER DETAILS
+                    // =========================
+                    StudentFeeRoundPaymentMasterDetails d
+                            = new StudentFeeRoundPaymentMasterDetails();
+
+                    d.setStudentFeeRoundPaymentMaster(master);
+                    d.setEnrollmentId(null);
+                    d.setReferenceId(safId);
+                    d.setReferenceType("ADDITIONAL");
+                    d.setPaidAmount(payableAmount);
+                    d.setStatus(1);
+
+                    em.persist(d);
                 }
             }
 
@@ -1480,9 +2175,9 @@ public class Round_Payment extends javax.swing.JDialog {
             rp_due_table.getColumnModel().getColumn(10).setMinWidth(50);
             rp_due_table.getColumnModel().getColumn(10).setPreferredWidth(50);
             rp_due_table.getColumnModel().getColumn(10).setMaxWidth(50);
-            rp_due_table.getColumnModel().getColumn(11).setMinWidth(0);
-            rp_due_table.getColumnModel().getColumn(11).setPreferredWidth(0);
-            rp_due_table.getColumnModel().getColumn(11).setMaxWidth(0);
+            rp_due_table.getColumnModel().getColumn(11).setMinWidth(50);
+            rp_due_table.getColumnModel().getColumn(11).setPreferredWidth(50);
+            rp_due_table.getColumnModel().getColumn(11).setMaxWidth(50);
         }
 
         jLabel11.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N

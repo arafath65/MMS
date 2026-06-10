@@ -147,8 +147,7 @@ public class Fees_Management extends javax.swing.JPanel {
     }
 
     private boolean itemSelectedByUser1 = false;
-    private boolean itemSelectedByUser2 = false;
-
+    
     public void setupComboSelectionListeners1(JComboBox<String> comboBox, JComponent nextFocusComponent) {
         comboBox.addPopupMenuListener(new PopupMenuListener() {
             @Override

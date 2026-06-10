@@ -381,9 +381,9 @@ public class Cheque_Handling extends javax.swing.JPanel {
                                 int enrollmentId = d[2] != null ? ((Number) d[2]).intValue() : 0;
                                 double paid = d[3] != null ? ((Number) d[3]).doubleValue() : 0;
 
-                                int targetEnrollmentId = (refIdInner != 0) ? refIdInner : enrollmentId;
-
+                                // =====================================================
                                 // COURSE REVERSE
+                                // =====================================================
                                 if (type.equalsIgnoreCase("COURSE")) {
 
                                     em.createNativeQuery(
@@ -394,23 +394,114 @@ public class Cheque_Handling extends javax.swing.JPanel {
                                     )
                                             .setParameter(1, paid)
                                             .setParameter(2, paid)
-                                            .setParameter(3, targetEnrollmentId)
+                                            .setParameter(3, enrollmentId)
                                             .executeUpdate();
-                                } // ADDITIONAL REVERSE
+
+                                    // Recalculate status
+                                    em.createNativeQuery(
+                                            "UPDATE student_fee_payments "
+                                            + "SET payment_status = CASE "
+                                            + "WHEN total_balance > 0 THEN 'ACTIVE' "
+                                            + "ELSE 'COMPLETED' END "
+                                            + "WHERE enrollment_id=?"
+                                    )
+                                            .setParameter(1, enrollmentId)
+                                            .executeUpdate();
+
+                                } // =====================================================
+                                // ADDITIONAL REVERSE
+                                // =====================================================
                                 else if (type.equalsIgnoreCase("ADDITIONAL")) {
 
                                     em.createNativeQuery(
-                                            "DELETE FROM student_additional_fee_payments "
+                                            "UPDATE student_additional_fee_payments "
+                                            + "SET payment_method='CHEQUE' "
                                             + "WHERE student_fee_round_payment_master_id=? "
-                                            + "AND student_additional_fees_id=? "
-                                            + "AND payment_method='CHEQUE'"
+                                            + "AND st_additional_fees_details_id=? "
+                                            + "AND payment_method='CHEQUE CLEARED'"
                                     )
                                             .setParameter(1, refId)
                                             .setParameter(2, refIdInner)
                                             .executeUpdate();
                                 }
+
+                                // =====================================================
+                                // RESTORE ROUND DETAIL TO PENDING
+                                // =====================================================
+                                em.createNativeQuery(
+                                        "UPDATE student_fee_round_payment_master_details "
+                                        + "SET status=1 "
+                                        + "WHERE student_fee_round_payment_master_id=? "
+                                        + "AND reference_type=? "
+                                        + "AND reference_id=?"
+                                )
+                                        .setParameter(1, refId)
+                                        .setParameter(2, type)
+                                        .setParameter(3, refIdInner)
+                                        .executeUpdate();
                             }
                         }
+//                        else if (refType.equalsIgnoreCase("ROUND")) {
+//
+//                            List<Object[]> details = em.createNativeQuery(
+//                                    "SELECT reference_type, reference_id, enrollment_id, paid_amount "
+//                                    + "FROM student_fee_round_payment_master_details "
+//                                    + "WHERE student_fee_round_payment_master_id=? AND status=0"
+//                            )
+//                                    .setParameter(1, refId)
+//                                    .getResultList();
+//
+//                            for (Object[] d : details) {
+//
+//                                String type = d[0] != null ? d[0].toString() : "";
+//                                int refIdInner = d[1] != null ? ((Number) d[1]).intValue() : 0;
+//                                int enrollmentId = d[2] != null ? ((Number) d[2]).intValue() : 0;
+//                                double paid = d[3] != null ? ((Number) d[3]).doubleValue() : 0;
+//
+//                                int targetEnrollmentId = (refIdInner != 0) ? refIdInner : enrollmentId;
+//
+//                                // COURSE REVERSE
+//                                if (type.equalsIgnoreCase("COURSE")) {
+//
+//                                    em.createNativeQuery(
+//                                            "UPDATE student_fee_payments "
+//                                            + "SET total_paid = total_paid - ?, "
+//                                            + "total_balance = total_balance + ? "
+//                                            + "WHERE enrollment_id=?"
+//                                    )
+//                                            .setParameter(1, paid)
+//                                            .setParameter(2, paid)
+//                                            .setParameter(3, targetEnrollmentId)
+//                                            .executeUpdate();
+//                                } // ADDITIONAL REVERSE
+//                                else if (type.equalsIgnoreCase("ADDITIONAL")) {
+//
+//                                    em.createNativeQuery(
+//                                            "UPDATE student_additional_fee_payments "
+//                                            + "SET payment_method='CHEQUE' "
+//                                            + "WHERE student_fee_round_payment_master_id=? "
+//                                            + "AND st_additional_fees_details_id=? "
+//                                            + "AND payment_method='CHEQUE CLEARED'"
+//                                    )
+//                                            .setParameter(1, refId)
+//                                            .setParameter(2, refIdInner)
+//                                            .executeUpdate();
+//                                }
+//
+//                                // RESTORE ROUND DETAIL TO PENDING
+//                                em.createNativeQuery(
+//                                        "UPDATE student_fee_round_payment_master_details "
+//                                        + "SET status=1 "
+//                                        + "WHERE student_fee_round_payment_master_id=? "
+//                                        + "AND reference_type=? "
+//                                        + "AND reference_id=?"
+//                                )
+//                                        .setParameter(1, refId)
+//                                        .setParameter(2, type)
+//                                        .setParameter(3, refIdInner)
+//                                        .executeUpdate();
+//                            }
+//                        }
 
                         // --- 2. LOG THE ACTION ---
                         String logDesc = String.format("Cheque #%s (%s) status changed: %s -> %s. (Ref: %s #%d)",
@@ -519,7 +610,6 @@ public class Cheque_Handling extends javax.swing.JPanel {
                             .setParameter(3, targetEnrollmentId)
                             .executeUpdate();
 
-                    // ✅ FIX: status update
                     em.createNativeQuery(
                             "UPDATE student_fee_payments "
                             + "SET payment_status = CASE "
@@ -532,20 +622,277 @@ public class Cheque_Handling extends javax.swing.JPanel {
 
                 } else if (type.equalsIgnoreCase("ADDITIONAL")) {
 
+                    int safId = refIdInner;
+
+                    // =========================
+                    // PREVENT DUPLICATE INSERT
+                    // =========================
                     em.createNativeQuery(
-                            "INSERT INTO student_additional_fee_payments "
-                            + "(student_additional_fees_id, student_fee_round_payment_master_id, paid_date, amount_paid, payment_method, user, status) "
-                            + "VALUES (?, ?, NOW(), ?, 'CHEQUE', ?, 1)"
+                            "UPDATE student_additional_fee_payments "
+                            + "SET payment_method='CHEQUE CLEARED' "
+                            + "WHERE st_additional_fees_details_id=? "
+                            + "AND student_fee_round_payment_master_id=? "
+                            + "AND payment_method='CHEQUE'"
                     )
-                            .setParameter(1, refIdInner)
+                            .setParameter(1, safId)
                             .setParameter(2, refId)
-                            .setParameter(3, paid)
-                            .setParameter(4, username)
+                            .executeUpdate();
+//                    Object exists = em.createNativeQuery(
+//                            "SELECT COUNT(*) FROM student_additional_fee_payments "
+//                            + "WHERE st_additional_fees_details_id=? "
+//                            + "AND student_fee_round_payment_master_id=? "
+//                            + "AND amount_paid=? "
+//                            + "AND payment_method='CHEQUE CLEARED'"
+//                    )
+//                            .setParameter(1, safId)
+//                            .setParameter(2, refId)
+//                            .setParameter(3, paid)
+//                            .getSingleResult();
+//
+//                    if (((Number) exists).intValue() == 0) {
+//
+//                        em.createNativeQuery(
+//                                "INSERT INTO student_additional_fee_payments "
+//                                + "(st_additional_fees_details_id, student_fee_round_payment_master_id, "
+//                                + "paid_date, amount_paid, payment_method, user, status) "
+//                                + "VALUES (?, ?, NOW(), ?, 'CHEQUE CLEARED', ?, 1)"
+//                        )
+//                                .setParameter(1, safId)
+//                                .setParameter(2, refId)
+//                                .setParameter(3, paid)
+//                                .setParameter(4, username)
+//                                .executeUpdate();
+//                    }
+
+                    // =========================
+                    // MASTER CALCULATION
+                    // =========================
+                    Object masterObj = em.createNativeQuery(
+                            "SELECT st_additional_fees_master_id "
+                            + "FROM student_additional_fees_details "
+                            + "WHERE st_additional_fees_details_id=?"
+                    )
+                            .setParameter(1, safId)
+                            .getSingleResult();
+
+                    int masterId = ((Number) masterObj).intValue();
+
+                    Object[] totals = (Object[]) em.createNativeQuery(
+                            "SELECT "
+                            + "COALESCE(SUM(d.line_net_amount),0), "
+                            + "COALESCE((SELECT SUM(p.amount_paid) "
+                            + "FROM student_additional_fee_payments p "
+                            + "WHERE p.st_additional_fees_details_id IN "
+                            + "(SELECT st_additional_fees_details_id "
+                            + "FROM student_additional_fees_details "
+                            + "WHERE st_additional_fees_master_id=? AND status=1) "
+                            + "AND p.payment_method <> 'CHEQUE'"
+                            + "),0) "
+                            + "FROM student_additional_fees_details d "
+                            + "WHERE d.st_additional_fees_master_id=? "
+                            + "AND d.status=1"
+                    )
+                            //                    Object[] totals = (Object[]) em.createNativeQuery(
+                            //                            "SELECT "
+                            //                            + "COALESCE(SUM(d.line_net_amount),0), "
+                            //                            + "COALESCE((SELECT SUM(p.amount_paid) "
+                            //                            + "FROM student_additional_fee_payments p "
+                            //                            + "WHERE p.st_additional_fees_details_id IN "
+                            //                            + "(SELECT st_additional_fees_details_id "
+                            //                            + "FROM student_additional_fees_details "
+                            //                            + "WHERE st_additional_fees_master_id=? AND status=1)"
+                            //                            + "),0) "
+                            //                            + "FROM student_additional_fees_details d "
+                            //                            + "WHERE d.st_additional_fees_master_id=? AND d.status=1"
+                            //                    )
+                            .setParameter(1, masterId)
+                            .setParameter(2, masterId)
+                            .getSingleResult();
+
+                    double totalAmount = ((Number) totals[0]).doubleValue();
+                    double totalPaidAmount = ((Number) totals[1]).doubleValue();
+                    double totalDue = Math.max(totalAmount - totalPaidAmount, 0);
+
+                    em.createNativeQuery(
+                            "UPDATE student_additional_fees_master "
+                            + "SET total_amount=?, total_paid=?, total_due=? "
+                            + "WHERE st_additional_fees_master_id=?"
+                    )
+                            .setParameter(1, totalAmount)
+                            .setParameter(2, totalPaidAmount)
+                            .setParameter(3, totalDue)
+                            .setParameter(4, masterId)
                             .executeUpdate();
                 }
+
+                // =========================
+                // MARK AS PROCESSED (IMPORTANT)
+                // =========================
+                em.createNativeQuery(
+                        "UPDATE student_fee_round_payment_master_details "
+                        + "SET status=0 "
+                        + "WHERE student_fee_round_payment_master_id=? "
+                        + "AND reference_type=? "
+                        + "AND reference_id=?"
+                )
+                        .setParameter(1, refId)
+                        .setParameter(2, type)
+                        .setParameter(3, refIdInner)
+                        .executeUpdate();
             }
         }
     }
+
+//    private void processClearance(EntityManager em, String refType, int refId, double amount) {
+//
+//        // ---------- ADMISSION ----------
+//        if (refType.equalsIgnoreCase("ADMISSION")) {
+//
+//            em.createNativeQuery(
+//                    "UPDATE student_fee_payments "
+//                    + "SET payment_status='PAID', "
+//                    + "total_paid = total_paid + ?, "
+//                    + "total_balance = total_fee - total_paid "
+//                    + "WHERE enrollment_id=?"
+//            )
+//                    .setParameter(1, amount)
+//                    .setParameter(2, refId)
+//                    .executeUpdate();
+//        } // ---------- ROUND ----------
+//        else if (refType.equalsIgnoreCase("ROUND")) {
+//
+//            List<Object[]> details = em.createNativeQuery(
+//                    "SELECT reference_type, reference_id, enrollment_id, paid_amount "
+//                    + "FROM student_fee_round_payment_master_details "
+//                    + "WHERE student_fee_round_payment_master_id=? AND status=1"
+//            )
+//                    .setParameter(1, refId)
+//                    .getResultList();
+//
+//            for (Object[] d : details) {
+//
+//                String type = d[0] != null ? d[0].toString() : "";
+//                int refIdInner = d[1] != null ? ((Number) d[1]).intValue() : 0;
+//                int enrollmentId = d[2] != null ? ((Number) d[2]).intValue() : 0;
+//                double paid = d[3] != null ? ((Number) d[3]).doubleValue() : 0;
+//
+//                int targetEnrollmentId = (refIdInner != 0) ? refIdInner : enrollmentId;
+//
+//                if (type.equalsIgnoreCase("COURSE")) {
+//
+//                    em.createNativeQuery(
+//                            "UPDATE student_fee_payments "
+//                            + "SET total_paid = total_paid + ?, "
+//                            + "total_balance = total_balance - ? "
+//                            + "WHERE enrollment_id=?"
+//                    )
+//                            .setParameter(1, paid)
+//                            .setParameter(2, paid)
+//                            .setParameter(3, targetEnrollmentId)
+//                            .executeUpdate();
+//
+//                    // ✅ FIX: status update
+//                    em.createNativeQuery(
+//                            "UPDATE student_fee_payments "
+//                            + "SET payment_status = CASE "
+//                            + "WHEN total_balance <= 0 THEN 'COMPLETED' "
+//                            + "ELSE 'ACTIVE' END "
+//                            + "WHERE enrollment_id = ?"
+//                    )
+//                            .setParameter(1, targetEnrollmentId)
+//                            .executeUpdate();
+//
+//                } else if (type.equalsIgnoreCase("ADDITIONAL")) {
+//
+//                    int safId = refIdInner;
+//
+//                    // =========================
+//                    // SAVE PAYMENT
+//                    // =========================
+//                    em.createNativeQuery(
+//                            "INSERT INTO student_additional_fee_payments "
+//                            + "(st_additional_fees_details_id, "
+//                            + "student_fee_round_payment_master_id, "
+//                            + "paid_date, amount_paid, payment_method, user, status) "
+//                            + "VALUES (?, ?, NOW(), ?, 'CHEQUE', ?, 1)"
+//                    )
+//                            .setParameter(1, safId)
+//                            .setParameter(2, refId)
+//                            .setParameter(3, paid)
+//                            .setParameter(4, username)
+//                            .executeUpdate();
+//
+//                    // =========================
+//                    // FIND MASTER ID
+//                    // =========================
+//                    Object masterObj = em.createNativeQuery(
+//                            "SELECT st_additional_fees_master_id "
+//                            + "FROM student_additional_fees_details "
+//                            + "WHERE st_additional_fees_details_id=?"
+//                    )
+//                            .setParameter(1, safId)
+//                            .getSingleResult();
+//
+//                    int masterId = ((Number) masterObj).intValue();
+//
+//                    // =========================
+//                    // RECALCULATE TOTALS
+//                    // =========================
+//                    Object[] totals = (Object[]) em.createNativeQuery(
+//                            "SELECT "
+//                            + "COALESCE(SUM(d.line_net_amount),0), "
+//                            + "COALESCE((SELECT SUM(p.amount_paid) "
+//                            + "FROM student_additional_fee_payments p "
+//                            + "WHERE p.st_additional_fees_details_id IN "
+//                            + "(SELECT st_additional_fees_details_id "
+//                            + "FROM student_additional_fees_details "
+//                            + "WHERE st_additional_fees_master_id=? "
+//                            + "AND status=1)"
+//                            + "),0) "
+//                            + "FROM student_additional_fees_details d "
+//                            + "WHERE d.st_additional_fees_master_id=? "
+//                            + "AND d.status=1"
+//                    )
+//                            .setParameter(1, masterId)
+//                            .setParameter(2, masterId)
+//                            .getSingleResult();
+//
+//                    double totalAmount = ((Number) totals[0]).doubleValue();
+//                    double totalPaidAmount = ((Number) totals[1]).doubleValue();
+//                    double totalDue = Math.max(totalAmount - totalPaidAmount, 0);
+//
+//                    // =========================
+//                    // UPDATE MASTER
+//                    // =========================
+//                    em.createNativeQuery(
+//                            "UPDATE student_additional_fees_master "
+//                            + "SET total_amount=?, "
+//                            + "total_paid=?, "
+//                            + "total_due=? "
+//                            + "WHERE st_additional_fees_master_id=?"
+//                    )
+//                            .setParameter(1, totalAmount)
+//                            .setParameter(2, totalPaidAmount)
+//                            .setParameter(3, totalDue)
+//                            .setParameter(4, masterId)
+//                            .executeUpdate();
+//                }
+    ////                else if (type.equalsIgnoreCase("ADDITIONAL")) {
+////
+////                    em.createNativeQuery(
+////                            "INSERT INTO student_additional_fee_payments "
+////                            + "(student_additional_fees_id, student_fee_round_payment_master_id, paid_date, amount_paid, payment_method, user, status) "
+////                            + "VALUES (?, ?, NOW(), ?, 'CHEQUE', ?, 1)"
+////                    )
+////                            .setParameter(1, refIdInner)
+////                            .setParameter(2, refId)
+////                            .setParameter(3, paid)
+////                            .setParameter(4, username)
+////                            .executeUpdate();
+////                }
+//            }
+//        }
+//    }
 
     private void processInvalidCheque(EntityManager em, int chequeId) {
 

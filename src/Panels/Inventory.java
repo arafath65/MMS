@@ -1033,7 +1033,6 @@ public class Inventory extends javax.swing.JPanel {
 
     private void inv_grn_tableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_inv_grn_tableMouseClicked
 
-
     }//GEN-LAST:event_inv_grn_tableMouseClicked
 
     private void buttonGradient5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient5ActionPerformed

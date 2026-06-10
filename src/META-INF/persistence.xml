@@ -37,7 +37,7 @@
     <class>Additional.BankNamesSriLanka</class>
     <class>Additional.BankBranches</class>
     
-    <properties>
+    <class>Entities.Student_Management.StudentAdditionalFeesDetails</class><class>Entities.Student_Management.StudentAdditionalFeesMaster</class><properties>
       <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/mms_db"/>
       <property name="javax.persistence.jdbc.user" value="root"/>
       <property name="javax.persistence.jdbc.password" value="6516"/>
