@@ -799,11 +799,13 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
 
                 DefaultTableModel model = (DefaultTableModel) reg_misc_issued_table.getModel();
                 int count = model.getRowCount() + 1;
+                double line = amount * qty;
                 Object[] data = {
                     count,
                     ser_name,
                     GeneralMethods.formatWithComma(amount),
                     GeneralMethods.formatWithComma(qty),
+                    GeneralMethods.formatWithComma(line),
                     GeneralMethods.formatWithComma(discount),
                     GeneralMethods.formatWithComma(amount)
                 };

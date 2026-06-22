@@ -77,7 +77,7 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
             //  new Item.Label("MAIN"),
             new Item("Dashboard", "dashboard.svg"),
             //   new Item.Label("STUDENT MANAGEMENT"),
-            
+
             new Item("Student Management", "student.svg")
             .subMenu("New Admission")
             .subMenu("Fees Handling")
@@ -88,18 +88,18 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
             .subMenu("Master Student Directory")
             .subMenu("Students Due Report")
             ),
-            
+            new Item("Donations (Funds)", "student.svg")
+            .subMenu("One-Time Donation")
+            .subMenu("Recurring Donation"),
             new Item("Inventory", "invetory.svg")
             .subMenu("Add Inventory")
             .subMenu(new Item("Reports")
-            .subMenu("Supplier List") 
-            .subMenu("Stock Movement") 
-            .subMenu("Low Stock") 
+            .subMenu("Supplier List")
+            .subMenu("Stock Movement")
+            .subMenu("Low Stock")
             ),
-            
             new Item("Accounts", "accountsvg.svg")
             .subMenu("Cheque Handling"),
-            
             new Item("Settings", "settingssvg.svg")
             .subMenu("Register Course")
             .subMenu("Additional Payments"),};
@@ -128,100 +128,113 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
                     return;
                 }
 
-                // STUDENT MANAGEMENT -> NEW ADMISSION
+// STUDENT MANAGEMENT -> NEW ADMISSION
                 if (index.length == 2 && index[0] == 1 && index[1] == 0) {
                     dashboard.showPanel("STUDENT_ADMISSION");
                     Dashboard.Dashboard.Main_Lable.setText("NEW ADMISSION");
                     return;
                 }
 
-                // STUDENT MANAGEMENT -> Fees Handling
+// STUDENT MANAGEMENT -> Fees Handling
                 if (index.length == 2 && index[0] == 1 && index[1] == 1) {
                     dashboard.showPanel("FEES_MANAGEMENT");
                     Dashboard.Dashboard.Main_Lable.setText("FEES MANAGEMENT");
                     return;
                 }
-                
-                // STUDENT MANAGEMENT -> Batch Fees Paymeny
+
+// STUDENT MANAGEMENT -> Batch Transfer / Payment
                 if (index.length == 2 && index[0] == 1 && index[1] == 2) {
                     dashboard.showPanel("BATCH_TRANSFER");
                     Dashboard.Dashboard.Main_Lable.setText("BATCH TRANSFER / PAYMENTS");
                     return;
                 }
-                
-                // STUDENT MANAGEMENT -> Reports -> Batch Student Report
+
+// STUDENT MANAGEMENT -> Reports -> Batch Student List
                 if (index.length == 3 && index[0] == 1 && index[1] == 3 && index[2] == 0) {
                     dashboard.showPanel("BATCH/CLASS_STUDENT_REPORT");
                     Dashboard.Dashboard.Main_Lable.setText("BATCH STUDENT LIST");
                     return;
                 }
-                
-                // STUDENT MANAGEMENT -> Reports -> Batch Student Contact List
+
+// STUDENT MANAGEMENT -> Reports -> Contact Details
                 if (index.length == 3 && index[0] == 1 && index[1] == 3 && index[2] == 1) {
                     dashboard.showPanel("BATCH/CLASS_STUDENT_CONTACT");
                     Dashboard.Dashboard.Main_Lable.setText("CONTACT DETAILS");
                     return;
                 }
-                
-                // STUDENT MANAGEMENT -> Reports -> Master Student Directory
+
+// STUDENT MANAGEMENT -> Reports -> Master Student Directory
                 if (index.length == 3 && index[0] == 1 && index[1] == 3 && index[2] == 2) {
                     dashboard.showPanel("ENTIRE_STUDENTS_REPORT");
                     Dashboard.Dashboard.Main_Lable.setText("STUDENT DIRECTORY");
                     return;
                 }
-                
-                // STUDENT MANAGEMENT -> Reports -> Students Due Report
+
+// STUDENT MANAGEMENT -> Reports -> Students Due Report
                 if (index.length == 3 && index[0] == 1 && index[1] == 3 && index[2] == 3) {
                     dashboard.showPanel("STUDENT_WISE_DUE");
                     Dashboard.Dashboard.Main_Lable.setText("STUDENTS DUE REPORT");
                     return;
                 }
 
-                // Inventory -> Inventory -> Add Inventory
+// DONATIONS -> One-Time Donation
                 if (index.length == 2 && index[0] == 2 && index[1] == 0) {
+                    dashboard.showPanel("ONE-TIME_DONATION");
+                    Dashboard.Dashboard.Main_Lable.setText("ONE-TIME DONATION");
+                    return;
+                }
+
+// DONATIONS -> Recurring Donation
+                if (index.length == 2 && index[0] == 2 && index[1] == 1) {
+                    dashboard.showPanel("RECURRING_DONATION");
+                    Dashboard.Dashboard.Main_Lable.setText("RECURRING DONATION");
+                    return;
+                }
+
+// INVENTORY -> Add Inventory
+                if (index.length == 2 && index[0] == 3 && index[1] == 0) {
                     dashboard.showPanel("INVENTORY");
                     Dashboard.Dashboard.Main_Lable.setText("ADD INVENTORY");
                     return;
                 }
-                
-                // Inventory -> Inventory -> Reports -> Supplier List
-                if (index.length == 3 && index[0] == 2 && index[1] == 1 && index[2] == 0) {
+
+// INVENTORY -> Reports -> Supplier List
+                if (index.length == 3 && index[0] == 3 && index[1] == 1 && index[2] == 0) {
                     dashboard.showPanel("SUPPLIER_LIST");
                     Dashboard.Dashboard.Main_Lable.setText("SUPPLIER LIST");
                     return;
                 }
-                
-                // Inventory -> Inventory -> Reports -> Stock Movement
-                if (index.length == 3 && index[0] == 2 && index[1] == 1 && index[2] == 1) {
+
+// INVENTORY -> Reports -> Stock Movement
+                if (index.length == 3 && index[0] == 3 && index[1] == 1 && index[2] == 1) {
                     dashboard.showPanel("STOCK_MOVEMENT");
-                    Dashboard.Dashboard.Main_Lable.setText("STOCK MOVEMENT"); 
+                    Dashboard.Dashboard.Main_Lable.setText("STOCK MOVEMENT");
                     return;
                 }
-                
-                
-                // Inventory -> Inventory -> Reports -> Low Stock
-                if (index.length == 3 && index[0] == 2 && index[1] == 1 && index[2] == 2) {
+
+// INVENTORY -> Reports -> Low Stock
+                if (index.length == 3 && index[0] == 3 && index[1] == 1 && index[2] == 2) {
                     dashboard.showPanel("LOW_STOCK");
                     Dashboard.Dashboard.Main_Lable.setText("LOW STOCK");
                     return;
                 }
 
-                // Accounts -> CHEQUE HANDLING
-                if (index.length == 2 && index[0] == 3 && index[1] == 0) {
+// ACCOUNTS -> Cheque Handling
+                if (index.length == 2 && index[0] == 4 && index[1] == 0) {
                     dashboard.showPanel("CHEQUE_HANDLING");
                     Dashboard.Dashboard.Main_Lable.setText("CHEQUE HANDLING");
                     return;
                 }
 
-                // SETTINGS -> REGISTER COURSE
-                if (index.length == 2 && index[0] == 4 && index[1] == 0) {
+// SETTINGS -> Register Course
+                if (index.length == 2 && index[0] == 5 && index[1] == 0) {
                     dashboard.showPanel("REGISTER_COURSE");
                     Dashboard.Dashboard.Main_Lable.setText("REGISTER COURSE");
                     return;
                 }
-                
-                // SETTINGS -> ADDITIONAL PAYMENTS
-                if (index.length == 2 && index[0] == 4 && index[1] == 1) {
+
+// SETTINGS -> Additional Payments
+                if (index.length == 2 && index[0] == 5 && index[1] == 1) {
                     dashboard.showPanel("ADDITIONAL_PAYMENTS");
                     Dashboard.Dashboard.Main_Lable.setText("REGISTER ADDITIONAL PAYMENTS");
                     return;
@@ -268,21 +281,28 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
         simpleMenuOption.setMenuValidation(new MenuValidation() {
             @Override
             public boolean menuValidation(int[] index) {
-                if (index.length == 1) {
-                    // Hide Calendar
-                    if (index[0] == 5) {
-                        return false;
-                    }
-                } else if (index.length == 10) {
-                    //  Hide Read 4
-                    if (index[0] == 1 && index[1] == 1 && index[2] == 4) {
-                        return false;
-                    }
-                }
+                System.out.println(Arrays.toString(index));
                 return true;
             }
         });
 
+//        simpleMenuOption.setMenuValidation(new MenuValidation() {
+//            @Override
+//            public boolean menuValidation(int[] index) {
+//                if (index.length == 1) {
+//                    // Hide Calendar
+//                    if (index[0] == 5) {
+//                        return false;
+//                    }
+//                } else if (index.length == 10) {
+//                    //  Hide Read 4
+//                    if (index[0] == 1 && index[1] == 1 && index[2] == 4) {
+//                        return false;
+//                    }
+//                }
+//                return true;
+//            }
+//        });
         simpleMenuOption.setMenus(items)
                 .setBaseIconPath("images")
                 .setIconScale(0.2f);

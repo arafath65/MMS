@@ -8,6 +8,7 @@ import Panels.Cheque_Handling;
 import Panels.Dashboard_Panel;
 import Panels.Fees_Management;
 import Panels.Inventory;
+import Panels.OneTime_Donation;
 import Panels.Register_Course;
 import Panels.Student_Management;
 import Panels_Reports.Batch_Class_Student_Contact;
@@ -40,6 +41,7 @@ public class Dashboard extends javax.swing.JFrame {
     Cheque_Handling cheque_Handling;
     Additional_Payments additional_Payments;
     Batch_Transfer batch_Transfer;
+    OneTime_Donation oneTime_Donation;
     // Course_enrolment course_enrolment;
 
     // REPORTS
@@ -54,14 +56,16 @@ public class Dashboard extends javax.swing.JFrame {
     String username;
     String role;
 
-    public Dashboard() {
+    public Dashboard(String username, String role) {
+        this.username = username;
+        this.role = role;
         GlassPanePopup.install(this);
         MyDrawerBuilder myDrawerBuilder = new MyDrawerBuilder(this);
         Drawer.getInstance().setDrawerBuilder(myDrawerBuilder);
         initComponents();
 
-        username = main_username.getText();
-        role = "Admin";
+        username = username;
+        role = role;
 
         // main_panels MUST already exist from NetBeans designer
         cardLayout = new CardLayout();
@@ -78,6 +82,7 @@ public class Dashboard extends javax.swing.JFrame {
         cheque_Handling = new Cheque_Handling(username, role);
         additional_Payments = new Additional_Payments(username, role);
         batch_Transfer = new Batch_Transfer(username, role);
+        oneTime_Donation = new OneTime_Donation(username, role);
         // course_enrolment = new Course_enrolment();
 
         batch_Class_Student_report = new Batch_Class_Student_report(username, role);
@@ -97,6 +102,7 @@ public class Dashboard extends javax.swing.JFrame {
         main_panels.add(cheque_Handling, "CHEQUE_HANDLING");
         main_panels.add(additional_Payments, "ADDITIONAL_PAYMENTS");
         main_panels.add(batch_Transfer, "BATCH_TRANSFER");
+        main_panels.add(oneTime_Donation, "ONE-TIME_DONATION");
         // main_panels.add(course_enrolment, "COURSE_ENROLMENT");
 
         main_panels.add(batch_Class_Student_report, "BATCH/CLASS_STUDENT_REPORT");
@@ -297,7 +303,7 @@ public class Dashboard extends javax.swing.JFrame {
         FlatMacDarkLaf.setup();
         //  FlatMacLightLaf.setup();
 
-        java.awt.EventQueue.invokeLater(() -> new Dashboard().setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new Dashboard("", "").setVisible(true));
     }
 
 
