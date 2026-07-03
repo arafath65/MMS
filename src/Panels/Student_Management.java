@@ -8,6 +8,7 @@ import Classes.LogHelper;
 import Classes.NICParser;
 import Classes.styleDateChooser;
 import Entities.Student_Management.Student;
+import Entities.Student_Management.StudentLanguages;
 import Entities.Student_Management.StudentParents;
 import JPA_DAO.Student_Management.StudentDAO;
 import JPA_DAO.Student_Management.StudentParentsDAO;
@@ -20,6 +21,7 @@ import com.github.sarxos.webcam.WebcamResolution;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -77,6 +79,8 @@ public class Student_Management extends javax.swing.JPanel {
 
         jComboPopulates();
 
+        loadLatestAdmissionNo();
+
         stm_ad_student_dob.addPropertyChangeListener("date", evt -> {
             NICParser.setAgeFromDOB(stm_ad_student_dob, stm_ad_student_age_text);
         });
@@ -96,16 +100,40 @@ public class Student_Management extends javax.swing.JPanel {
 
     private void jComboPopulates() {
 
-//        stm_ad_admission_no_combo.getEditor().getEditorComponent().addKeyListener(new KeyAdapter() {
-//            public void keyReleased(KeyEvent e) {
-//                String input = stm_ad_admission_no_combo.getEditor().getItem().toString();
-//                generalMethods.loadMatchingComboItems(stm_ad_admission_no_combo,
-//                        "occupation", // columns to show
-//                        "nikah_groom", // table
-//                        input // user input
-//                );
-//            }
-//        });
+        stm_ad_student_nationality_combo.getEditor().getEditorComponent().addKeyListener(new KeyAdapter() {
+            public void keyReleased(KeyEvent e) {
+                String input = stm_ad_student_nationality_combo.getEditor().getItem().toString();
+                generalMethods.loadMatchingComboItems(stm_ad_student_nationality_combo,
+                        "nationality", // columns to show
+                        "student", // table
+                        input // user input
+                );
+            }
+        });
+
+        stm_ad_district_combo.getEditor().getEditorComponent().addKeyListener(new KeyAdapter() {
+            public void keyReleased(KeyEvent e) {
+                String input = stm_ad_district_combo.getEditor().getItem().toString();
+                generalMethods.loadMatchingComboItems(stm_ad_district_combo,
+                        "district", // columns to show
+                        "student", // table
+                        input // user input
+                );
+            }
+        });
+
+        stm_ad_area_combo.getEditor().getEditorComponent().addKeyListener(new KeyAdapter() {
+            public void keyReleased(KeyEvent e) {
+                String input = stm_ad_area_combo.getEditor().getItem().toString();
+                generalMethods.loadMatchingComboItems(stm_ad_area_combo,
+                        "area", // columns to show
+                        "student", // table
+                        input // user input
+                );
+            }
+        });
+
+        //*********************
         stm_ad_admission_no_combo.getEditor().getEditorComponent().addKeyListener(new KeyAdapter() {
             public void keyReleased(KeyEvent e) {
 
@@ -264,149 +292,6 @@ public class Student_Management extends javax.swing.JPanel {
         return false;
     }
 
-    private void loadStudentToFields(Student student) {
-
-        if (student == null) {
-            clearForm();
-            return;
-        }
-
-        // -----------------------------
-        // STUDENT DETAILS
-        // -----------------------------
-        stm_ad_admission_no_combo.getEditor().setItem(student.getAdmissionNo());
-        stm_ad_form_no_combo.getEditor().setItem(student.getFormNo());
-        stm_ad_admission_date.setDate(student.getAdmissionDate());
-        stm_ad_student_name_combo.getEditor().setItem(student.getFullName());
-        stm_ad_student_nic_combo.getEditor().setItem(student.getNic());
-        stm_ad_student_dob.setDate(student.getDob());
-        stm_ad_student_gender_combo.setSelectedItem(student.getGender());
-        stm_ad_student_address_text.setText(student.getAddress());
-        stm_ad_student_contact_text.setText(student.getContactNo());
-        stm_ad_student_remarks_text.setText(student.getRemarks());
-        stm_ad_student_medical_text.setText(student.getMedicalInfo());
-
-        // -----------------------------
-        // LOAD IMAGE
-        // -----------------------------
-        try {
-            String fileName = student.getAdmissionNo().replaceAll("\\s+", "_") + ".png";
-            File imgFile = new File(GeneralMethods.IMAGE_SAVE_BASE_PATH + fileName);
-
-            if (imgFile.exists()) {
-                BufferedImage img = ImageIO.read(imgFile);
-                jLabel9.setIcon(new ImageIcon(
-                        GeneralMethods.resizeImage(img, 171, 163)
-                ));
-                GeneralMethods.resizedImageToSave = img;
-            } else {
-                jLabel9.setIcon(null);
-                GeneralMethods.resizedImageToSave = null;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // -----------------------------
-        // PARENTS DETAILS
-        // -----------------------------
-        // -----------------------------
-// PARENTS DETAILS
-// -----------------------------
-        StudentParents parents = student.getStudentParents();
-
-        if (parents != null) {
-
-            // Mother
-            stm_ad_student_mother_name_text.setText(parents.getMotherName());
-            stm_ad_student_mother_nic_text.setText(parents.getMotherNic());
-            stm_ad_student_mother_contact_text.setText(parents.getMotherContact());
-            stm_ad_student_mother_whatsapp_text.setText(parents.getMotherWhatsapp());
-            stm_ad_student_mother_occupation_combo.setSelectedItem(parents.getMotherOccupation());
-
-            stm_ad_student_mother_living_yes_checkbox.setSelected(false);
-            stm_ad_student_mother_living_no_checkbox.setSelected(false);
-
-            if ("YES".equalsIgnoreCase(parents.getMotherLivingWithChild())) {
-                stm_ad_student_mother_living_yes_checkbox.setSelected(true);
-            } else if ("NO".equalsIgnoreCase(parents.getMotherLivingWithChild())) {
-                stm_ad_student_mother_living_no_checkbox.setSelected(true);
-            }
-
-            stm_ad_student_mother_living_combo.setSelectedItem(parents.getMotherReason());
-
-            // Father
-            stm_ad_student_father_name_text.setText(parents.getFatherName());
-            stm_ad_student_father_nic_text.setText(parents.getFatherNic());
-            stm_ad_student_father_contact_text.setText(parents.getFatherContact());
-            stm_ad_student_father_whatsapp_text.setText(parents.getFatherWhatsapp());
-            stm_ad_student_father_occupation_combo.setSelectedItem(parents.getFatherOccupation());
-
-            stm_ad_student_father_living_yes_checkbox.setSelected(false);
-            stm_ad_student_father_living_no_checkbox.setSelected(false);
-
-            if ("YES".equalsIgnoreCase(parents.getFatherLivingWithChild())) {
-                stm_ad_student_father_living_yes_checkbox.setSelected(true);
-            } else if ("NO".equalsIgnoreCase(parents.getFatherLivingWithChild())) {
-                stm_ad_student_father_living_no_checkbox.setSelected(true);
-            }
-
-            stm_ad_student_father_living_combo.setSelectedItem(parents.getFatherReason());
-
-            // Guardian
-            stm_ad_student_guardian_name_text.setText(parents.getGuardianName());
-            stm_ad_student_guardian_nic.setText(parents.getGuardianNic());
-            stm_ad_student_guardian_relationship_combo.setSelectedItem(parents.getGuardianRelationship());
-            stm_ad_student_guardian_address_contact.setText(parents.getGuardianAddress());
-            stm_ad_student_guardian_contact_text.setText(parents.getGuardianContact());
-            stm_ad_student_guardian_whatsapp_text.setText(parents.getGuardianWhatsapp());
-
-        } else {
-            // clearParentFields(); // optional helper to clear parent fields
-        }
-//        if (student.getStudentParentsList() != null && !student.getStudentParentsList().isEmpty()) {
-//
-//            StudentParents parents = student.getStudentParentsList().get(0);
-//
-//            stm_ad_student_mother_name_text.setText(parents.getMotherName());
-//            stm_ad_student_mother_nic_text.setText(parents.getMotherNic());
-//            stm_ad_student_mother_contact_text.setText(parents.getMotherContact());
-//            stm_ad_student_mother_whatsapp_text.setText(parents.getMotherWhatsapp());
-//            stm_ad_student_mother_occupation_combo.setSelectedItem(parents.getMotherOccupation());
-//
-//            if ("YES".equals(parents.getMotherLivingWithChild())) {
-//                stm_ad_student_mother_living_yes_checkbox.setSelected(true);
-//            } else if ("NO".equals(parents.getMotherLivingWithChild())) {
-//                stm_ad_student_mother_living_no_checkbox.setSelected(true);
-//            }
-//
-//            stm_ad_student_mother_living_combo.setSelectedItem(parents.getMotherReason());
-//
-//            // Father
-//            stm_ad_student_father_name_text.setText(parents.getFatherName());
-//            stm_ad_student_father_nic_text.setText(parents.getFatherNic());
-//            stm_ad_student_father_contact_text.setText(parents.getFatherContact());
-//            stm_ad_student_father_whatsapp_text.setText(parents.getFatherWhatsapp());
-//            stm_ad_student_father_occupation_combo.setSelectedItem(parents.getFatherOccupation());
-//
-//            if ("YES".equals(parents.getFatherLivingWithChild())) {
-//                stm_ad_student_father_living_yes_checkbox.setSelected(true);
-//            } else if ("NO".equals(parents.getFatherLivingWithChild())) {
-//                stm_ad_student_father_living_no_checkbox.setSelected(true);
-//            }
-//
-//            stm_ad_student_father_living_combo.setSelectedItem(parents.getFatherReason());
-//
-//            // Guardian
-//            stm_ad_student_guardian_name_text.setText(parents.getGuardianName());
-//            stm_ad_student_guardian_nic.setText(parents.getGuardianNic());
-//            stm_ad_student_guardian_relationship_combo.setSelectedItem(parents.getGuardianRelationship());
-//            stm_ad_student_guardian_address_contact.setText(parents.getGuardianAddress());
-//            stm_ad_student_guardian_contact_text.setText(parents.getGuardianContact());
-//            stm_ad_student_guardian_whatsapp_text.setText(parents.getGuardianWhatsapp());
-//        }
-    }
-
     public void loadStudentDynamic(String searchText, String type) {
 
         StudentDAO studentDAO = new StudentDAO();
@@ -436,18 +321,88 @@ public class Student_Management extends javax.swing.JPanel {
 
             Student student = students.get(0);
 
+            // CHECK ELIMINATION BEFORE LOADING DETAILS
+            Object[] elimination = studentDAO.getStudentElimination(student.getStudentId());
+
+            if (elimination != null) {
+
+                String eliminateType = elimination[0] != null
+                        ? elimination[0].toString() : "";
+
+                String admissionNo = elimination[1] != null
+                        ? elimination[1].toString() : "";
+
+                String studentName = elimination[2] != null
+                        ? elimination[2].toString() : "";
+
+                String note = elimination[3] != null
+                        ? elimination[3].toString() : "";
+
+                String message
+                        = "This student is currently marked as "
+                        + eliminateType + ".\n\n"
+                        + "Admission No : " + admissionNo + "\n"
+                        + "Student Name : " + studentName + "\n\n"
+                        + "Reason : " + note + "\n\n"
+                        + "Do you still want to load this student?";
+
+                int option = JOptionPane.showConfirmDialog(
+                        null,
+                        message,
+                        "Student Elimination Found",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE
+                );
+
+                if (option != JOptionPane.YES_OPTION) {
+                    return;
+                }
+            }
+
+            StudentLanguages lang = student.getStudentLanguages();
+
+            stm_ad_english_chk.setSelected(false);
+            stm_ad_sinhala_chk.setSelected(false);
+            stm_ad_tamil_chk.setSelected(false);
+            stm_ad_arabic_chk.setSelected(false);
+
+            if (lang != null) {
+
+                stm_ad_english_chk.setSelected(
+                        Boolean.TRUE.equals(lang.getEnglish()));
+
+                stm_ad_sinhala_chk.setSelected(
+                        Boolean.TRUE.equals(lang.getSinhala()));
+
+                stm_ad_tamil_chk.setSelected(
+                        Boolean.TRUE.equals(lang.getTamil()));
+
+                stm_ad_arabic_chk.setSelected(
+                        Boolean.TRUE.equals(lang.getArabic()));
+            }
+
             // ===============================
             // 1️⃣ STUDENT DETAILS
             // ===============================
             stm_ad_admission_no_combo.getEditor().setItem(student.getAdmissionNo());
             stm_ad_form_no_combo.getEditor().setItem(student.getFormNo());
             stm_ad_admission_date.setDate(student.getAdmissionDate());
+            stm_ad_student_bc_text.setText(student.getBcNo());
+            stm_ad_student_name_initials_combo.getEditor().setItem(student.getNameInitials());
             stm_ad_student_name_combo.getEditor().setItem(student.getFullName());
+            stm_ad_student_nationality_combo.getEditor().setItem(student.getNationality());
             stm_ad_student_nic_combo.getEditor().setItem(student.getNic());
-            stm_ad_student_dob.setDate(student.getDob());
             stm_ad_student_gender_combo.setSelectedItem(student.getGender());
-            stm_ad_student_address_text.setText(student.getAddress());
+            stm_ad_student_medium_combo.setSelectedItem(student.getMedium());
+            stm_ad_student_dob.setDate(student.getDob());
+            stm_ad_student_blood_combo.setSelectedItem(student.getBloodGroup());
+            stm_ad_student_religion_combo.setSelectedItem(student.getReligion());
+            stm_ad_district_combo.getEditor().setItem(student.getDistrict());
+            stm_ad_area_combo.getEditor().setItem(student.getArea());
             stm_ad_student_contact_text.setText(student.getContactNo());
+            stm_ad_student_email_text.setText(student.getEmail());
+            stm_ad_student_address_text.setText(student.getCurrentAddress());
+            stm_ad_student_per_address_text.setText(student.getPermanentAddress());
             stm_ad_student_remarks_text.setText(student.getRemarks());
             stm_ad_student_medical_text.setText(student.getMedicalInfo());
 
@@ -575,288 +530,11 @@ public class Student_Management extends javax.swing.JPanel {
         }
     }
 
-//    public void loadStudentDynamic(String searchText, String text) {
-//
-//        StudentDAO studentDAO = new StudentDAO();
-//        StudentParentsDAO parentsDAO = new StudentParentsDAO();
-//
-//        try {
-//
-//            if (searchText == null || searchText.trim().isEmpty()) {
-//                JOptionPane.showMessageDialog(null,
-//                        "Please enter Admission No, Form No, NIC or Name",
-//                        "Warning",
-//                        JOptionPane.WARNING_MESSAGE);
-//                return;
-//            }
-//
-//            searchText = searchText.trim();
-//
-//            // 🔎 Search using existing DAO
-//            List<Student> students = studentDAO.searchStudents(searchText, text);
-//
-//            if (students == null || students.isEmpty()) {
-//                JOptionPane.showMessageDialog(null,
-//                        "No student found for: " + searchText,
-//                        "Not Found",
-//                        JOptionPane.WARNING_MESSAGE);
-//                return;
-//            }
-//
-//            // If multiple found → take first
-//            Student student = students.get(0);
-//
-//            // ===============================
-//            // 1️⃣ Populate student fields
-//            // ===============================
-//            stm_ad_admission_no_combo.getEditor().setItem(student.getAdmissionNo());
-//            stm_ad_form_no_combo.getEditor().setItem(student.getFormNo());
-//            stm_ad_admission_date.setDate(student.getAdmissionDate());
-//            stm_ad_student_name_combo.getEditor().setItem(student.getFullName());
-//            stm_ad_student_nic_combo.getEditor().setItem(student.getNic());
-//            stm_ad_student_dob.setDate(student.getDob());
-//            stm_ad_student_gender_combo.setSelectedItem(student.getGender());
-//            stm_ad_student_address_text.setText(student.getAddress());
-//            stm_ad_student_contact_text.setText(student.getContactNo());
-//            stm_ad_student_remarks_text.setText(student.getremarks());
-//            stm_ad_student_medical_text.setText(student.getmedicalInfo());
-//
-//            // ===============================
-//            // 2️⃣ Fetch parents
-//            // ===============================
-//            StudentParents parents = parentsDAO.findByStudentId(student.getStudentId());
-//
-//            if (parents != null) {
-//
-//                stm_ad_student_mother_name_text.setText(parents.getMotherName());
-//                stm_ad_student_mother_nic_text.setText(parents.getMotherNic());
-//                stm_ad_student_mother_contact_text.setText(parents.getMotherContact());
-//                stm_ad_student_mother_whatsapp_text.setText(parents.getMotherWhatsapp());
-//                stm_ad_student_mother_occupation_combo.getEditor().setItem(parents.getMotherOccupation());
-//
-//                if ("YES".equalsIgnoreCase(parents.getMotherLivingWithChild())) {
-//                    stm_ad_student_mother_living_yes_checkbox.setSelected(true);
-//                    stm_ad_student_mother_living_no_checkbox.setSelected(false);
-//                } else if ("NO".equalsIgnoreCase(parents.getMotherLivingWithChild())) {
-//                    stm_ad_student_mother_living_no_checkbox.setSelected(true);
-//                    stm_ad_student_mother_living_yes_checkbox.setSelected(false);
-//                } else {
-//                    stm_ad_student_mother_living_yes_checkbox.setSelected(false);
-//                    stm_ad_student_mother_living_no_checkbox.setSelected(false);
-//                }
-//
-//                stm_ad_student_mother_living_combo.setSelectedItem(parents.getMotherReason());
-//
-//                stm_ad_student_father_name_text.setText(parents.getFatherName());
-//                stm_ad_student_father_nic_text.setText(parents.getFatherNic());
-//                stm_ad_student_father_contact_text.setText(parents.getFatherContact());
-//                stm_ad_student_father_whatsapp_text.setText(parents.getFatherWhatsapp());
-//                stm_ad_student_father_occupation_combo.getEditor().setItem(parents.getFatherOccupation());
-//
-//                if ("YES".equalsIgnoreCase(parents.getFatherLivingWithChild())) {
-//                    stm_ad_student_father_living_yes_checkbox.setSelected(true);
-//                    stm_ad_student_father_living_no_checkbox.setSelected(false);
-//                } else if ("NO".equalsIgnoreCase(parents.getFatherLivingWithChild())) {
-//                    stm_ad_student_father_living_no_checkbox.setSelected(true);
-//                    stm_ad_student_father_living_yes_checkbox.setSelected(false);
-//                } else {
-//                    stm_ad_student_father_living_yes_checkbox.setSelected(false);
-//                    stm_ad_student_father_living_no_checkbox.setSelected(false);
-//                }
-//
-//                stm_ad_student_father_living_combo.setSelectedItem(parents.getFatherReason());
-//
-//                stm_ad_student_guardian_name_text.setText(parents.getGuardianName());
-//                stm_ad_student_guardian_nic.setText(parents.getGuardianNic());
-//                stm_ad_student_guardian_relationship_combo.getEditor().setItem(parents.getGuardianRelationship());
-//                stm_ad_student_guardian_address_contact.setText(parents.getGuardianAddress());
-//                stm_ad_student_guardian_contact_text.setText(parents.getGuardianContact());
-//                stm_ad_student_guardian_whatsapp_text.setText(parents.getGuardianWhatsapp());
-//            }
-//
-//            // ===============================
-//            // 3️⃣ Load Student Image
-//            // ===============================
-//            try {
-//
-//                String fileName = student.getAdmissionNo().replaceAll("\\s+", "_") + ".png";
-//                File imgFile = new File(GeneralMethods.IMAGE_SAVE_BASE_PATH + fileName);
-//
-//                BufferedImage img = null;
-//
-//                if (imgFile.exists()) {
-//                    img = ImageIO.read(imgFile);
-//                }
-//
-//                if (img == null) {
-//                    InputStream is = getClass().getResourceAsStream("/images/student_logo.png");
-//                    if (is != null) {
-//                        img = ImageIO.read(is);
-//                        is.close();
-//                    }
-//                }
-//
-//                if (img != null) {
-//                    jLabel9.setIcon(new ImageIcon(
-//                            GeneralMethods.resizeImage(img, 171, 163)
-//                    ));
-//                } else {
-//                    jLabel9.setIcon(null);
-//                }
-//
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                jLabel9.setIcon(null);
-//            }
-//
-//            selectedStudentId = student.getStudentId();
-//
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//            JOptionPane.showMessageDialog(null,
-//                    "Error loading student: " + ex.getMessage(),
-//                    "Error",
-//                    JOptionPane.ERROR_MESSAGE);
-//        }
-//    }
-//    public void loadStudentByAdmissionNoUsingDAO(String admissionNo) {
-//        StudentDAO studentDAO = new StudentDAO();
-//        StudentParentsDAO parentsDAO = new StudentParentsDAO();
-//
-//        try {
-//            // 1️⃣ Fetch Student by admission number
-//            Student student = studentDAO.findByAdmissionNo(admissionNo.trim());
-//
-//            if (student == null) {
-//                JOptionPane.showMessageDialog(null,
-//                        "No student found with Admission No: " + admissionNo,
-//                        "Not Found",
-//                        JOptionPane.WARNING_MESSAGE);
-//                return;
-//            }
-//
-//            // 2️⃣ Populate student fields
-//            stm_ad_admission_no_combo.getEditor().setItem(student.getAdmissionNo());
-//            stm_ad_form_no_combo.getEditor().setItem(student.getFormNo());
-//            stm_ad_admission_date.setDate(student.getAdmissionDate());
-//            stm_ad_student_name_combo.getEditor().setItem(student.getFullName());
-//            stm_ad_student_nic_combo.getEditor().setItem(student.getNic());
-//            stm_ad_student_dob.setDate(student.getDob());
-//            stm_ad_student_gender_combo.setSelectedItem(student.getGender());
-//            stm_ad_student_address_text.setText(student.getAddress());
-//            stm_ad_student_contact_text.setText(student.getContactNo());
-//            stm_ad_student_remarks_text.setText(student.getremarks());
-//            stm_ad_student_medical_text.setText(student.getmedicalInfo());
-//
-//            // 3️⃣ Fetch parents by studentId
-//            StudentParents parents = parentsDAO.findByStudentId(student.getStudentId());
-//            if (parents != null) {
-//                stm_ad_student_mother_name_text.setText(parents.getMotherName());
-//                stm_ad_student_mother_nic_text.setText(parents.getMotherNic());
-//                stm_ad_student_mother_contact_text.setText(parents.getMotherContact());
-//                stm_ad_student_mother_whatsapp_text.setText(parents.getMotherWhatsapp());
-//                stm_ad_student_mother_occupation_combo.getEditor().setItem(parents.getMotherOccupation());
-//
-//                if ("YES".equalsIgnoreCase(parents.getMotherLivingWithChild())) {
-//                    stm_ad_student_mother_living_yes_checkbox.setSelected(true);
-//                } else if ("NO".equalsIgnoreCase(parents.getMotherLivingWithChild())) {
-//                    stm_ad_student_mother_living_no_checkbox.setSelected(true);
-//                } else {
-//                    stm_ad_student_mother_living_yes_checkbox.setSelected(false);
-//                    stm_ad_student_mother_living_no_checkbox.setSelected(false);
-//                }
-//                stm_ad_student_mother_living_combo.setSelectedItem(parents.getMotherReason());
-//
-//                stm_ad_student_father_name_text.setText(parents.getFatherName());
-//                stm_ad_student_father_nic_text.setText(parents.getFatherNic());
-//                stm_ad_student_father_contact_text.setText(parents.getFatherContact());
-//                stm_ad_student_father_whatsapp_text.setText(parents.getFatherWhatsapp());
-//                stm_ad_student_father_occupation_combo.getEditor().setItem(parents.getFatherOccupation());
-//
-//                if ("YES".equalsIgnoreCase(parents.getFatherLivingWithChild())) {
-//                    stm_ad_student_father_living_yes_checkbox.setSelected(true);
-//                } else if ("NO".equalsIgnoreCase(parents.getFatherLivingWithChild())) {
-//                    stm_ad_student_father_living_no_checkbox.setSelected(true);
-//                } else {
-//                    stm_ad_student_father_living_yes_checkbox.setSelected(false);
-//                    stm_ad_student_father_living_no_checkbox.setSelected(false);
-//                }
-//                stm_ad_student_father_living_combo.setSelectedItem(parents.getFatherReason());
-//
-//                stm_ad_student_guardian_name_text.setText(parents.getGuardianName());
-//                stm_ad_student_guardian_nic.setText(parents.getGuardianNic());
-//                stm_ad_student_guardian_relationship_combo.getEditor().setItem(parents.getGuardianRelationship());
-//                stm_ad_student_guardian_address_contact.setText(parents.getGuardianAddress());
-//                stm_ad_student_guardian_contact_text.setText(parents.getGuardianContact());
-//                stm_ad_student_guardian_whatsapp_text.setText(parents.getGuardianWhatsapp());
-//            }
-//
-//            // 4️⃣ Load student image if exists
-//            try {
-//
-//                String fileName = student.getAdmissionNo().replaceAll("\\s+", "_") + ".png";
-//                File imgFile = new File(GeneralMethods.IMAGE_SAVE_BASE_PATH + fileName);
-//
-//                BufferedImage img = null;
-//
-//                // 1️⃣ Try student image
-//                if (imgFile.exists()) {
-//                    img = ImageIO.read(imgFile);
-//                }
-//
-//                // 2️⃣ If not found, try default image
-//                if (img == null) {
-//                    InputStream is = getClass().getResourceAsStream("/images/student_logo.png");
-//                    if (is != null) {
-//                        img = ImageIO.read(is);
-//                        is.close();
-//                    }
-//                }
-//
-//                // 3️⃣ Final safety check
-//                if (img != null) {
-//                    jLabel9.setIcon(new ImageIcon(
-//                            GeneralMethods.resizeImage(img, 171, 163)
-//                    ));
-//                } else {
-//                    jLabel9.setIcon(null);
-//                }
-//                System.out.println("IMAGEFILEEEE" + imgFile);
-//
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                jLabel9.setIcon(null);
-//            }
-//
-//            selectedStudentId = student.getStudentId();
-//
-    ////            String imageFileName = student.getAdmissionNo().replaceAll("\\s+", "_") + ".png";
-////            File imageFile = new File(ImageHelper.IMAGE_SAVE_BASE_PATH + imageFileName);
-////
-////            if (imageFile.exists()) {
-////                BufferedImage bufferedImage = ImageIO.read(imageFile);
-////                jLabel9.setIcon(new ImageIcon(bufferedImage));
-////                ImageHelper.resizeImage = bufferedImage; // keep for further edits
-////            } else {
-////                jLabel9.setIcon(null); // or default image
-////            }
-////            JOptionPane.showMessageDialog(null,
-////                    "Student and Parents loaded successfully!",
-////                    "Success",
-////                    JOptionPane.INFORMATION_MESSAGE);
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//            JOptionPane.showMessageDialog(null,
-//                    "Error loading student: " + ex.getMessage(),
-//                    "Error",
-//                    JOptionPane.ERROR_MESSAGE);
-//        }
-//    }
-
     //******************************************************************************************************************************************
     public void updateStudentWithParents(int studentId,
             Student updatedStudent,
             StudentParents updatedParents,
+            StudentLanguages updatedLanguages,
             BufferedImage newImage) {
 
         EntityManager em = HibernateConfig.getEntityManager();
@@ -875,12 +553,22 @@ public class Student_Management extends javax.swing.JPanel {
             existingStudent.setAdmissionNo(updatedStudent.getAdmissionNo());
             existingStudent.setFormNo(updatedStudent.getFormNo());
             existingStudent.setAdmissionDate(updatedStudent.getAdmissionDate());
+            existingStudent.setBcNo(updatedStudent.getBcNo());
+            existingStudent.setNameInitials(updatedStudent.getNameInitials());
             existingStudent.setFullName(updatedStudent.getFullName());
+            existingStudent.setNationality(updatedStudent.getNationality());
             existingStudent.setNic(updatedStudent.getNic());
-            existingStudent.setDob(updatedStudent.getDob());
             existingStudent.setGender(updatedStudent.getGender());
-            existingStudent.setAddress(updatedStudent.getAddress());
+            existingStudent.setMedium(updatedStudent.getMedium());
+            existingStudent.setDob(updatedStudent.getDob());
+            existingStudent.setBloodGroup(updatedStudent.getBloodGroup());
+            existingStudent.setReligion(updatedStudent.getReligion());
+            existingStudent.setDistrict(updatedStudent.getDistrict());
+            existingStudent.setArea(updatedStudent.getArea());
             existingStudent.setContactNo(updatedStudent.getContactNo());
+            existingStudent.setEmail(updatedStudent.getEmail());
+            existingStudent.setCurrentAddress(updatedStudent.getCurrentAddress());
+            existingStudent.setPermanentAddress(updatedStudent.getPermanentAddress());
             existingStudent.setRemarks(updatedStudent.getRemarks());
             existingStudent.setMedicalInfo(updatedStudent.getMedicalInfo());
             existingStudent.setCurrentStatus(updatedStudent.getCurrentStatus());
@@ -921,6 +609,27 @@ public class Student_Management extends javax.swing.JPanel {
                 existingStudent.setStudentParents(updatedParents); // link to student
             }
 
+            // 3️⃣ LANGUAGES
+            StudentLanguages existingLanguages = existingStudent.getStudentLanguages();
+
+            if (existingLanguages != null) {
+
+                existingLanguages.setEnglish(updatedLanguages.getEnglish());
+                existingLanguages.setSinhala(updatedLanguages.getSinhala());
+                existingLanguages.setTamil(updatedLanguages.getTamil());
+                existingLanguages.setArabic(updatedLanguages.getArabic());
+
+                em.merge(existingLanguages);
+
+            } else {
+
+                updatedLanguages.setStudent(existingStudent);
+
+                em.persist(updatedLanguages);
+
+                existingStudent.setStudentLanguages(updatedLanguages);
+            }
+
             // 4️⃣ Image Handling
             if (newImage != null) {
                 Files.createDirectories(Paths.get(GeneralMethods.IMAGE_SAVE_BASE_PATH));
@@ -949,107 +658,6 @@ public class Student_Management extends javax.swing.JPanel {
             em.close();
         }
     }
-//    public void updateStudentWithParents(int studentId,
-//            Student updatedStudent,
-//            StudentParents updatedParents,
-//            BufferedImage newImage) {
-//
-//        EntityManager em = HibernateConfig.getEntityManager();
-//
-//        try {
-//            em.getTransaction().begin();
-//
-//            // 1️⃣ Find by PRIMARY KEY
-//            Student existingStudent = em.find(Student.class, studentId);
-//
-//            if (existingStudent == null) {
-//                throw new RuntimeException("Student not found for update.");
-//            }
-//
-//            // 2️⃣ Update student fields
-//            existingStudent.setAdmissionNo(updatedStudent.getAdmissionNo());
-//            existingStudent.setFormNo(updatedStudent.getFormNo());
-//            existingStudent.setAdmissionDate(updatedStudent.getAdmissionDate());
-//            existingStudent.setFullName(updatedStudent.getFullName());
-//            existingStudent.setNic(updatedStudent.getNic());
-//            existingStudent.setDob(updatedStudent.getDob());
-//            existingStudent.setGender(updatedStudent.getGender());
-//            existingStudent.setAddress(updatedStudent.getAddress());
-//            existingStudent.setContactNo(updatedStudent.getContactNo());
-//            existingStudent.setremarks(updatedStudent.getremarks());
-//            existingStudent.setmedicalInfo(updatedStudent.getmedicalInfo());
-//            existingStudent.setCurrentStatus(updatedStudent.getCurrentStatus());
-//
-//            // 3️⃣ Parents
-//            StudentParents existingParents = null;
-//
-//            if (!existingStudent.getStudentParentsList().isEmpty()) {
-//                existingParents = existingStudent.getStudentParentsList().get(0);
-//            }
-//
-//            if (existingParents != null) {
-//
-//                existingParents.setMotherName(updatedParents.getMotherName());
-//                existingParents.setMotherNic(updatedParents.getMotherNic());
-//                existingParents.setMotherContact(updatedParents.getMotherContact());
-//                existingParents.setMotherWhatsapp(updatedParents.getMotherWhatsapp());
-//                existingParents.setMotherOccupation(updatedParents.getMotherOccupation());
-//                existingParents.setMotherLivingWithChild(updatedParents.getMotherLivingWithChild());
-//                existingParents.setMotherReason(updatedParents.getMotherReason());
-//
-//                existingParents.setFatherName(updatedParents.getFatherName());
-//                existingParents.setFatherNic(updatedParents.getFatherNic());
-//                existingParents.setFatherContact(updatedParents.getFatherContact());
-//                existingParents.setFatherWhatsapp(updatedParents.getFatherWhatsapp());
-//                existingParents.setFatherOccupation(updatedParents.getFatherOccupation());
-//                existingParents.setFatherLivingWithChild(updatedParents.getFatherLivingWithChild());
-//                existingParents.setFatherReason(updatedParents.getFatherReason());
-//
-//                existingParents.setGuardianName(updatedParents.getGuardianName());
-//                existingParents.setGuardianNic(updatedParents.getGuardianNic());
-//                existingParents.setGuardianRelationship(updatedParents.getGuardianRelationship());
-//                existingParents.setGuardianAddress(updatedParents.getGuardianAddress());
-//                existingParents.setGuardianContact(updatedParents.getGuardianContact());
-//                existingParents.setGuardianWhatsapp(updatedParents.getGuardianWhatsapp());
-//
-//            } else {
-//                updatedParents.setStudent(existingStudent);
-//                em.persist(updatedParents);
-//            }
-//
-//            // 4️⃣ Image Handling
-//            if (newImage != null) {
-//
-//                String fileName = existingStudent.getAdmissionNo() + ".png";
-//                String fullPath = GeneralMethods.IMAGE_SAVE_BASE_PATH + fileName;
-//
-//                File imageFile = new File(fullPath);
-//
-//                if (imageFile.exists()) {
-//                    imageFile.delete();
-//                }
-//
-//                Files.createDirectories(Paths.get(GeneralMethods.IMAGE_SAVE_BASE_PATH));
-//                ImageIO.write(newImage, "png", imageFile);
-//            }
-//
-//            em.getTransaction().commit();
-//
-//            JOptionPane.showMessageDialog(null, "Student updated successfully!");
-//
-//        } catch (Exception e) {
-//
-//            if (em.getTransaction().isActive()) {
-//                em.getTransaction().rollback();
-//            }
-//
-//            e.printStackTrace();
-//            JOptionPane.showMessageDialog(null, "Update failed: " + e.getMessage());
-//
-//        } finally {
-//            em.close();
-//        }
-//    }
 
     private void clearForm() {
         // ----------------------
@@ -1058,14 +666,30 @@ public class Student_Management extends javax.swing.JPanel {
         stm_ad_admission_no_combo.removeAllItems();
         stm_ad_form_no_combo.removeAllItems();
         stm_ad_admission_date.setDate(null);
+        stm_ad_student_bc_text.setText("");
+        stm_ad_student_name_initials_combo.removeAllItems();
         stm_ad_student_name_combo.removeAllItems();
+        stm_ad_student_nationality_combo.removeAllItems();
         stm_ad_student_nic_combo.removeAllItems();
+        stm_ad_student_gender_combo.setSelectedIndex(0);
+        stm_ad_student_medium_combo.setSelectedIndex(0);
         stm_ad_student_dob.setDate(null);
-        stm_ad_student_gender_combo.setSelectedIndex(-1);
-        stm_ad_student_address_text.setText("");
+        stm_ad_student_age_text.setText("");
+        stm_ad_student_blood_combo.setSelectedIndex(0);
+        stm_ad_student_religion_combo.setSelectedIndex(0);
+        stm_ad_district_combo.removeAllItems();
+        stm_ad_area_combo.removeAllItems();
         stm_ad_student_contact_text.setText("");
+        stm_ad_student_email_text.setText("");
+        stm_ad_student_address_text.setText("");
+        stm_ad_student_per_address_text.setText("");
         stm_ad_student_remarks_text.setText("");
         stm_ad_student_medical_text.setText("");
+
+        stm_ad_english_chk.setSelected(false);
+        stm_ad_sinhala_chk.setSelected(false);
+        stm_ad_tamil_chk.setSelected(false);
+        stm_ad_arabic_chk.setSelected(false);
 
 // ----------------------
 // MOTHER CLEAR
@@ -1213,7 +837,8 @@ public class Student_Management extends javax.swing.JPanel {
                     "SELECT "
                     + "se.eliminate_type, " // 0
                     + "s.admission_no, " // 1
-                    + "s.full_name " // 2
+                    + "s.full_name, " // 2
+                    + "se.note " // 3
                     + "FROM student_eliminates se "
                     + "INNER JOIN student s ON se.student_id = s.student_id "
                     + "WHERE se.student_id = ? "
@@ -1235,11 +860,13 @@ public class Student_Management extends javax.swing.JPanel {
                 String eliminateType = row[0] != null ? row[0].toString() : "";
                 String admissionNo = row[1] != null ? row[1].toString() : "";
                 String studentName = row[2] != null ? row[2].toString() : "";
+                String studentNote = row[3] != null ? row[3].toString() : "";
 
                 String message
                         = "Following student is " + eliminateType + "\n\n"
                         + "Admission Number : " + admissionNo + "\n"
                         + "Student Name     : " + studentName + "\n\n"
+                        + "Reason           : " + studentNote + "\n\n\n"
                         + "Do you want to change status?";
 
                 String[] options = {"Change Status", "Cancel"};
@@ -1358,7 +985,42 @@ public class Student_Management extends javax.swing.JPanel {
         title.setForeground(Color.WHITE);
         title.setFont(new Font("Segoe UI", Font.BOLD, 18));
 
+        JButton closeBtn = new JButton("X") {
+            @Override
+            protected void paintComponent(Graphics g) {
+
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
+
+                Color color = getModel().isRollover()
+                        ? new Color(190, 30, 45)
+                        : new Color(220, 53, 69);
+
+                g2.setColor(color);
+                g2.fillOval(0, 0, getWidth(), getHeight());
+
+                FontMetrics fm = g2.getFontMetrics();
+                int x = (getWidth() - fm.stringWidth("X")) / 2;
+                int y = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+
+                g2.setColor(Color.WHITE);
+                g2.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                g2.drawString("X", x, y);
+
+                g2.dispose();
+            }
+        };
+
+        closeBtn.setBounds(372, 14, 26, 26);
+        closeBtn.setBorderPainted(false);
+        closeBtn.setContentAreaFilled(false);
+        closeBtn.setFocusPainted(false);
+        closeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        closeBtn.addActionListener(e -> dialog.dispose());
+
         panel.add(title);
+        panel.add(closeBtn);
 
         JButton takePhotoBtn = createAnimatedGradientButton(
                 "TAKE PHOTO",
@@ -1469,6 +1131,34 @@ public class Student_Management extends javax.swing.JPanel {
         stm_ad_student_name_combo = new javax.swing.JComboBox<>();
         stm_ad_student_nic_combo = new javax.swing.JComboBox<>();
         jButton5 = new javax.swing.JButton();
+        jLabel10 = new javax.swing.JLabel();
+        stm_ad_student_name_initials_combo = new javax.swing.JComboBox<>();
+        stm_ad_student_nationality_combo = new javax.swing.JComboBox<>();
+        jLabel11 = new javax.swing.JLabel();
+        stm_ad_student_medium_combo = new javax.swing.JComboBox<>();
+        jLabel16 = new javax.swing.JLabel();
+        stm_ad_student_blood_combo = new javax.swing.JComboBox<>();
+        jLabel18 = new javax.swing.JLabel();
+        jLabel19 = new javax.swing.JLabel();
+        stm_ad_student_religion_combo = new javax.swing.JComboBox<>();
+        jLabel12 = new javax.swing.JLabel();
+        stm_ad_student_bc_text = new javax.swing.JTextField();
+        jLabel20 = new javax.swing.JLabel();
+        stm_ad_district_combo = new javax.swing.JComboBox<>();
+        jLabel37 = new javax.swing.JLabel();
+        stm_ad_area_combo = new javax.swing.JComboBox<>();
+        jLabel38 = new javax.swing.JLabel();
+        stm_ad_student_per_address_text = new javax.swing.JTextField();
+        jLabel39 = new javax.swing.JLabel();
+        stm_ad_english_chk = new javax.swing.JCheckBox();
+        stm_ad_sinhala_chk = new javax.swing.JCheckBox();
+        stm_ad_tamil_chk = new javax.swing.JCheckBox();
+        stm_ad_student_email_text = new javax.swing.JTextField();
+        jLabel40 = new javax.swing.JLabel();
+        jLabel41 = new javax.swing.JLabel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        stm_ad_student_remarks_text = new javax.swing.JEditorPane();
+        stm_ad_arabic_chk = new javax.swing.JCheckBox();
         jPanel5 = new javax.swing.JPanel();
         jLabel13 = new javax.swing.JLabel();
         jLabel14 = new javax.swing.JLabel();
@@ -1521,9 +1211,6 @@ public class Student_Management extends javax.swing.JPanel {
         jPanel9 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         stm_ad_student_medical_text = new javax.swing.JEditorPane();
-        jPanel11 = new javax.swing.JPanel();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        stm_ad_student_remarks_text = new javax.swing.JEditorPane();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
         jButton3 = new javax.swing.JButton();
@@ -1538,7 +1225,7 @@ public class Student_Management extends javax.swing.JPanel {
         jLabel2.setText("Full Name");
 
         jLabel3.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel3.setText("Form Number");
+        jLabel3.setText("App. Form Number");
 
         stm_ad_admission_date.setForeground(new java.awt.Color(204, 204, 204));
         stm_ad_admission_date.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
@@ -1570,7 +1257,7 @@ public class Student_Management extends javax.swing.JPanel {
         jLabel7.setText("NIC");
 
         jLabel8.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
-        jLabel8.setText("Address");
+        jLabel8.setText("Current Address");
 
         stm_ad_student_address_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
         stm_ad_student_address_text.addActionListener(new java.awt.event.ActionListener() {
@@ -1603,15 +1290,15 @@ public class Student_Management extends javax.swing.JPanel {
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(buttonGradient5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, 171, Short.MAX_VALUE))
+                    .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, 171, Short.MAX_VALUE)
+                    .addComponent(buttonGradient5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonGradient5, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -1653,6 +1340,94 @@ public class Student_Management extends javax.swing.JPanel {
             }
         });
 
+        jLabel10.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel10.setText("Name with initials");
+
+        stm_ad_student_name_initials_combo.setEditable(true);
+        stm_ad_student_name_initials_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+
+        stm_ad_student_nationality_combo.setEditable(true);
+        stm_ad_student_nationality_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+
+        jLabel11.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel11.setText("Nationality");
+
+        stm_ad_student_medium_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        stm_ad_student_medium_combo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "English", "Sinhala", "Tamil", "Arabic" }));
+
+        jLabel16.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel16.setText("Medium");
+
+        stm_ad_student_blood_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        stm_ad_student_blood_combo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-" }));
+
+        jLabel18.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel18.setText("Blood Group");
+
+        jLabel19.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel19.setText("Religion");
+
+        stm_ad_student_religion_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        stm_ad_student_religion_combo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Buddhist", "Christian", "Islam", "Hindu", "Burger" }));
+
+        jLabel12.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel12.setText("B/C No");
+
+        stm_ad_student_bc_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        stm_ad_student_bc_text.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                stm_ad_student_bc_textActionPerformed(evt);
+            }
+        });
+
+        jLabel20.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel20.setText("District");
+
+        stm_ad_district_combo.setEditable(true);
+        stm_ad_district_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+
+        jLabel37.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel37.setText("Area");
+
+        stm_ad_area_combo.setEditable(true);
+        stm_ad_area_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+
+        jLabel38.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel38.setText("Permanent Address");
+
+        stm_ad_student_per_address_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        stm_ad_student_per_address_text.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                stm_ad_student_per_address_textActionPerformed(evt);
+            }
+        });
+
+        jLabel39.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel39.setText("Languages");
+
+        stm_ad_english_chk.setText("English");
+
+        stm_ad_sinhala_chk.setText("Sinhala");
+
+        stm_ad_tamil_chk.setText("Tamil");
+
+        stm_ad_student_email_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        stm_ad_student_email_text.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                stm_ad_student_email_textActionPerformed(evt);
+            }
+        });
+
+        jLabel40.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel40.setText("E-Mail");
+
+        jLabel41.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel41.setText("Remarks");
+
+        jScrollPane2.setViewportView(stm_ad_student_remarks_text);
+
+        stm_ad_arabic_chk.setText("Arabic");
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -1660,48 +1435,116 @@ public class Student_Management extends javax.swing.JPanel {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(stm_ad_student_address_text)
-                    .addComponent(stm_ad_student_name_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(stm_ad_student_dob, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel4))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(stm_ad_student_age_text)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addComponent(jLabel5)
-                                .addGap(0, 0, Short.MAX_VALUE))))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addComponent(stm_ad_admission_no_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                        .addComponent(stm_ad_admission_no_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addComponent(jLabel1))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel2)
-                            .addComponent(jLabel8))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel3)
+                                    .addComponent(stm_ad_form_no_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                        .addComponent(jLabel25)
+                                        .addGap(0, 0, Short.MAX_VALUE))
+                                    .addComponent(stm_ad_admission_date, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(stm_ad_student_bc_text, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel12)))
                             .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addComponent(jLabel3)
-                                .addGap(0, 0, Short.MAX_VALUE))
-                            .addComponent(stm_ad_form_no_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(stm_ad_student_contact_text)
-                    .addComponent(stm_ad_admission_date, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(stm_ad_student_gender_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(jLabel10)
+                                    .addComponent(stm_ad_student_name_initials_combo, 0, 197, Short.MAX_VALUE)
+                                    .addComponent(jLabel11)
+                                    .addComponent(stm_ad_student_nationality_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(stm_ad_student_name_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                        .addComponent(jLabel2)
+                                        .addGap(0, 0, Short.MAX_VALUE))
+                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(jLabel7)
+                                            .addComponent(stm_ad_student_nic_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 183, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(jLabel5))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(jLabel6)
+                                            .addComponent(stm_ad_student_gender_combo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(jLabel18))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(stm_ad_student_medium_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                                        .addGap(6, 6, 6)
+                                                        .addComponent(jLabel19))
+                                                    .addComponent(jLabel16))
+                                                .addGap(0, 0, Short.MAX_VALUE))))))
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                        .addComponent(stm_ad_district_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(stm_ad_area_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                .addGroup(jPanel2Layout.createSequentialGroup()
+                                                    .addComponent(jLabel4)
+                                                    .addGap(136, 136, 136))
+                                                .addGroup(jPanel2Layout.createSequentialGroup()
+                                                    .addComponent(stm_ad_student_dob, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                    .addGap(6, 6, 6)))
+                                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                                .addComponent(jLabel20)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(jLabel37)
+                                            .addComponent(stm_ad_student_age_text, javax.swing.GroupLayout.PREFERRED_SIZE, 183, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                        .addComponent(stm_ad_student_blood_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 81, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(stm_ad_student_religion_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(stm_ad_student_contact_text, javax.swing.GroupLayout.PREFERRED_SIZE, 197, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(jLabel15)
+                                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                                .addComponent(jLabel39)
+                                                .addGap(20, 20, 20)
+                                                .addComponent(jLabel41)))
+                                        .addGap(0, 0, Short.MAX_VALUE)))))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(stm_ad_student_email_text)
+                            .addComponent(jLabel40)))
+                    .addComponent(jLabel8)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel15)
-                            .addComponent(jLabel6)
-                            .addComponent(jLabel7)
-                            .addComponent(jLabel25))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(stm_ad_student_nic_combo, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(stm_ad_student_address_text, javax.swing.GroupLayout.PREFERRED_SIZE, 386, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel38)
+                            .addComponent(stm_ad_student_per_address_text, javax.swing.GroupLayout.PREFERRED_SIZE, 386, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(stm_ad_tamil_chk)
+                            .addComponent(stm_ad_sinhala_chk)
+                            .addComponent(stm_ad_english_chk)
+                            .addComponent(stm_ad_arabic_chk))
+                        .addGap(18, 18, 18)
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -1709,48 +1552,118 @@ public class Student_Management extends javax.swing.JPanel {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(jLabel1)
+                                .addComponent(jLabel3))
+                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(jLabel25, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jLabel12, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(stm_ad_admission_date, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(stm_ad_form_no_combo)
+                            .addComponent(stm_ad_admission_no_combo)
+                            .addComponent(jButton5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(stm_ad_student_bc_text, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel25, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel2))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(stm_ad_student_per_address_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(17, 17, 17))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 80, Short.MAX_VALUE)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                            .addComponent(stm_ad_student_name_initials_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addComponent(stm_ad_student_name_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(stm_ad_student_nic_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                                        .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(stm_ad_student_nationality_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addComponent(jLabel16, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(stm_ad_student_medium_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                        .addGap(41, 41, 41)
+                                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(stm_ad_student_gender_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jLabel18, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jLabel19, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(stm_ad_student_blood_combo)
+                                        .addComponent(stm_ad_student_religion_combo, javax.swing.GroupLayout.DEFAULT_SIZE, 35, Short.MAX_VALUE))
+                                    .addComponent(stm_ad_student_age_text, javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(stm_ad_student_dob, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, 243, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(stm_ad_admission_date, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
                                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(stm_ad_admission_no_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(stm_ad_form_no_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel2)
-                            .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(stm_ad_student_name_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(stm_ad_student_nic_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(stm_ad_student_gender_combo)
-                            .addComponent(stm_ad_student_age_text, javax.swing.GroupLayout.DEFAULT_SIZE, 35, Short.MAX_VALUE)
-                            .addComponent(stm_ad_student_dob, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                    .addComponent(jLabel20)
+                                    .addComponent(jLabel37))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(stm_ad_district_combo))
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(jLabel15)
+                                    .addComponent(jLabel40))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(stm_ad_area_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(stm_ad_student_contact_text, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(stm_ad_student_email_text, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel8)
-                            .addComponent(jLabel15, javax.swing.GroupLayout.PREFERRED_SIZE, 19, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jLabel39)
+                            .addComponent(jLabel41))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(stm_ad_student_address_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(stm_ad_student_contact_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap())
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addComponent(stm_ad_student_address_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel38))
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addComponent(stm_ad_english_chk)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(stm_ad_sinhala_chk)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(stm_ad_tamil_chk)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(stm_ad_arabic_chk)
+                                .addGap(11, 11, 11))
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
+
+        jPanel2Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {stm_ad_student_blood_combo, stm_ad_student_religion_combo});
+
+        jPanel2Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {stm_ad_area_combo, stm_ad_student_contact_text, stm_ad_student_email_text});
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Mother Information", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
@@ -1944,16 +1857,15 @@ public class Student_Management extends javax.swing.JPanel {
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel7Layout.createSequentialGroup()
                         .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(stm_ad_student_guardian_nic, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel31))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel7Layout.createSequentialGroup()
-                                .addComponent(jLabel31)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(jLabel32, javax.swing.GroupLayout.PREFERRED_SIZE, 97, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(154, 154, 154))
-                            .addGroup(jPanel7Layout.createSequentialGroup()
-                                .addComponent(stm_ad_student_guardian_nic, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(stm_ad_student_guardian_name_text)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addComponent(stm_ad_student_guardian_name_text))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel33, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(stm_ad_student_guardian_relationship_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -2097,7 +2009,7 @@ public class Student_Management extends javax.swing.JPanel {
                                 .addComponent(stm_ad_student_father_living_yes_checkbox)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(stm_ad_student_father_living_no_checkbox)
-                                .addGap(0, 21, Short.MAX_VALUE))
+                                .addGap(0, 20, Short.MAX_VALUE))
                             .addComponent(stm_ad_student_father_living_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap())
         );
@@ -2180,7 +2092,7 @@ public class Student_Management extends javax.swing.JPanel {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonGradient2, javax.swing.GroupLayout.PREFERRED_SIZE, 137, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(buttonGradient6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(buttonGradient6, javax.swing.GroupLayout.DEFAULT_SIZE, 140, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel8Layout.setVerticalGroup(
@@ -2208,7 +2120,7 @@ public class Student_Management extends javax.swing.JPanel {
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel9Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 513, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel9Layout.setVerticalGroup(
@@ -2216,27 +2128,6 @@ public class Student_Management extends javax.swing.JPanel {
             .addGroup(jPanel9Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 66, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-
-        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Student Remarks", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
-
-        jScrollPane2.setViewportView(stm_ad_student_remarks_text);
-
-        javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
-        jPanel11.setLayout(jPanel11Layout);
-        jPanel11Layout.setHorizontalGroup(
-            jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel11Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 787, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        jPanel11Layout.setVerticalGroup(
-            jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel11Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane2)
                 .addContainerGap())
         );
 
@@ -2284,7 +2175,6 @@ public class Student_Management extends javax.swing.JPanel {
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel8, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(6, 6, 6)
                         .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2316,10 +2206,8 @@ public class Student_Management extends javax.swing.JPanel {
                             .addComponent(jButton3, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
                             .addComponent(jButton4, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE))
                         .addGap(42, 42, 42)
-                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(18, 18, 18)
+                        .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -2369,7 +2257,7 @@ public class Student_Management extends javax.swing.JPanel {
     }//GEN-LAST:event_jLabel9MouseClicked
 
     private void stm_ad_student_contact_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stm_ad_student_contact_textActionPerformed
-        // TODO add your handling code here:
+        stm_ad_student_email_text.requestFocus();
     }//GEN-LAST:event_stm_ad_student_contact_textActionPerformed
 
     private void stm_ad_student_mother_nic_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stm_ad_student_mother_nic_textActionPerformed
@@ -2432,16 +2320,28 @@ public class Student_Management extends javax.swing.JPanel {
         }
 
         Student student = new Student();
+        StudentLanguages langs = new StudentLanguages();
+
         StudentDAO studentDAO = new StudentDAO();
         student.setAdmissionNo(stm_ad_admission_no_combo.getEditor().getItem().toString().trim());
         student.setFormNo(stm_ad_form_no_combo.getEditor().getItem().toString().trim());
         student.setAdmissionDate(stm_ad_admission_date.getDate()); // Assuming JDateChooser
+        student.setBcNo(stm_ad_student_bc_text.getText().trim());
+        student.setNameInitials(stm_ad_student_name_initials_combo.getEditor().getItem().toString().trim());
         student.setFullName(stm_ad_student_name_combo.getEditor().getItem().toString().trim());
+        student.setNationality(stm_ad_student_nationality_combo.getEditor().getItem().toString().trim());
         student.setNic(stm_ad_student_nic_combo.getEditor().getItem().toString().trim());
-        student.setDob(stm_ad_student_dob.getDate()); // Assuming JDateChooser
         student.setGender(stm_ad_student_gender_combo.getSelectedItem().toString());
-        student.setAddress(stm_ad_student_address_text.getText().trim());
+        student.setMedium(stm_ad_student_medium_combo.getSelectedItem().toString());
+        student.setDob(stm_ad_student_dob.getDate()); // Assuming JDateChooser
+        student.setBloodGroup(stm_ad_student_blood_combo.getSelectedItem().toString());
+        student.setReligion(stm_ad_student_religion_combo.getSelectedItem().toString());
+        student.setDistrict(stm_ad_district_combo.getEditor().getItem().toString().trim());
+        student.setArea(stm_ad_area_combo.getEditor().getItem().toString().trim());
         student.setContactNo(stm_ad_student_contact_text.getText().trim());
+        student.setEmail(stm_ad_student_email_text.getText().trim());
+        student.setCurrentAddress(stm_ad_student_address_text.getText().trim());
+        student.setPermanentAddress(stm_ad_student_per_address_text.getText().trim());
         student.setRemarks(stm_ad_student_remarks_text.getText().trim());
         student.setMedicalInfo(stm_ad_student_medical_text.getText().trim());
         student.setCurrentStatus("ACTIVE");
@@ -2484,23 +2384,6 @@ public class Student_Management extends javax.swing.JPanel {
         parents.setGuardianWhatsapp(stm_ad_student_guardian_whatsapp_text.getText().trim());
         parents.setStatus(true);
 
-//        // Handle student image
-//        if (ImageHelper.saveLabelImage != null) {
-//            try {
-//                // Build path: IMAGE_SAVE_BASE_PATH + admissionNo + ".png"
-//                String fileName = student.getAdmissionNo().replaceAll("\\s+", "_") + ".png";
-//                File imageFile = new File(ImageHelper.IMAGE_SAVE_BASE_PATH + fileName);
-//
-//                // Save image
-//                ImageIO.write(ImageHelper.resizedImageToSave, "png", imageFile);
-//
-//                // Optionally, store the path in student table if you have a column for it
-//                // student.setImagePath(imageFile.getAbsolutePath());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                JOptionPane.showMessageDialog(null, "Failed to save student image: " + e.getMessage());
-//            }
-//        }
         // Image handling
         BufferedImage imageToSave = GeneralMethods.resizedImageToSave;
         if (imageToSave == null) {
@@ -2527,24 +2410,6 @@ public class Student_Management extends javax.swing.JPanel {
 
             em.getTransaction().begin();
 
-            // Check if student already exists by admissionNo
-//            TypedQuery<Student> query = em.createQuery(
-//                    "SELECT s FROM Student s WHERE s.admissionNo = :admissionNo",
-//                    Student.class
-//            );
-//            query.setParameter("admissionNo", student.getAdmissionNo());
-//            boolean exists = !query.getResultList().isEmpty();
-//
-//            if (exists) {
-//                JOptionPane.showMessageDialog(
-//                        null,
-//                        "Student with Admission No " + student.getAdmissionNo() + " already exists!",
-//                        "Duplicate Entry",
-//                        JOptionPane.WARNING_MESSAGE
-//                );
-//                em.getTransaction().rollback();
-//                return;
-//            }
             StudentParentsDAO parentsDAO = new StudentParentsDAO();
             StudentParents existingParent = parentsDAO.findExistingParent(parents);
             if (existingParent != null) {
@@ -2596,15 +2461,22 @@ public class Student_Management extends javax.swing.JPanel {
                 }
             }
 
-//            // Save student
-//            em.persist(student);
-//
-//            // Link parents to student
-//            parents.setStudent(student);
-//
-//            // Save parents
-//            em.persist(parents);
-            // Save parents first
+            langs.setEnglish(stm_ad_english_chk.isSelected());
+            langs.setSinhala(stm_ad_sinhala_chk.isSelected());
+            langs.setTamil(stm_ad_tamil_chk.isSelected());
+            langs.setArabic(stm_ad_arabic_chk.isSelected());
+
+            langs.setStudent(student);
+            student.setStudentLanguages(langs);
+
+            // Save student
+            em.persist(student);
+
+            // Link parents to student
+            //           parents.setStudent(student);
+            // Save parents
+            em.persist(parents);
+            //            Save parents first
             em.persist(parents);
             em.flush(); // force ID generation
 
@@ -2680,12 +2552,22 @@ public class Student_Management extends javax.swing.JPanel {
         student.setAdmissionNo(stm_ad_admission_no_combo.getEditor().getItem().toString().trim());
         student.setFormNo(stm_ad_form_no_combo.getEditor().getItem().toString().trim());
         student.setAdmissionDate(stm_ad_admission_date.getDate()); // Assuming JDateChooser
+        student.setBcNo(stm_ad_student_bc_text.getText().trim());
+        student.setNameInitials(stm_ad_student_name_initials_combo.getEditor().getItem().toString().trim());
         student.setFullName(stm_ad_student_name_combo.getEditor().getItem().toString().trim());
+        student.setNationality(stm_ad_student_nationality_combo.getEditor().getItem().toString().trim());
         student.setNic(stm_ad_student_nic_combo.getEditor().getItem().toString().trim());
-        student.setDob(stm_ad_student_dob.getDate()); // Assuming JDateChooser
         student.setGender(stm_ad_student_gender_combo.getSelectedItem().toString());
-        student.setAddress(stm_ad_student_address_text.getText().trim());
+        student.setMedium(stm_ad_student_medium_combo.getSelectedItem().toString());
+        student.setDob(stm_ad_student_dob.getDate()); // Assuming JDateChooser
+        student.setBloodGroup(stm_ad_student_blood_combo.getSelectedItem().toString());
+        student.setReligion(stm_ad_student_religion_combo.getSelectedItem().toString());
+        student.setDistrict(stm_ad_district_combo.getEditor().getItem().toString().trim());
+        student.setArea(stm_ad_area_combo.getEditor().getItem().toString().trim());
         student.setContactNo(stm_ad_student_contact_text.getText().trim());
+        student.setEmail(stm_ad_student_email_text.getText().trim());
+        student.setCurrentAddress(stm_ad_student_address_text.getText().trim());
+        student.setPermanentAddress(stm_ad_student_per_address_text.getText().trim());
         student.setRemarks(stm_ad_student_remarks_text.getText().trim());
         student.setMedicalInfo(stm_ad_student_medical_text.getText().trim());
         student.setCurrentStatus("ACTIVE");
@@ -2728,7 +2610,14 @@ public class Student_Management extends javax.swing.JPanel {
         parents.setGuardianWhatsapp(stm_ad_student_guardian_whatsapp_text.getText().trim());
         parents.setStatus(true);
 
-        updateStudentWithParents(selectedStudentId, student, parents, imageToSave);
+        StudentLanguages languages = new StudentLanguages();
+
+        languages.setEnglish(stm_ad_english_chk.isSelected());
+        languages.setSinhala(stm_ad_sinhala_chk.isSelected());
+        languages.setTamil(stm_ad_tamil_chk.isSelected());
+        languages.setArabic(stm_ad_arabic_chk.isSelected());
+
+        updateStudentWithParents(selectedStudentId, student, parents, languages, imageToSave);
 
         // ✅ LOG: Student & Parent Update
         logHelper.log(
@@ -2816,6 +2705,11 @@ public class Student_Management extends javax.swing.JPanel {
         stm_ad_student_remarks_text.setText("");
         stm_ad_student_medical_text.setText("");
 
+        stm_ad_english_chk.setSelected(false);
+        stm_ad_sinhala_chk.setSelected(false);
+        stm_ad_tamil_chk.setSelected(false);
+        stm_ad_arabic_chk.setSelected(false);
+
         selectedStudentId = 0;
 
         try {
@@ -2841,11 +2735,54 @@ public class Student_Management extends javax.swing.JPanel {
 //        GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
         JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
 
+        String mother_name = stm_ad_student_mother_name_text.getText().trim();
+        String mother_nic = stm_ad_student_mother_nic_text.getText().trim();
+        String mother_contact = stm_ad_student_mother_contact_text.getText().trim();
+
+        String father_name = stm_ad_student_father_name_text.getText().trim();
+        String father_nic = stm_ad_student_father_nic_text.getText().trim();
+        String father_contact = stm_ad_student_father_contact_text.getText().trim();
+
+        String guardian_name = stm_ad_student_guardian_name_text.getText().trim();
+        String guardian_nic = stm_ad_student_guardian_nic.getText().trim();
+        String guardian_contact = stm_ad_student_guardian_contact_text.getText().trim();
+
         Siblings_Register dialog = new Siblings_Register(
                 parentFrame,
                 selectedStudentId,
                 this // VERY IMPORTANT
         );
+
+        if (!mother_nic.isEmpty()) {
+            Siblings_Register.stm_si_option_combo.setSelectedIndex(0);
+            Siblings_Register.stm_si_search_combo.getEditor().setItem(mother_nic);
+        } else if (!mother_name.isEmpty()) {
+            Siblings_Register.stm_si_option_combo.setSelectedIndex(1);
+            Siblings_Register.stm_si_search_combo.getEditor().setItem(mother_name);
+        } else if (!mother_contact.isEmpty()) {
+            Siblings_Register.stm_si_option_combo.setSelectedIndex(2);
+            Siblings_Register.stm_si_search_combo.getEditor().setItem(mother_contact);
+        } else if (!father_nic.isEmpty()) {
+            Siblings_Register.stm_si_option_combo.setSelectedIndex(3);
+            Siblings_Register.stm_si_search_combo.getEditor().setItem(father_nic);
+        } else if (!father_name.isEmpty()) {
+            Siblings_Register.stm_si_option_combo.setSelectedIndex(4);
+            Siblings_Register.stm_si_search_combo.getEditor().setItem(father_name);
+        } else if (!father_contact.isEmpty()) {
+            Siblings_Register.stm_si_option_combo.setSelectedIndex(5);
+            Siblings_Register.stm_si_search_combo.getEditor().setItem(father_contact);
+        } else if (!guardian_nic.isEmpty()) {
+            Siblings_Register.stm_si_option_combo.setSelectedIndex(6);
+            Siblings_Register.stm_si_search_combo.getEditor().setItem(guardian_nic);
+        } else if (!guardian_name.isEmpty()) {
+            Siblings_Register.stm_si_option_combo.setSelectedIndex(7);
+            Siblings_Register.stm_si_search_combo.getEditor().setItem(guardian_name);
+        } else if (!guardian_contact.isEmpty()) {
+            Siblings_Register.stm_si_option_combo.setSelectedIndex(8);
+            Siblings_Register.stm_si_search_combo.getEditor().setItem(guardian_contact);
+        }
+
+        dialog.loadSiblingTable();
 
         GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
 
@@ -2885,6 +2822,18 @@ public class Student_Management extends javax.swing.JPanel {
 
     }//GEN-LAST:event_jButton5ActionPerformed
 
+    private void stm_ad_student_bc_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stm_ad_student_bc_textActionPerformed
+        stm_ad_student_name_initials_combo.requestFocus();
+    }//GEN-LAST:event_stm_ad_student_bc_textActionPerformed
+
+    private void stm_ad_student_per_address_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stm_ad_student_per_address_textActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_stm_ad_student_per_address_textActionPerformed
+
+    private void stm_ad_student_email_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stm_ad_student_email_textActionPerformed
+        stm_ad_student_address_text.requestFocus();
+    }//GEN-LAST:event_stm_ad_student_email_textActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private Classes.ButtonGradient buttonGradient1;
@@ -2901,11 +2850,18 @@ public class Student_Management extends javax.swing.JPanel {
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel18;
+    private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel22;
     private javax.swing.JLabel jLabel23;
@@ -2923,14 +2879,18 @@ public class Student_Management extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel34;
     private javax.swing.JLabel jLabel35;
     private javax.swing.JLabel jLabel36;
+    private javax.swing.JLabel jLabel37;
+    private javax.swing.JLabel jLabel38;
+    private javax.swing.JLabel jLabel39;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel40;
+    private javax.swing.JLabel jLabel41;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel11;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
@@ -2942,11 +2902,19 @@ public class Student_Management extends javax.swing.JPanel {
     private javax.swing.JScrollPane jScrollPane2;
     private com.toedter.calendar.JDateChooser stm_ad_admission_date;
     private javax.swing.JComboBox<String> stm_ad_admission_no_combo;
+    private javax.swing.JCheckBox stm_ad_arabic_chk;
+    private javax.swing.JComboBox<String> stm_ad_area_combo;
+    private javax.swing.JComboBox<String> stm_ad_district_combo;
+    private javax.swing.JCheckBox stm_ad_english_chk;
     private javax.swing.JComboBox<String> stm_ad_form_no_combo;
+    private javax.swing.JCheckBox stm_ad_sinhala_chk;
     private javax.swing.JTextField stm_ad_student_address_text;
     private javax.swing.JTextField stm_ad_student_age_text;
+    private javax.swing.JTextField stm_ad_student_bc_text;
+    private javax.swing.JComboBox<String> stm_ad_student_blood_combo;
     private javax.swing.JTextField stm_ad_student_contact_text;
     private com.toedter.calendar.JDateChooser stm_ad_student_dob;
+    private javax.swing.JTextField stm_ad_student_email_text;
     private javax.swing.JTextField stm_ad_student_father_contact_text;
     private javax.swing.JComboBox<String> stm_ad_student_father_living_combo;
     private javax.swing.JCheckBox stm_ad_student_father_living_no_checkbox;
@@ -2963,6 +2931,7 @@ public class Student_Management extends javax.swing.JPanel {
     private javax.swing.JComboBox<String> stm_ad_student_guardian_relationship_combo;
     private javax.swing.JTextField stm_ad_student_guardian_whatsapp_text;
     private javax.swing.JEditorPane stm_ad_student_medical_text;
+    private javax.swing.JComboBox<String> stm_ad_student_medium_combo;
     private javax.swing.JTextField stm_ad_student_mother_contact_text;
     private javax.swing.JComboBox<String> stm_ad_student_mother_living_combo;
     private javax.swing.JCheckBox stm_ad_student_mother_living_no_checkbox;
@@ -2972,8 +2941,13 @@ public class Student_Management extends javax.swing.JPanel {
     private javax.swing.JComboBox<String> stm_ad_student_mother_occupation_combo;
     private javax.swing.JTextField stm_ad_student_mother_whatsapp_text;
     private javax.swing.JComboBox<String> stm_ad_student_name_combo;
+    private javax.swing.JComboBox<String> stm_ad_student_name_initials_combo;
+    private javax.swing.JComboBox<String> stm_ad_student_nationality_combo;
     private javax.swing.JComboBox<String> stm_ad_student_nic_combo;
+    private javax.swing.JTextField stm_ad_student_per_address_text;
+    private javax.swing.JComboBox<String> stm_ad_student_religion_combo;
     private javax.swing.JEditorPane stm_ad_student_remarks_text;
+    private javax.swing.JCheckBox stm_ad_tamil_chk;
     // End of variables declaration//GEN-END:variables
 private JButton createAnimatedGradientButton(String text, Color c1, Color c2) {
 

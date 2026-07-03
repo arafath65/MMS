@@ -150,10 +150,14 @@ public class GeneralMethods {
         }
     }
 
-    // AUTO-RESIZE IMAGE AND SET TO LABEL
+    // AUTO-RESIZE IMAGE AND SET TO LABEL  STUDENT
     public static File lastImageDirectory = new File(System.getProperty("user.home"));
     public static final String IMAGE_SAVE_BASE_PATH = "C:/MMS/students/";
-    public static final String IMAGE_SAVE_BASE_PATH_LOGO = "C:/InnovexPOS_Images/";
+    public static final String IMAGE_SAVE_BASE_PATH_LOGO = "C:/MMS/profile/";
+    //public static final String IMAGE_SAVE_BASE_PATH_PROFILE = "C:/InnovexPOS_Images/";
+
+    // EMPLOYEES
+    public static final String IMAGE_SAVE_BASE_PATH_EMPLOYEE = "C:/MMS/employees/profiles/";
 
     // You’ll store the resized image to this variable from outside
     public static BufferedImage resizedImageToSave = null;
@@ -191,13 +195,77 @@ public class GeneralMethods {
         return null;
     }
 
+    public static File chooseAndSetImageAutoResizeRemember2(JLabel label) {
+        JFileChooser fileChooser = new JFileChooser(lastImageDirectory);
+        fileChooser.setDialogTitle("Select Image");
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Image Files", "jpg", "jpeg", "png");
+        fileChooser.setFileFilter(filter);
+
+        int result = fileChooser.showOpenDialog(null);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            lastImageDirectory = selectedFile.getParentFile();
+
+            try {
+                BufferedImage originalImage = ImageIO.read(selectedFile);
+
+                if (originalImage == null) {
+                    JOptionPane.showMessageDialog(null, "Invalid image file.");
+                    return null;
+                }
+
+                BufferedImage resized = resizeImage(originalImage, 113, 113);
+                label.setIcon(new ImageIcon(resized));
+                resizedImageToSave = resized; // save resized image to be stored later
+
+                return selectedFile;
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Error loading image.");
+            }
+        }
+        return null;
+    }
+
     // Resizing utility
+//    public static BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
+//        Image resultingImage = originalImage.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
+//        BufferedImage outputImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
+//        Graphics2D g2d = outputImage.createGraphics();
+//        g2d.drawImage(resultingImage, 0, 0, null);
+//        g2d.dispose();
+//        return outputImage;
+//    }
     public static BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
-        Image resultingImage = originalImage.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
-        BufferedImage outputImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
+
+        if (originalImage == null) {
+            return null;
+        }
+
+        // Prevent zero or negative sizes
+        if (targetWidth <= 0) {
+            targetWidth = originalImage.getWidth();
+        }
+
+        if (targetHeight <= 0) {
+            targetHeight = originalImage.getHeight();
+        }
+
+        Image resultingImage = originalImage.getScaledInstance(
+                targetWidth,
+                targetHeight,
+                Image.SCALE_SMOOTH);
+
+        BufferedImage outputImage = new BufferedImage(
+                targetWidth,
+                targetHeight,
+                BufferedImage.TYPE_INT_ARGB);
+
         Graphics2D g2d = outputImage.createGraphics();
         g2d.drawImage(resultingImage, 0, 0, null);
         g2d.dispose();
+
         return outputImage;
     }
 
@@ -498,14 +566,67 @@ public class GeneralMethods {
 
             try {
 
-//                String sql = "SELECT DISTINCT CONCAT(" + nameColumn + ", ' [', " + idColumn + ", ']') "
+//                String sql = "SELECT DISTINCT CONCAT(" + nameColumn + ", ' [', IFNULL(" + idColumn + ", 0), ']') "
 //                        + "FROM " + table + " "
 //                        + "WHERE " + nameColumn + " LIKE ? "
 //                        + "AND status = 1";
-                String sql = "SELECT DISTINCT CONCAT(" + nameColumn + ", ' [', IFNULL(" + idColumn + ", 0), ']') "
+                String sql = "SELECT DISTINCT CONCAT(" + nameColumn + ", ' [', " + idColumn + ", ']') "
                         + "FROM " + table + " "
                         + "WHERE " + nameColumn + " LIKE ? "
-                        + "AND status = 1";
+                        + "AND status = 1 "
+                        + "AND " + idColumn + " > 0";
+
+                List<String> results = em.createNativeQuery(sql)
+                        .setParameter(1, "%" + input + "%")
+                        .getResultList();
+
+                DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+                boolean found = false;
+
+                for (String value : results) {
+                    model.addElement(value);
+                    found = true;
+                }
+
+                comboBox.setModel(model);
+                comboBox.setSelectedItem(input);
+
+                if (found) {
+                    comboBox.setPopupVisible(true);
+                } else {
+                    comboBox.hidePopup();
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                em.close();
+            }
+
+        });
+    }
+
+    public void loadMatchingComboItemswithID0Only(JComboBox<String> comboBox,
+            String idColumn,
+            String nameColumn,
+            String table,
+            String input) {
+
+        SwingUtilities.invokeLater(() -> {
+
+            EntityManager em = HibernateConfig.getEntityManager();
+
+            try {
+
+//                String sql = "SELECT DISTINCT CONCAT(" + nameColumn + ", ' [', IFNULL(" + idColumn + ", 0), ']') "
+//                        + "FROM " + table + " "
+//                        + "WHERE " + nameColumn + " LIKE ? "
+//                        + "AND status = 1";
+                String sql = "SELECT DISTINCT CONCAT(" + nameColumn + ", ' [', " + idColumn + ", ']') "
+                        + "FROM " + table + " "
+                        + "WHERE " + nameColumn + " LIKE ? "
+                        + "AND status = 1 "
+                        + "AND item_id = 0";
 
                 List<String> results = em.createNativeQuery(sql)
                         .setParameter(1, "%" + input + "%")
@@ -706,6 +827,14 @@ public class GeneralMethods {
                 ));
             }
         });
+    }
+
+    public String extractBoxBracket(String combo) {
+        if (combo.contains("[")) {
+            combo = combo.substring(0, combo.indexOf("[")).trim();
+        }
+
+        return combo;
     }
 
 }

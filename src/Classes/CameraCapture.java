@@ -89,16 +89,17 @@ public class CameraCapture {
 
                     if (image != null) {
 
-                        Image scaled = image.getScaledInstance(
-                                targetLabel.getWidth(),
-                                targetLabel.getHeight(),
-                                Image.SCALE_SMOOTH
+                        BufferedImage resized = GeneralMethods.resizeImage(
+                                image,
+                                171,
+                                171
                         );
 
-                        targetLabel.setIcon(
-                                new ImageIcon(scaled)
-                        );
+                        // Display
+                        targetLabel.setIcon(new ImageIcon(resized));
 
+                        // IMPORTANT - remember for saving
+                        GeneralMethods.resizedImageToSave = resized;
                     }
 
                 } catch (Exception ex) {
@@ -110,6 +111,34 @@ public class CameraCapture {
 
             });
 
+//            captureBtn.addActionListener(e -> {
+//
+//                try {
+//
+//                    BufferedImage image = webcam.getImage();
+//
+//                    if (image != null) {
+//
+//                        Image scaled = image.getScaledInstance(
+//                                targetLabel.getWidth(),
+//                                targetLabel.getHeight(),
+//                                Image.SCALE_SMOOTH
+//                        );
+//
+//                        targetLabel.setIcon(
+//                                new ImageIcon(scaled)
+//                        );
+//
+//                    }
+//
+//                } catch (Exception ex) {
+//                    ex.printStackTrace();
+//                }
+//
+//                webcam.close();
+//                dialog.dispose();
+//
+//            });
             cancelBtn.addActionListener(e -> {
 
                 webcam.close();

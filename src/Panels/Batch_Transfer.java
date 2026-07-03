@@ -5,12 +5,15 @@ import Classes.HibernateConfig;
 import Classes.TableGradientCell;
 import Classes.styleDateChooser;
 import Entities.Student_Management.CourseEnrollment;
+import Entities.Student_Management.OtherFeeAssignment;
 import Entities.Student_Management.Student;
 import Entities.Student_Management.StudentFeePayments;
+import JPA_DAO.Student_Management.OtherFeeAssignmentDAO;
 import com.formdev.flatlaf.FlatClientProperties;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -51,14 +54,21 @@ public class Batch_Transfer extends javax.swing.JPanel {
                 + "hoverBackground:null;"
                 + "pressedBackground:null;"
                 + "separatorColor:$TableHeader.background");
+        bat_other_pay_table.setDefaultRenderer(Object.class, new TableGradientCell());
+        bat_other_pay_table.getTableHeader().putClientProperty(FlatClientProperties.STYLE, ""
+                + "hoverBackground:null;"
+                + "pressedBackground:null;"
+                + "separatorColor:$TableHeader.background");
 
         bat_pay_amount_text.setEnabled(true);
 
         loadActiveMonthlyBatchCourses(bat_tr_batch_course_combo);
         loadActiveMonthlyOnlyBatchCourses(bat_pay_batch_course_combo);
+        loadActiveMonthlyBatchCourses(bat_other_pay_batch_course_combo);
         loadClassCombo(bat_tr_class_combo);
         loadClassCombo(bat_tr_new_class_combo);
         loadClassCombo(bat_pay_class_combo);
+        loadClassCombo(bat_other_pay_class_combo);
 
         JComboPopulates();
 
@@ -75,9 +85,19 @@ public class Batch_Transfer extends javax.swing.JPanel {
         });
         setupComboSelectionListener(bat_tr_new_batch_combo, bat_tr_new_batch_combo);
 
+        bat_other_pay_payments_combo.getEditor().getEditorComponent().addKeyListener(new KeyAdapter() {
+            public void keyReleased(KeyEvent e) {
+                String input = bat_other_pay_payments_combo.getEditor().getItem().toString();
+                generalMethods.loadMatchingComboItemswithID0Only(bat_other_pay_payments_combo, "fee_type_id", "fee_name", "fee_types", input);
+            }
+
+        });
+        setupComboSelectionListener2(bat_other_pay_payments_combo, bat_other_pay_amount_text);
+
     }
 
     private boolean itemSelectedByUser = false;
+    private boolean itemSelectedByUser2 = false;
 
     public void setupComboSelectionListener(JComboBox<String> comboBox, JComponent nextFocusComponent) {
         comboBox.addPopupMenuListener(new PopupMenuListener() {
@@ -110,6 +130,72 @@ public class Batch_Transfer extends javax.swing.JPanel {
         comboBox.addActionListener(e -> {
             if (comboBox.isPopupVisible()) {
                 itemSelectedByUser = true;
+            }
+        });
+
+    }
+
+    public void setupComboSelectionListener2(JComboBox<String> comboBox, JComponent nextFocusComponent) {
+        comboBox.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                itemSelectedByUser2 = false;
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+                if (itemSelectedByUser2) {
+                    Object selected = comboBox.getSelectedItem();
+                    if (selected != null) {
+                        String selectedValue = selected.toString().trim();
+                        if (!selectedValue.isEmpty() && isValueFromList(comboBox, selectedValue)) {
+
+                            int feeId = generalMethods.extractIdFromCombo(bat_other_pay_payments_combo.getEditor().getItem().toString());
+                            try {
+
+                                EntityManager em = HibernateConfig.getEntityManager();
+
+                                Object amount = em.createNativeQuery(
+                                        "SELECT default_amount "
+                                        + "FROM fee_types "
+                                        + "WHERE fee_type_id = ? "
+                                        + "AND status = 1")
+                                        .setParameter(1, feeId) // your fee_type_id variable
+                                        .getSingleResult();
+
+                                if (amount != null) {
+                                    bat_other_pay_amount_text.setText(
+                                            GeneralMethods.formatWithComma(
+                                                    GeneralMethods.parseCommaNumber(amount.toString())
+                                            )
+                                    );
+                                } else {
+                                    bat_other_pay_amount_text.setText("");
+                                }
+
+                                em.close();
+
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                                bat_other_pay_amount_text.setText("");
+                            }
+
+                            nextFocusComponent.requestFocus();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+                itemSelectedByUser2 = false;
+            }
+        });
+
+        // Detect user selection from keyboard (Enter) or mouse (click)
+        comboBox.addActionListener(e -> {
+            if (comboBox.isPopupVisible()) {
+                itemSelectedByUser2 = true;
             }
         });
 
@@ -408,17 +494,12 @@ public class Batch_Transfer extends javax.swing.JPanel {
                     rowNo++, // index 0 -> #
                     admissionNo, // index 1 -> Admission No
                     studentName, // index 2 -> Student Name
-                    "", // index 3
-                    "", // index 4
-                    "", // index 5
-                    "", // index 6
-                    "", // index 7
-                    studentId, // index 8 -> Student ID
-                    enrollmentId // index 9 -> Enrollment ID
+                    "",
+                    studentId, // index 3 -> Student ID
                 });
             }
 
-            bat_pay_total.setText(model.getRowCount() + "");
+            bat_other_pay_total.setText(model.getRowCount() + "");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -1924,7 +2005,7 @@ public class Batch_Transfer extends javax.swing.JPanel {
         buttonGroup2 = new javax.swing.ButtonGroup();
         jPanel1 = new javax.swing.JPanel();
         jLabel10 = new javax.swing.JLabel();
-        bat_pay_total = new javax.swing.JTextField();
+        bat_other_pay_total = new javax.swing.JTextField();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel2 = new javax.swing.JPanel();
         jPanel4 = new javax.swing.JPanel();
@@ -1961,20 +2042,35 @@ public class Batch_Transfer extends javax.swing.JPanel {
         jButton8 = new javax.swing.JButton();
         bat_pay_note_text = new javax.swing.JTextField();
         jLabel12 = new javax.swing.JLabel();
+        jPanel5 = new javax.swing.JPanel();
+        jPanel8 = new javax.swing.JPanel();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        bat_other_pay_table = new javax.swing.JTable();
+        bat_other_pay_batch_course_combo = new javax.swing.JComboBox<>();
+        jLabel15 = new javax.swing.JLabel();
+        jLabel17 = new javax.swing.JLabel();
+        buttonGradient6 = new Classes.ButtonGradient();
+        jButton9 = new javax.swing.JButton();
+        bat_other_pay_amount_text = new javax.swing.JTextField();
+        bat_other_pay_class_combo = new javax.swing.JComboBox<>();
+        jLabel18 = new javax.swing.JLabel();
+        bat_other_pay_payments_combo = new javax.swing.JComboBox<>();
+        jLabel19 = new javax.swing.JLabel();
+        jButton10 = new javax.swing.JButton();
 
         jLabel10.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
         jLabel10.setText("TotalStudents ");
 
-        bat_pay_total.setEditable(false);
-        bat_pay_total.setFont(new java.awt.Font("Roboto Light", 1, 14)); // NOI18N
-        bat_pay_total.addActionListener(new java.awt.event.ActionListener() {
+        bat_other_pay_total.setEditable(false);
+        bat_other_pay_total.setFont(new java.awt.Font("Roboto Light", 1, 14)); // NOI18N
+        bat_other_pay_total.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bat_pay_totalActionPerformed(evt);
+                bat_other_pay_totalActionPerformed(evt);
             }
         });
-        bat_pay_total.addKeyListener(new java.awt.event.KeyAdapter() {
+        bat_other_pay_total.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyTyped(java.awt.event.KeyEvent evt) {
-                bat_pay_totalKeyTyped(evt);
+                bat_other_pay_totalKeyTyped(evt);
             }
         });
 
@@ -2159,7 +2255,7 @@ public class Batch_Transfer extends javax.swing.JPanel {
                 .addContainerGap())
         );
 
-        jTabbedPane1.addTab("Transfer", jPanel2);
+        jTabbedPane1.addTab("     Transfer     ", jPanel2);
 
         jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Batch Information", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
@@ -2379,7 +2475,190 @@ public class Batch_Transfer extends javax.swing.JPanel {
                 .addContainerGap())
         );
 
-        jTabbedPane1.addTab("Waiver / Discount", jPanel3);
+        jTabbedPane1.addTab("     Waiver / Discount     ", jPanel3);
+
+        jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Batch Information", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
+
+        bat_other_pay_table.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "#", "Admission", "Student Name", "Amount", "st_id"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        bat_other_pay_table.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                bat_other_pay_tableMouseClicked(evt);
+            }
+        });
+        jScrollPane4.setViewportView(bat_other_pay_table);
+        if (bat_other_pay_table.getColumnModel().getColumnCount() > 0) {
+            bat_other_pay_table.getColumnModel().getColumn(0).setPreferredWidth(30);
+            bat_other_pay_table.getColumnModel().getColumn(1).setPreferredWidth(120);
+            bat_other_pay_table.getColumnModel().getColumn(2).setPreferredWidth(350);
+            bat_other_pay_table.getColumnModel().getColumn(4).setMinWidth(0);
+            bat_other_pay_table.getColumnModel().getColumn(4).setPreferredWidth(0);
+            bat_other_pay_table.getColumnModel().getColumn(4).setMaxWidth(0);
+        }
+
+        bat_other_pay_batch_course_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+
+        jLabel15.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel15.setText("Batch / Course");
+
+        jLabel17.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel17.setText("Amount");
+
+        buttonGradient6.setText("PAY");
+        buttonGradient6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonGradient6ActionPerformed(evt);
+            }
+        });
+
+        jButton9.setBackground(new java.awt.Color(102, 102, 102));
+        jButton9.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jButton9.setForeground(new java.awt.Color(255, 255, 255));
+        jButton9.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/search16.png"))); // NOI18N
+        jButton9.setToolTipText("Course Enrolment");
+        jButton9.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton9ActionPerformed(evt);
+            }
+        });
+
+        bat_other_pay_amount_text.setFont(new java.awt.Font("Roboto Light", 1, 14)); // NOI18N
+        bat_other_pay_amount_text.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bat_other_pay_amount_textActionPerformed(evt);
+            }
+        });
+        bat_other_pay_amount_text.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                bat_other_pay_amount_textKeyTyped(evt);
+            }
+        });
+
+        bat_other_pay_class_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+
+        jLabel18.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel18.setText("Class");
+
+        bat_other_pay_payments_combo.setEditable(true);
+        bat_other_pay_payments_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        bat_other_pay_payments_combo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bat_other_pay_payments_comboActionPerformed(evt);
+            }
+        });
+
+        jLabel19.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel19.setText("Other Payments");
+
+        jButton10.setBackground(new java.awt.Color(102, 102, 102));
+        jButton10.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jButton10.setForeground(new java.awt.Color(255, 255, 255));
+        jButton10.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/enter24.png"))); // NOI18N
+        jButton10.setToolTipText("Set fees to the table");
+        jButton10.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton10ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
+        jPanel8.setLayout(jPanel8Layout);
+        jPanel8Layout.setHorizontalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane4)
+                    .addGroup(jPanel8Layout.createSequentialGroup()
+                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel15)
+                            .addComponent(bat_other_pay_batch_course_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 297, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel8Layout.createSequentialGroup()
+                                .addComponent(bat_other_pay_class_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton9, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jLabel18))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 273, Short.MAX_VALUE)
+                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(bat_other_pay_payments_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 254, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel19, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(bat_other_pay_amount_text, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel17))
+                        .addGap(18, 18, 18)
+                        .addComponent(jButton10, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(buttonGradient6, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
+        );
+        jPanel8Layout.setVerticalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel8Layout.createSequentialGroup()
+                            .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(jLabel15)
+                                .addComponent(jLabel18))
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(bat_other_pay_class_combo, javax.swing.GroupLayout.DEFAULT_SIZE, 36, Short.MAX_VALUE)
+                                .addComponent(bat_other_pay_batch_course_combo)))
+                        .addComponent(jButton9, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(jPanel8Layout.createSequentialGroup()
+                            .addGap(21, 21, 21)
+                            .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(jButton10, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(buttonGradient6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                    .addGroup(jPanel8Layout.createSequentialGroup()
+                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel17)
+                            .addComponent(jLabel19))
+                        .addGap(5, 5, 5)
+                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(bat_other_pay_amount_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(bat_other_pay_payments_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 461, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        jTabbedPane1.addTab("     Other Payments     ", jPanel5);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -2391,7 +2670,7 @@ public class Batch_Transfer extends javax.swing.JPanel {
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(jLabel10)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(bat_pay_total, javax.swing.GroupLayout.PREFERRED_SIZE, 87, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(bat_other_pay_total, javax.swing.GroupLayout.PREFERRED_SIZE, 87, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(8, 8, 8))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addContainerGap()
@@ -2404,7 +2683,7 @@ public class Batch_Transfer extends javax.swing.JPanel {
                 .addComponent(jTabbedPane1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(bat_pay_total, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(bat_other_pay_total, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel10))
                 .addContainerGap())
         );
@@ -2421,13 +2700,13 @@ public class Batch_Transfer extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void bat_pay_totalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bat_pay_totalActionPerformed
+    private void bat_other_pay_totalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bat_other_pay_totalActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_bat_pay_totalActionPerformed
+    }//GEN-LAST:event_bat_other_pay_totalActionPerformed
 
-    private void bat_pay_totalKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_bat_pay_totalKeyTyped
+    private void bat_other_pay_totalKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_bat_other_pay_totalKeyTyped
         // TODO add your handling code here:
-    }//GEN-LAST:event_bat_pay_totalKeyTyped
+    }//GEN-LAST:event_bat_other_pay_totalKeyTyped
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
 
@@ -2563,8 +2842,118 @@ public class Batch_Transfer extends javax.swing.JPanel {
 
     }//GEN-LAST:event_bat_pay_option_comboActionPerformed
 
+    private void bat_other_pay_tableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_bat_other_pay_tableMouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_bat_other_pay_tableMouseClicked
+
+    private void buttonGradient6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient6ActionPerformed
+
+        try {
+
+            EntityManager em = HibernateConfig.getEntityManager();
+
+            List<OtherFeeAssignment> assignments = new ArrayList<>();
+
+            int feeTypesId = generalMethods.extractIdFromCombo(
+                    bat_other_pay_payments_combo.getEditor().getItem().toString());
+
+            double amount = GeneralMethods.parseCommaNumber(
+                    bat_other_pay_amount_text.getText());
+
+            // Loop ALL rows
+            for (int row = 0; row < bat_other_pay_table.getRowCount(); row++) {
+
+                int studentId = Integer.parseInt(
+                        bat_other_pay_table.getValueAt(row, 4).toString());
+
+                Student student = em.find(Student.class, studentId);
+
+                if (student == null) {
+                    continue;
+                }
+
+                OtherFeeAssignment assignment = new OtherFeeAssignment();
+                assignment.setStudent(student);
+                assignment.setFeeType(feeTypesId);
+                assignment.setAmount(amount);
+                assignment.setAssignedDate(new Date());
+                assignment.setFeeStatus("PENDING");
+                assignment.setUser(username);
+                assignment.setStatus(1);
+
+                assignments.add(assignment);
+            }
+
+            new OtherFeeAssignmentDAO().saveAll(assignments);
+
+            em.close();
+            JOptionPane.showMessageDialog(null, "Fees assigned successfully.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }//GEN-LAST:event_buttonGradient6ActionPerformed
+
+    private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
+        loadBatchTransferStudents(bat_other_pay_table, bat_other_pay_batch_course_combo, bat_other_pay_class_combo);
+    }//GEN-LAST:event_jButton9ActionPerformed
+
+    private void bat_other_pay_amount_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bat_other_pay_amount_textActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_bat_other_pay_amount_textActionPerformed
+
+    private void bat_other_pay_amount_textKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_bat_other_pay_amount_textKeyTyped
+        // TODO add your handling code here:
+    }//GEN-LAST:event_bat_other_pay_amount_textKeyTyped
+
+    private void bat_other_pay_payments_comboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bat_other_pay_payments_comboActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_bat_other_pay_payments_comboActionPerformed
+
+    private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
+
+        try {
+            DefaultTableModel model = (DefaultTableModel) bat_other_pay_table.getModel();
+
+            if (model.getRowCount() == 0) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        "No students found."
+                );
+                return;
+            }
+
+            // =====================================================
+            // GET VALUES
+            // =====================================================
+            String amountText = bat_other_pay_amount_text.getText();
+            String payments = bat_other_pay_payments_combo.getEditor().getItem().toString();
+
+            if (amountText.isEmpty() || payments.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Please select the payments");
+                return;
+            }
+            for (int i = 0; i < model.getRowCount(); i++) {
+
+                model.setValueAt(amountText, i, 3);
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }//GEN-LAST:event_jButton10ActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTextField bat_other_pay_amount_text;
+    public static javax.swing.JComboBox<String> bat_other_pay_batch_course_combo;
+    public static javax.swing.JComboBox<String> bat_other_pay_class_combo;
+    public static javax.swing.JComboBox<String> bat_other_pay_payments_combo;
+    private javax.swing.JTable bat_other_pay_table;
+    private javax.swing.JTextField bat_other_pay_total;
     private javax.swing.JTextField bat_pay_amount_text;
     public static javax.swing.JComboBox<String> bat_pay_batch_course_combo;
     public static javax.swing.JComboBox<String> bat_pay_class_combo;
@@ -2572,7 +2961,6 @@ public class Batch_Transfer extends javax.swing.JPanel {
     private javax.swing.JTextField bat_pay_note_text;
     public static javax.swing.JComboBox<String> bat_pay_option_combo;
     private javax.swing.JTable bat_pay_table;
-    private javax.swing.JTextField bat_pay_total;
     public static javax.swing.JComboBox<String> bat_tr_batch_course_combo;
     public static javax.swing.JComboBox<String> bat_tr_class_combo;
     public static javax.swing.JComboBox<String> bat_tr_new_batch_combo;
@@ -2580,17 +2968,24 @@ public class Batch_Transfer extends javax.swing.JPanel {
     private javax.swing.JTable bat_tr_table;
     private Classes.ButtonGradient buttonGradient4;
     private Classes.ButtonGradient buttonGradient5;
+    private Classes.ButtonGradient buttonGradient6;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
+    private javax.swing.JButton jButton10;
     private javax.swing.JButton jButton5;
     private javax.swing.JButton jButton6;
     private javax.swing.JButton jButton7;
     private javax.swing.JButton jButton8;
+    private javax.swing.JButton jButton9;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel18;
+    private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel6;
@@ -2601,10 +2996,13 @@ public class Batch_Transfer extends javax.swing.JPanel {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanel7;
+    private javax.swing.JPanel jPanel8;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JTabbedPane jTabbedPane1;
     // End of variables declaration//GEN-END:variables
 

@@ -10,7 +10,9 @@ import Panels.Fees_Management;
 import Panels.Inventory;
 import Panels.OneTime_Donation;
 import Panels.Register_Course;
+import Panels.Register_Employee;
 import Panels.Student_Management;
+import Panels.User_Permissions;
 import Panels_Reports.Batch_Class_Student_Contact;
 import Panels_Reports.Batch_Class_Student_report;
 import Panels_Reports.Entire_Students_Report;
@@ -42,6 +44,8 @@ public class Dashboard extends javax.swing.JFrame {
     Additional_Payments additional_Payments;
     Batch_Transfer batch_Transfer;
     OneTime_Donation oneTime_Donation;
+    User_Permissions user_Permissions;
+    Register_Employee register_Employee;
     // Course_enrolment course_enrolment;
 
     // REPORTS
@@ -83,6 +87,8 @@ public class Dashboard extends javax.swing.JFrame {
         additional_Payments = new Additional_Payments(username, role);
         batch_Transfer = new Batch_Transfer(username, role);
         oneTime_Donation = new OneTime_Donation(username, role);
+        user_Permissions = new User_Permissions(username, role);
+        register_Employee = new Register_Employee(username, role);
         // course_enrolment = new Course_enrolment();
 
         batch_Class_Student_report = new Batch_Class_Student_report(username, role);
@@ -103,6 +109,8 @@ public class Dashboard extends javax.swing.JFrame {
         main_panels.add(additional_Payments, "ADDITIONAL_PAYMENTS");
         main_panels.add(batch_Transfer, "BATCH_TRANSFER");
         main_panels.add(oneTime_Donation, "ONE-TIME_DONATION");
+        main_panels.add(user_Permissions, "USER-PERMISSION");
+        main_panels.add(register_Employee, "REGISTER_EMPLOYEE");
         // main_panels.add(course_enrolment, "COURSE_ENROLMENT");
 
         main_panels.add(batch_Class_Student_report, "BATCH/CLASS_STUDENT_REPORT");

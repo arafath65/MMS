@@ -2,6 +2,7 @@ package Panels_SubDialogs;
 
 import Classes.GeneralMethods;
 import Classes.GradientButton;
+import Classes.HibernateConfig;
 import Classes.LogHelper;
 import Classes.ModernDialog;
 import Classes.ModernMessage;
@@ -31,6 +32,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.Date;
 import java.util.List;
+import javax.persistence.EntityManager;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.ComboBoxModel;
@@ -284,6 +286,7 @@ public class Course_Enrollment extends javax.swing.JDialog {
         jLabel6 = new javax.swing.JLabel();
         jButton2 = new javax.swing.JButton();
         stm_ce_class_name_combo = new javax.swing.JComboBox<>();
+        buttonGradientRound1 = new Classes.ButtonGradientRound();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -396,6 +399,14 @@ public class Course_Enrollment extends javax.swing.JDialog {
 
         stm_ce_class_name_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
 
+        buttonGradientRound1.setText("X");
+        buttonGradientRound1.setFont(new java.awt.Font("Roboto Black", 0, 17)); // NOI18N
+        buttonGradientRound1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonGradientRound1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
@@ -432,7 +443,10 @@ public class Course_Enrollment extends javax.swing.JDialog {
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(stm_ce_course_end_textfield, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel6)))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(buttonGradientRound1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         jPanel6Layout.setVerticalGroup(
@@ -468,7 +482,9 @@ public class Course_Enrollment extends javax.swing.JDialog {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(stm_ce_course_start_textfield, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 254, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 258, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(buttonGradientRound1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
@@ -485,8 +501,8 @@ public class Course_Enrollment extends javax.swing.JDialog {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -497,7 +513,7 @@ public class Course_Enrollment extends javax.swing.JDialog {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
         pack();
@@ -673,6 +689,83 @@ public class Course_Enrollment extends javax.swing.JDialog {
         }
     }//GEN-LAST:event_stm_ce_tableMouseClicked
 
+    private void buttonGradientRound1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradientRound1ActionPerformed
+        try {
+
+            DefaultTableModel model = (DefaultTableModel) stm_ce_table.getModel();
+            int enrollmentId = Integer.parseInt(model.getValueAt(stm_ce_table.getSelectedRow(), 10).toString());
+            int confirm = JOptionPane.showConfirmDialog(
+                    null,
+                    "Are you sure you want to delete this enrollment?",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            if (confirm != JOptionPane.YES_OPTION) {
+                return;
+            }
+
+            EntityManager em = HibernateConfig.getEntityManager();
+
+            try {
+
+                em.getTransaction().begin();
+
+                // Soft delete enrollment
+                em.createNativeQuery(
+                        "UPDATE course_enrollment "
+                        + "SET status = 0 "
+                        + "WHERE enrollment_id = ?"
+                )
+                        .setParameter(1, enrollmentId)
+                        .executeUpdate();
+
+                // Soft delete fee record
+                em.createNativeQuery(
+                        "UPDATE student_fee_payments "
+                        + "SET status = 0 "
+                        + "WHERE enrollment_id = ?"
+                )
+                        .setParameter(1, enrollmentId)
+                        .executeUpdate();
+
+                em.getTransaction().commit();
+
+                JOptionPane.showMessageDialog(
+                        null,
+                        "Enrollment deleted successfully.",
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+                loadCourseEnrollmentTable(studentId);
+                
+            } catch (Exception e) {
+
+                if (em.getTransaction().isActive()) {
+                    em.getTransaction().rollback();
+                }
+
+                e.printStackTrace();
+
+                JOptionPane.showMessageDialog(
+                        null,
+                        "Delete failed: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+
+            } finally {
+                em.close();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+    }//GEN-LAST:event_buttonGradientRound1ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -711,6 +804,7 @@ public class Course_Enrollment extends javax.swing.JDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private Classes.ButtonGradientRound buttonGradientRound1;
     private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;

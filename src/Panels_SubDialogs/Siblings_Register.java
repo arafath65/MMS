@@ -191,7 +191,7 @@ public class Siblings_Register extends javax.swing.JDialog {
         });
     }
 
-    private void loadSiblingTable() {
+    public void loadSiblingTable() {
 
         String searchText = ((JTextComponent) stm_si_search_combo
                 .getEditor().getEditorComponent()).getText().trim();
@@ -210,15 +210,27 @@ public class Siblings_Register extends javax.swing.JDialog {
 
         int seq = 1;
 
+//        for (Object[] row : list) {
+//            model.addRow(new Object[]{
+//                seq++,
+//                row[0],
+//                row[1],
+//                row[2],
+//                row[3]
+//            });
         for (Object[] row : list) {
+
             model.addRow(new Object[]{
-                seq++,
-                row[0],
-                row[1],
-                row[2],
-                row[3]
+                seq++, // #
+                row[0], // Admission No
+                row[1], // Admission Date
+                row[2], // Student Name
+                row[3], // Course
+                row[4], // Class
+                row[5] // Course Status
             });
         }
+
     }
 
     @SuppressWarnings("unchecked")
@@ -249,11 +261,11 @@ public class Siblings_Register extends javax.swing.JDialog {
 
             },
             new String [] {
-                "#", "Admission Number", "Student Name ", "Admission Date", "Course Status"
+                "#", "Admission Number", "Admission Date", "Student Name ", "Grade / Course", "Class", "Course Status"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false
+                false, false, false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -267,11 +279,13 @@ public class Siblings_Register extends javax.swing.JDialog {
         });
         jScrollPane1.setViewportView(stm_si_table);
         if (stm_si_table.getColumnModel().getColumnCount() > 0) {
-            stm_si_table.getColumnModel().getColumn(0).setPreferredWidth(50);
+            stm_si_table.getColumnModel().getColumn(0).setPreferredWidth(30);
             stm_si_table.getColumnModel().getColumn(1).setPreferredWidth(120);
-            stm_si_table.getColumnModel().getColumn(2).setPreferredWidth(250);
-            stm_si_table.getColumnModel().getColumn(3).setPreferredWidth(120);
-            stm_si_table.getColumnModel().getColumn(4).setPreferredWidth(100);
+            stm_si_table.getColumnModel().getColumn(2).setPreferredWidth(120);
+            stm_si_table.getColumnModel().getColumn(3).setPreferredWidth(180);
+            stm_si_table.getColumnModel().getColumn(4).setPreferredWidth(180);
+            stm_si_table.getColumnModel().getColumn(5).setPreferredWidth(80);
+            stm_si_table.getColumnModel().getColumn(6).setPreferredWidth(80);
         }
 
         stm_si_search_combo.setEditable(true);
@@ -292,7 +306,7 @@ public class Siblings_Register extends javax.swing.JDialog {
                                 .addComponent(stm_si_option_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(stm_si_search_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 345, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(0, 246, Short.MAX_VALUE)))
+                        .addGap(0, 341, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel6Layout.setVerticalGroup(
@@ -394,8 +408,8 @@ public class Siblings_Register extends javax.swing.JDialog {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JComboBox<String> stm_si_option_combo;
-    private javax.swing.JComboBox<String> stm_si_search_combo;
+    public static javax.swing.JComboBox<String> stm_si_option_combo;
+    public static javax.swing.JComboBox<String> stm_si_search_combo;
     private javax.swing.JTable stm_si_table;
     // End of variables declaration//GEN-END:variables
 private void showEnrollmentActionDialog(int enrollmentId, int rowIndex) {

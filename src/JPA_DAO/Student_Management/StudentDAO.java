@@ -2,6 +2,7 @@ package JPA_DAO.Student_Management;
 
 import Classes.GeneralMethods.StudentSearchType;
 import Classes.HibernateConfig;
+import Entities.Settings.Course;
 import Entities.Student_Management.CourseEnrollment;
 import Entities.Student_Management.Student;
 import java.util.ArrayList;
@@ -241,21 +242,27 @@ public class StudentDAO {
             case "ADMISSION":
                 field = "s.admissionNo";
                 break;
+
             case "FORM":
                 field = "s.formNo";
                 break;
+
             case "NIC":
                 field = "s.nic";
                 break;
+
             case "NAME":
                 field = "s.fullName";
                 break;
+
             default:
                 field = "s.admissionNo";
         }
 
         List<Student> list = em.createQuery(
-                "SELECT s FROM Student s "
+                "SELECT DISTINCT s "
+                + "FROM Student s "
+                + "LEFT JOIN FETCH s.studentParents "
                 + "WHERE " + field + " LIKE :text",
                 Student.class
         )
@@ -263,9 +270,44 @@ public class StudentDAO {
                 .getResultList();
 
         em.close();
+
         return list;
     }
 
+//    public List<Student> searchStudents(String text, String type) {
+//
+//        EntityManager em = HibernateConfig.getEntityManager();
+//
+//        String field;
+//
+//        switch (type) {
+//            case "ADMISSION":
+//                field = "s.admissionNo";
+//                break;
+//            case "FORM":
+//                field = "s.formNo";
+//                break;
+//            case "NIC":
+//                field = "s.nic";
+//                break;
+//            case "NAME":
+//                field = "s.fullName";
+//                break;
+//            default:
+//                field = "s.admissionNo";
+//        }
+//
+//        List<Student> list = em.createQuery(
+//                "SELECT s FROM Student s "
+//                + "WHERE " + field + " LIKE :text",
+//                Student.class
+//        )
+//                .setParameter("text", text + "%")
+//                .getResultList();
+//
+//        em.close();
+//        return list;
+//    }
     public List<Object[]> searchSiblings(String searchText, String searchType) {
         EntityManager em = HibernateConfig.getEntityManager();
         List<Object[]> resultList = new ArrayList<>();
@@ -320,21 +362,55 @@ public class StudentDAO {
 
             // Now for each student, pick the latest CourseEnrollment
             for (Student s : students) {
-                String latestCourseStatus = "N/A";
+
+                String courseName = "N/A";
+                String className = "N/A";
+                String courseStatus = "N/A";
+
                 if (s.getCourseEnrollments() != null && !s.getCourseEnrollments().isEmpty()) {
-                    latestCourseStatus = s.getCourseEnrollments().stream()
-                            .filter(ce -> ce.getStatus() == 1) // active only
+
+                    CourseEnrollment latestEnrollment = s.getCourseEnrollments().stream()
+                            .filter(ce -> ce.getStatus() == 1)
                             .max(Comparator.comparingInt(CourseEnrollment::getEnrollmentId))
-                            .map(CourseEnrollment::getCourseStatus)
-                            .orElse("N/A");
+                            .orElse(null);
+
+                    if (latestEnrollment != null) {
+
+                        className = latestEnrollment.getClassName();
+                        courseStatus = latestEnrollment.getCourseStatus();
+
+                        Course course = latestEnrollment.getCourse();
+
+                        if (course != null) {
+                            courseName = course.getCourseName();
+                        }
+                    }
                 }
 
                 resultList.add(new Object[]{
-                    s.getAdmissionNo(),
-                    s.getFullName(),
-                    sdf.format(s.getAdmissionDate()),
-                    latestCourseStatus
+                    s.getAdmissionNo(), // 0
+                    sdf.format(s.getAdmissionDate()), // 1
+                    s.getFullName(), // 2
+                    courseName, // 3
+                    className, // 4
+                    courseStatus // 5
                 });
+
+//                String latestCourseStatus = "N/A";
+//                if (s.getCourseEnrollments() != null && !s.getCourseEnrollments().isEmpty()) {
+//                    latestCourseStatus = s.getCourseEnrollments().stream()
+//                            .filter(ce -> ce.getStatus() == 1) // active only
+//                            .max(Comparator.comparingInt(CourseEnrollment::getEnrollmentId))
+//                            .map(CourseEnrollment::getCourseStatus)
+//                            .orElse("N/A");
+//                }
+//
+//                resultList.add(new Object[]{
+//                    s.getAdmissionNo(),
+//                    s.getFullName(),
+//                    sdf.format(s.getAdmissionDate()),
+//                    latestCourseStatus
+//                });
             }
 
         } catch (Exception e) {
@@ -344,6 +420,42 @@ public class StudentDAO {
         }
 
         return resultList;
+    }
+
+    public Object[] getStudentElimination(int studentId) {
+
+        EntityManager em = HibernateConfig.getEntityManager();
+
+        try {
+
+            List<Object[]> list = em.createNativeQuery(
+                    "SELECT "
+                    + "se.eliminate_type, "
+                    + "s.admission_no, "
+                    + "s.full_name, "
+                    + "se.note "
+                    + "FROM student_eliminates se "
+                    + "INNER JOIN student s ON se.student_id = s.student_id "
+                    + "WHERE se.student_id = ? "
+                    + "AND se.status = 1 "
+                    + "AND s.status = 1 "
+                    + "ORDER BY se.student_eliminates_id DESC "
+                    + "LIMIT 1"
+            )
+                    .setParameter(1, studentId)
+                    .getResultList();
+
+            if (!list.isEmpty()) {
+                return list.get(0);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
+
+        return null;
     }
 
 }

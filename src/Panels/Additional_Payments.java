@@ -9,19 +9,30 @@ import Classes.TableGradientCell;
 import Classes.ButtonGradientRound;
 import Classes.HibernateConfig;
 import Classes.LogHelper;
+import Entities.Madhrasa_Profile.MadhrasaProfile;
 import Entities.Settings.Course;
 import Entities.Settings.StudentClass;
 import Entities.Student_Management.FeeTypes;
+import JPA_DAO.Madhrasa_Profile.MadhrasaProfileDAO;
 import JPA_DAO.Settings.ClassDAO;
 import JPA_DAO.Settings.CourseDAO;
 import com.formdev.flatlaf.FlatClientProperties;
 import java.awt.Dimension;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Date;
 import java.util.List;
+import javax.imageio.ImageIO;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.swing.ComboBoxModel;
+import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
@@ -30,14 +41,12 @@ import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.table.DefaultTableModel;
 
-/**
- *
- * @author UNKNOWN_UN
- */
 public class Additional_Payments extends javax.swing.JPanel {
 
     GeneralMethods generalMethods = new GeneralMethods();
     LogHelper logHelper = new LogHelper();
+
+    private File selectedImageFile;
 
     String username;
     String role;
@@ -55,6 +64,7 @@ public class Additional_Payments extends javax.swing.JPanel {
 
         JComboPopulates();
         loadFeeTypesToTable(reg_add_paym_table);
+        loadMadhrasaProfile();
 
     }
 
@@ -125,7 +135,9 @@ public class Additional_Payments extends javax.swing.JPanel {
         try {
 
             String jpql = "SELECT f.feeTypeId, f.feeName, f.feeCategory, f.defaultAmount "
-                    + "FROM FeeTypes f WHERE f.status = 1";
+                    + "FROM FeeTypes f "
+                    + "WHERE f.status = 1 "
+                    + "AND f.itemId = 0";
 
             List<Object[]> list = em.createQuery(jpql).getResultList();
 
@@ -154,10 +166,61 @@ public class Additional_Payments extends javax.swing.JPanel {
         }
     }
 
+    public void loadMadhrasaProfile() {
+
+        try {
+
+            MadhrasaProfile profile = new MadhrasaProfileDAO().getProfile();
+
+            if (profile == null) {
+                return;
+            }
+
+            set_mad_prof_name_Textfield.setText(profile.getName());
+            set_mad_prof_adress_textfield.setText(profile.getAddress());
+            set_mad_prof_contact_textfield.setText(profile.getContact());
+            set_mad_prof_email_textfield.setText(profile.getEmail());
+            set_mad_prof_website_textfield.setText(profile.getWebsite());
+
+            // ==========================
+            // Load Logo
+            // ==========================
+            File folder = new File(GeneralMethods.IMAGE_SAVE_BASE_PATH_LOGO);
+
+            if (folder.exists()) {
+
+                File[] files = folder.listFiles((dir, name)
+                        -> name.toLowerCase().endsWith(".png")
+                        || name.toLowerCase().endsWith(".jpg")
+                        || name.toLowerCase().endsWith(".jpeg"));
+
+                if (files != null && files.length > 0) {
+
+                    BufferedImage img = ImageIO.read(files[0]);
+
+                    if (img != null) {
+
+                        GeneralMethods.resizedImageToSave = img;
+
+                        jLabel9.setIcon(new ImageIcon(
+                                GeneralMethods.resizeImage(img,
+                                        jLabel9.getWidth(),
+                                        jLabel9.getHeight())
+                        ));
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        buttonGroup1 = new javax.swing.ButtonGroup();
         jPanel1 = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
         jLabel12 = new javax.swing.JLabel();
@@ -169,6 +232,24 @@ public class Additional_Payments extends javax.swing.JPanel {
         jScrollPane1 = new javax.swing.JScrollPane();
         reg_add_paym_table = new javax.swing.JTable();
         buttonGradientRound1 = new Classes.ButtonGradientRound();
+        jPanel4 = new javax.swing.JPanel();
+        jLabel13 = new javax.swing.JLabel();
+        jLabel17 = new javax.swing.JLabel();
+        set_mad_prof_contact_textfield = new javax.swing.JTextField();
+        jLabel22 = new javax.swing.JLabel();
+        set_mad_prof_name_Textfield = new javax.swing.JTextField();
+        set_mad_prof_adress_textfield = new javax.swing.JTextField();
+        jLabel23 = new javax.swing.JLabel();
+        set_mad_prof_email_textfield = new javax.swing.JTextField();
+        jPanel5 = new javax.swing.JPanel();
+        jLabel9 = new javax.swing.JLabel();
+        buttonGradient5 = new Classes.ButtonGradient();
+        buttonGradient6 = new Classes.ButtonGradient();
+        jLabel24 = new javax.swing.JLabel();
+        set_mad_prof_website_textfield = new javax.swing.JTextField();
+        jPanel6 = new javax.swing.JPanel();
+        stm_ad_english_chk1 = new javax.swing.JCheckBox();
+        stm_ad_english_chk2 = new javax.swing.JCheckBox();
 
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Register Additional Payments", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
@@ -178,8 +259,8 @@ public class Additional_Payments extends javax.swing.JPanel {
         jLabel16.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
         jLabel16.setText("Category");
 
-        reg_add_paym_category_combo.setEditable(true);
         reg_add_paym_category_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        reg_add_paym_category_combo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "SERVICES" }));
 
         reg_add_paym_amount_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
         reg_add_paym_amount_text.addActionListener(new java.awt.event.ActionListener() {
@@ -262,7 +343,7 @@ public class Additional_Payments extends javax.swing.JPanel {
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
                         .addComponent(jLabel12, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -280,25 +361,220 @@ public class Additional_Payments extends javax.swing.JPanel {
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 415, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(buttonGradientRound1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .addComponent(buttonGradientRound1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+
+        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Organization Profile", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
+
+        jLabel13.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel13.setText("School Name");
+
+        jLabel17.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel17.setText("Address");
+
+        set_mad_prof_contact_textfield.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        set_mad_prof_contact_textfield.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                set_mad_prof_contact_textfieldActionPerformed(evt);
+            }
+        });
+
+        jLabel22.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel22.setText("Contact");
+
+        set_mad_prof_name_Textfield.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        set_mad_prof_name_Textfield.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                set_mad_prof_name_TextfieldActionPerformed(evt);
+            }
+        });
+
+        set_mad_prof_adress_textfield.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        set_mad_prof_adress_textfield.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                set_mad_prof_adress_textfieldActionPerformed(evt);
+            }
+        });
+
+        jLabel23.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel23.setText("E-Mail");
+
+        set_mad_prof_email_textfield.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        set_mad_prof_email_textfield.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                set_mad_prof_email_textfieldActionPerformed(evt);
+            }
+        });
+
+        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Image", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 0, 14))); // NOI18N
+
+        jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel9.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/student_logo.png"))); // NOI18N
+        jLabel9.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jLabel9MouseClicked(evt);
+            }
+        });
+
+        buttonGradient5.setText("RESET");
+        buttonGradient5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonGradient5ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buttonGradient5, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(buttonGradient5, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(18, Short.MAX_VALUE))
+        );
+
+        buttonGradient6.setText("SAVE / UPDATE");
+        buttonGradient6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonGradient6ActionPerformed(evt);
+            }
+        });
+
+        jLabel24.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
+        jLabel24.setText("Website");
+
+        set_mad_prof_website_textfield.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        set_mad_prof_website_textfield.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                set_mad_prof_website_textfieldActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel24, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel23, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel17, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel22, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(set_mad_prof_website_textfield, javax.swing.GroupLayout.DEFAULT_SIZE, 264, Short.MAX_VALUE)
+                    .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(set_mad_prof_contact_textfield)
+                        .addComponent(set_mad_prof_adress_textfield)
+                        .addComponent(set_mad_prof_name_Textfield)
+                        .addComponent(set_mad_prof_email_textfield)
+                        .addComponent(buttonGradient6, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 264, Short.MAX_VALUE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(jLabel13, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(set_mad_prof_name_Textfield, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 35, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel17, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(set_mad_prof_adress_textfield, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(set_mad_prof_contact_textfield, javax.swing.GroupLayout.DEFAULT_SIZE, 35, Short.MAX_VALUE)
+                            .addComponent(jLabel22, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel23, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(set_mad_prof_email_textfield, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel24, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(set_mad_prof_website_textfield, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(buttonGradient6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jPanel4Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {set_mad_prof_adress_textfield, set_mad_prof_name_Textfield});
+
+        jPanel4Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {set_mad_prof_contact_textfield, set_mad_prof_email_textfield, set_mad_prof_website_textfield});
+
+        jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Organization Type", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
+
+        buttonGroup1.add(stm_ad_english_chk1);
+        stm_ad_english_chk1.setFont(new java.awt.Font("Roboto Condensed Medium", 0, 14)); // NOI18N
+        stm_ad_english_chk1.setText("School (Local / International)");
+
+        buttonGroup1.add(stm_ad_english_chk2);
+        stm_ad_english_chk2.setFont(new java.awt.Font("Roboto Condensed Medium", 0, 14)); // NOI18N
+        stm_ad_english_chk2.setText("Madhrasa (Makthab / Arabic Colleges)");
+
+        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
+        jPanel6.setLayout(jPanel6Layout);
+        jPanel6Layout.setHorizontalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel6Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(stm_ad_english_chk1)
+                .addGap(18, 18, 18)
+                .addComponent(stm_ad_english_chk2)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel6Layout.setVerticalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel6Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(stm_ad_english_chk1)
+                    .addComponent(stm_ad_english_chk2))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(829, Short.MAX_VALUE))
+                .addContainerGap(309, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(12, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -320,7 +596,7 @@ public class Additional_Payments extends javax.swing.JPanel {
         try {
 
             String feeName = reg_add_paym_name_text.getText().trim();
-            String category = reg_add_paym_category_combo.getEditor().getItem().toString().trim();
+            String category = reg_add_paym_category_combo.getSelectedItem().toString().trim();
             double amount = GeneralMethods.parseCommaNumber(reg_add_paym_amount_text.getText());
 
             // =========================
@@ -374,6 +650,7 @@ public class Additional_Payments extends javax.swing.JPanel {
             );
 
             JOptionPane.showMessageDialog(null, "Additional Payment Saved Successfully!");
+            loadFeeTypesToTable(reg_add_paym_table);
 
         } catch (Exception e) {
 
@@ -457,6 +734,7 @@ public class Additional_Payments extends javax.swing.JPanel {
             );
 
             JOptionPane.showMessageDialog(null, "Deleted successfully!");
+            loadFeeTypesToTable(reg_add_paym_table);
 
         } catch (Exception e) {
 
@@ -477,18 +755,150 @@ public class Additional_Payments extends javax.swing.JPanel {
         reg_add_paym_category_combo.requestFocus();
     }//GEN-LAST:event_reg_add_paym_name_textActionPerformed
 
+    private void set_mad_prof_contact_textfieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_set_mad_prof_contact_textfieldActionPerformed
+        set_mad_prof_email_textfield.requestFocus();
+    }//GEN-LAST:event_set_mad_prof_contact_textfieldActionPerformed
+
+    private void set_mad_prof_name_TextfieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_set_mad_prof_name_TextfieldActionPerformed
+        set_mad_prof_adress_textfield.requestFocus();
+    }//GEN-LAST:event_set_mad_prof_name_TextfieldActionPerformed
+
+    private void set_mad_prof_adress_textfieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_set_mad_prof_adress_textfieldActionPerformed
+        set_mad_prof_contact_textfield.requestFocus();
+    }//GEN-LAST:event_set_mad_prof_adress_textfieldActionPerformed
+
+    private void set_mad_prof_email_textfieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_set_mad_prof_email_textfieldActionPerformed
+        set_mad_prof_website_textfield.requestFocus();
+    }//GEN-LAST:event_set_mad_prof_email_textfieldActionPerformed
+
+    private void jLabel9MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel9MouseClicked
+        //        File selectedFile = ImageHelper.chooseAndSetImageAutoResizeRemember(jLabel9);
+        //
+        //        if (selectedFile != null) {
+        //            System.out.println("Image selected: " + selectedFile.getAbsolutePath());
+        //            // The resized image is now stored in ImageHelper.resizedImageToSave
+        //        } else {
+        //            System.out.println("No image selected.");
+        //        }
+
+        selectedImageFile = GeneralMethods.chooseAndSetImageAutoResizeRemember2(jLabel9);
+    }//GEN-LAST:event_jLabel9MouseClicked
+
+    private void buttonGradient5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient5ActionPerformed
+        try {
+
+            InputStream imgStream = getClass().getResourceAsStream("/images/student_logo.png");
+            if (imgStream == null) {
+                System.out.println("Image resource not found!");
+                return;
+            }
+
+            // Read the image
+            BufferedImage img = ImageIO.read(imgStream);
+            jLabel9.setIcon(new ImageIcon(img));
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }//GEN-LAST:event_buttonGradient5ActionPerformed
+
+    private void buttonGradient6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient6ActionPerformed
+        try {
+
+            MadhrasaProfileDAO dao = new MadhrasaProfileDAO();
+
+            // Check existing profile
+            MadhrasaProfile profile = dao.getProfile();
+
+            // First time
+            if (profile == null) {
+                profile = new MadhrasaProfile();
+            }
+
+            profile.setName(set_mad_prof_name_Textfield.getText());
+            profile.setAddress(set_mad_prof_adress_textfield.getText());
+            profile.setContact(set_mad_prof_contact_textfield.getText());
+            profile.setEmail(set_mad_prof_email_textfield.getText());
+            profile.setWebsite(set_mad_prof_website_textfield.getText());
+            profile.setUser(username);
+            profile.setLastModified(new Date());
+
+            // ===========================
+            // Image Handling
+            // ===========================
+            BufferedImage imageToSave = GeneralMethods.resizedImageToSave;
+
+            if (imageToSave == null) {
+                imageToSave = GeneralMethods.getDefaultImage();
+                GeneralMethods.resizedImageToSave = imageToSave;
+            }
+
+            if (imageToSave == null) {
+                JOptionPane.showMessageDialog(this, "Failed to load image.");
+                return;
+            }
+
+            Files.createDirectories(Paths.get(GeneralMethods.IMAGE_SAVE_BASE_PATH_LOGO));
+
+            // Always use one fixed logo name
+            String fullSavePath = GeneralMethods.IMAGE_SAVE_BASE_PATH_LOGO + "madhrasa_logo.png";
+
+            ImageIO.write(imageToSave, "png", new File(fullSavePath));
+
+            // ===========================
+            // Save or Update
+            // ===========================
+            if (profile.getMadhrasaProfileId() == null) {
+                dao.save(profile);
+                JOptionPane.showMessageDialog(this, "Profile saved successfully.");
+            } else {
+                dao.update(profile);
+                JOptionPane.showMessageDialog(this, "Profile updated successfully.");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Error : " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_buttonGradient6ActionPerformed
+
+    private void set_mad_prof_website_textfieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_set_mad_prof_website_textfieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_set_mad_prof_website_textfieldActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private Classes.ButtonGradient buttonGradient5;
+    private Classes.ButtonGradient buttonGradient6;
     private Classes.ButtonGradientRound buttonGradientRound1;
+    private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JLabel jLabel12;
+    private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel16;
+    private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel21;
+    private javax.swing.JLabel jLabel22;
+    private javax.swing.JLabel jLabel23;
+    private javax.swing.JLabel jLabel24;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextField reg_add_paym_amount_text;
     private javax.swing.JComboBox<String> reg_add_paym_category_combo;
     private javax.swing.JTextField reg_add_paym_name_text;
     private javax.swing.JTable reg_add_paym_table;
+    private javax.swing.JTextField set_mad_prof_adress_textfield;
+    private javax.swing.JTextField set_mad_prof_contact_textfield;
+    private javax.swing.JTextField set_mad_prof_email_textfield;
+    private javax.swing.JTextField set_mad_prof_name_Textfield;
+    private javax.swing.JTextField set_mad_prof_website_textfield;
+    private javax.swing.JCheckBox stm_ad_english_chk1;
+    private javax.swing.JCheckBox stm_ad_english_chk2;
     // End of variables declaration//GEN-END:variables
 }

@@ -88,6 +88,9 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
 
         reg_misc_discount_text.putClientProperty("JComponent.outline", new Color(255, 160, 41));
         reg_misc_discount_text.putClientProperty("JComponent.focusWidth", 2);
+
+        generateInvoiceNo();
+
     }
 
     private void JComboPopulatesBankInfo() {
@@ -190,7 +193,7 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
         reg_misc_total_due_text.setText(GeneralMethods.formatWithComma(total));
     }
 
-    public void loadInvoiceItems(
+    public boolean loadInvoiceItems(
             JTable table,
             int studentId,
             String invoiceNo, com.toedter.calendar.JDateChooser reg_misc_date) {
@@ -248,6 +251,10 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
                     .setParameter(2, invoiceNo)
                     .getResultList();
 
+            if (list.isEmpty()) {
+                return false;
+            }
+
             int rowNo = 1;
 
             for (Object[] row : list) {
@@ -290,8 +297,11 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
                 });
             }
 
+            return true;
+
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         } finally {
             em.close();
         }
@@ -337,6 +347,29 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
         }
     }
 
+    public void generateInvoiceNo() {
+
+        EntityManager em = HibernateConfig.getEntityManager();
+
+        try {
+
+            Object result = em.createNativeQuery(
+                    "SELECT MAX(CAST(invoice_no AS UNSIGNED)) "
+                    + "FROM student_additional_fees_master")
+                    .getSingleResult();
+
+            int nextNo = (result == null ? 1 : ((Number) result).intValue() + 1);
+
+            reg_invoice_no_text.setText(String.format("%06d", nextNo));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            reg_invoice_no_text.setText("000001");
+        } finally {
+            em.close();
+        }
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -364,6 +397,7 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
         reg_misc_qty_text = new javax.swing.JTextField();
         jLabel8 = new javax.swing.JLabel();
         reg_invoice_no_text = new javax.swing.JTextField();
+        jButton6 = new javax.swing.JButton();
         jPanel9 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         reg_misc_issued_table = new javax.swing.JTable();
@@ -506,6 +540,16 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
             }
         });
 
+        jButton6.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jButton6.setForeground(new java.awt.Color(255, 255, 255));
+        jButton6.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/refresh.png"))); // NOI18N
+        jButton6.setToolTipText("Refreshing the invoice number");
+        jButton6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton6ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
@@ -542,9 +586,12 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
                             .addComponent(reg_misc_discount_text, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(reg_invoice_no_text, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(jPanel6Layout.createSequentialGroup()
+                                .addComponent(reg_invoice_no_text, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(jLabel8))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGap(18, 18, 18)
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel1)
                             .addComponent(reg_misc_date, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -557,19 +604,22 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
-                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addComponent(jLabel8)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel1))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(reg_misc_date, javax.swing.GroupLayout.DEFAULT_SIZE, 35, Short.MAX_VALUE)
-                            .addComponent(reg_invoice_no_text)))
-                    .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(reg_misc_student_name_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(reg_invoice_no_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addGroup(jPanel6Layout.createSequentialGroup()
+                            .addComponent(jLabel1)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(reg_misc_date, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGroup(jPanel6Layout.createSequentialGroup()
+                            .addComponent(jLabel2)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(reg_misc_student_name_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addGap(24, 24, 24)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel6Layout.createSequentialGroup()
@@ -666,6 +716,7 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
         });
 
         buttonGradientRound1.setText("DELETE");
+        buttonGradientRound1.setToolTipText("Delete the invoice");
         buttonGradientRound1.setFont(new java.awt.Font("Roboto Black", 0, 17)); // NOI18N
         buttonGradientRound1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -674,6 +725,7 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
         });
 
         buttonGradientRound2.setText("SAVE");
+        buttonGradientRound2.setToolTipText("Save invoice");
         buttonGradientRound2.setFont(new java.awt.Font("Roboto Black", 0, 17)); // NOI18N
         buttonGradientRound2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -682,6 +734,7 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
         });
 
         buttonGradientRound3.setText("X");
+        buttonGradientRound3.setToolTipText("Remove row");
         buttonGradientRound3.setFont(new java.awt.Font("Roboto Black", 0, 17)); // NOI18N
         buttonGradientRound3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -711,10 +764,13 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
                         .addComponent(jLabel10)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(reg_misc_total_due_text, javax.swing.GroupLayout.PREFERRED_SIZE, 119, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(buttonGradientRound3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
+
+        jPanel1Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {buttonGradientRound1, buttonGradientRound2});
+
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
@@ -724,15 +780,16 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
                 .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(buttonGradientRound3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(reg_misc_total_due_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(buttonGradientRound1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(buttonGradientRound2, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(reg_misc_total_due_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel10))
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(buttonGradientRound1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(buttonGradientRound2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addContainerGap())
         );
 
@@ -996,31 +1053,22 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
             );
         }
 
-        // ✅ AUDIT LOG
-//        logHelper.log(
-//                "MISC_PAYMENTS",
-//                selectedStudentIds,
-//                "SERVICE DELETE",
-//                serviceName,
-//                deletedAmount,
-//                "Removed " + serviceName + " record from student account.",
-//                username
-//        );
 
     }//GEN-LAST:event_buttonGradientRound1ActionPerformed
 
     private void reg_invoice_no_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reg_invoice_no_textActionPerformed
-        //reg_misc_service_combo.requestFocus();
-        loadInvoiceItems(
+        boolean invoiceLoaded = loadInvoiceItems(
                 reg_misc_issued_table,
                 selectedStudentIds,
                 reg_invoice_no_text.getText().trim(),
                 reg_misc_date
         );
-        
-        if (reg_invoice_no_text.getText().isEmpty()) {
+
+        if (!invoiceLoaded) {
             reg_misc_date.setDate(new Date());
             reg_misc_service_combo.requestFocus();
+        } else {
+            reg_misc_date.setDate(new Date()); // remove this if you want loaded invoice date to remain
         }
 
         calculateServiceTotal();
@@ -1050,6 +1098,25 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
             }
 
             tx.begin();
+
+            String invoiceNo = reg_invoice_no_text.getText().trim();
+            Number count = (Number) em.createNativeQuery(
+                    "SELECT COUNT(*) "
+                    + "FROM student_additional_fees_master "
+                    + "WHERE invoice_no = ? AND status = 1"
+            )
+                    .setParameter(1, invoiceNo)
+                    .getSingleResult();
+
+            if (count.intValue() > 0) {
+
+                JOptionPane.showMessageDialog(null,
+                        "Invoice No already exists: " + invoiceNo,
+                        "Duplicate Invoice",
+                        JOptionPane.WARNING_MESSAGE);
+
+                return;
+            }
 
             //=================================================
             // MASTER SAVE
@@ -1150,17 +1217,25 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
     }//GEN-LAST:event_buttonGradientRound2ActionPerformed
 
     private void buttonGradientRound3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradientRound3ActionPerformed
+
         try {
-            
+
             DefaultTableModel model = (DefaultTableModel) reg_misc_issued_table.getModel();
             int selectedRow = reg_misc_issued_table.getSelectedRow();
             model.removeRow(selectedRow);
             calculateServiceTotal();
-            
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }//GEN-LAST:event_buttonGradientRound3ActionPerformed
+
+    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
+
+        generateInvoiceNo();
+
+    }//GEN-LAST:event_jButton6ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -1185,6 +1260,7 @@ public class Miscellaneous_Issuing extends javax.swing.JDialog {
     private Classes.ButtonGradientRound buttonGradientRound2;
     private Classes.ButtonGradientRound buttonGradientRound3;
     private javax.swing.JButton jButton5;
+    private javax.swing.JButton jButton6;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel2;

@@ -1,5 +1,6 @@
 package Entities.Student_Management;
 
+import Entities.Settings.Course;
 import java.io.Serializable;
 import java.util.List;
 import javax.persistence.*;
@@ -25,6 +26,16 @@ public class CourseEnrollment implements Serializable {
     @OneToOne(mappedBy = "enrollment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private StudentFeePayments feePayments;
 
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "course_id")
+//    private Course course;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "course_id",
+            insertable = false,
+            updatable = false
+    )
+    private Course course;
     @Column(name = "course_id")
     private Integer courseId;
 
@@ -44,6 +55,14 @@ public class CourseEnrollment implements Serializable {
     private int status;
 
     // Getters and Setters
+    public Course getCourse() {
+        return course;
+    }
+
+    public void setCourse(Course course) {
+        this.course = course;
+    }
+
     public Integer getEnrollmentId() {
         return enrollmentId;
     }
