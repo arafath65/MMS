@@ -90,7 +90,7 @@ public class MyDrawerBuilder extends SimpleDrawerBuilder {
             ),
             new Item("Donations (Funds)", "donation.svg")
             .subMenu("One-Time Donation")
-            .subMenu("Recurring Donation"),
+            .subMenu("Reports"),
             
             new Item("Inventory", "invetory.svg")
             .subMenu("Add Inventory")

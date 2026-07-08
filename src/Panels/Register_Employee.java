@@ -12,10 +12,12 @@ import Classes.HibernateConfig;
 import Classes.LogHelper;
 import Classes.styleDateChooser;
 import Entities.Employee.Employee;
+import Entities.Employee.EmployeeCareerHistory;
 import Entities.Madhrasa_Profile.MadhrasaProfile;
 import Entities.Settings.Course;
 import Entities.Settings.StudentClass;
 import Entities.Student_Management.FeeTypes;
+import JPA_DAO.Employee.EmployeeCareerHistoryDAO;
 import JPA_DAO.Employee.EmployeeDAO;
 import JPA_DAO.Employee.EmployeeLanguagesDAO;
 import JPA_DAO.Madhrasa_Profile.MadhrasaProfileDAO;
@@ -598,6 +600,22 @@ public class Register_Employee extends javax.swing.JPanel {
             e.printStackTrace();
             jLabel9.setIcon(null);
         }
+    }
+
+    private void saveEmployeeCareerHistory(Employee employee) {
+
+        EmployeeCareerHistory history = new EmployeeCareerHistory();
+
+        history.setEmployee(employee);
+        history.setEffectiveDate(employee.getJoinedDate());
+        history.setDesignation(employee.getJobTitle());
+        history.setSalary(employee.getBasicSalary());
+        history.setChangeType("JOINED");
+        history.setRemarks("Initial appointment");
+        history.setUser(username);
+        history.setStatus(1);
+
+        new EmployeeCareerHistoryDAO().save(history);
     }
 
     @SuppressWarnings("unchecked")
@@ -1693,7 +1711,7 @@ public class Register_Employee extends javax.swing.JPanel {
 
         JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
 
-        Employee_Career_History dialog = new Employee_Career_History(parentFrame, username, role);
+        Employee_Career_History dialog = new Employee_Career_History(parentFrame, selectedEmployeeId, username, role);
         GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
 
     }//GEN-LAST:event_jButton1ActionPerformed
@@ -1882,6 +1900,7 @@ public class Register_Employee extends javax.swing.JPanel {
                 }
 
                 ImageIO.write(imageToSave, extension, outputPath);
+                saveEmployeeCareerHistory(employee);
 
                 JOptionPane.showMessageDialog(
                         this,

@@ -49,8 +49,6 @@
                           <Component id="buttonGradientRound2" linkSize="1" min="-2" pref="82" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="buttonGradientRound1" linkSize="1" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace max="32767" attributes="0"/>
-                          <Component id="buttonGradientRound3" min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
                   <EmptySpace max="32767" attributes="0"/>
@@ -65,12 +63,11 @@
                   <EmptySpace type="separate" max="-2" attributes="0"/>
                   <Component id="jPanel6" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
-                  <Component id="jPanel9" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace max="32767" attributes="0"/>
+                  <Component id="jPanel9" max="32767" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="buttonGradientRound1" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="buttonGradientRound2" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="buttonGradientRound3" alignment="3" min="-2" pref="50" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
@@ -131,7 +128,7 @@
           <Properties>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                <TitledBorder position="1" title="Student Information">
+                <TitledBorder position="1" title="Employee Career Information">
                   <Border PropertyName="innerBorder" info="org.netbeans.modules.form.compat2.border.EtchedBorderInfo">
                     <EtchetBorder>
                       <Color PropertyName="highlight" blue="cc" green="cc" red="cc" type="rgb"/>
@@ -150,28 +147,28 @@
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="reg_invoice_no_text1" max="32767" attributes="0"/>
+                          <Component id="emp_car_remarks_text" max="32767" attributes="0"/>
                           <Group type="102" attributes="0">
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Group type="102" alignment="0" attributes="0">
                                       <Group type="103" groupAlignment="0" attributes="0">
-                                          <Component id="reg_misc_date" min="-2" pref="163" max="-2" attributes="0"/>
+                                          <Component id="emp_car_date_date" min="-2" pref="163" max="-2" attributes="0"/>
                                           <Component id="jLabel1" min="-2" pref="89" max="-2" attributes="0"/>
                                       </Group>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Group type="103" groupAlignment="0" attributes="0">
                                           <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
-                                          <Component id="reg_misc_student_name_combo" min="-2" pref="268" max="-2" attributes="0"/>
+                                          <Component id="emp_car_designation_combo" min="-2" pref="268" max="-2" attributes="0"/>
                                       </Group>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Group type="103" groupAlignment="0" attributes="0">
-                                          <Component id="reg_invoice_no_text" min="-2" pref="120" max="-2" attributes="0"/>
+                                          <Component id="emp_car_salary_text" min="-2" pref="120" max="-2" attributes="0"/>
                                           <Component id="jLabel8" alignment="0" min="-2" max="-2" attributes="0"/>
                                       </Group>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Group type="103" groupAlignment="0" attributes="0">
                                           <Component id="jLabel3" alignment="0" min="-2" max="-2" attributes="0"/>
-                                          <Component id="reg_misc_student_name_combo1" alignment="0" min="-2" pref="159" max="-2" attributes="0"/>
+                                          <Component id="emp_car_change_type_combo" alignment="0" min="-2" pref="159" max="-2" attributes="0"/>
                                       </Group>
                                   </Group>
                                   <Component id="jLabel9" alignment="0" min="-2" max="-2" attributes="0"/>
@@ -191,7 +188,7 @@
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
-                              <Component id="reg_misc_date" max="32767" attributes="0"/>
+                              <Component id="emp_car_date_date" max="32767" attributes="0"/>
                           </Group>
                           <Group type="102" attributes="0">
                               <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
@@ -199,17 +196,17 @@
                                   <Group type="102" attributes="0">
                                       <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="reg_misc_student_name_combo1" min="-2" pref="35" max="-2" attributes="0"/>
+                                      <Component id="emp_car_change_type_combo" min="-2" pref="35" max="-2" attributes="0"/>
                                   </Group>
                                   <Group type="102" attributes="0">
                                       <Component id="jLabel8" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="reg_invoice_no_text" min="-2" pref="35" max="-2" attributes="0"/>
+                                      <Component id="emp_car_salary_text" min="-2" pref="35" max="-2" attributes="0"/>
                                   </Group>
                                   <Group type="102" alignment="1" attributes="0">
                                       <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="reg_misc_student_name_combo" min="-2" pref="35" max="-2" attributes="0"/>
+                                      <Component id="emp_car_designation_combo" min="-2" pref="35" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
                           </Group>
@@ -217,7 +214,7 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jLabel9" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="reg_invoice_no_text1" min="-2" pref="35" max="-2" attributes="0"/>
+                      <Component id="emp_car_remarks_text" min="-2" pref="35" max="-2" attributes="0"/>
                       <EmptySpace min="-2" pref="24" max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -240,7 +237,7 @@
                 <Property name="text" type="java.lang.String" value="Designation"/>
               </Properties>
             </Component>
-            <Component class="javax.swing.JComboBox" name="reg_misc_student_name_combo">
+            <Component class="javax.swing.JComboBox" name="emp_car_designation_combo">
               <Properties>
                 <Property name="editable" type="boolean" value="true"/>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
@@ -254,7 +251,7 @@
                 <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
               </AuxValues>
             </Component>
-            <Component class="com.toedter.calendar.JDateChooser" name="reg_misc_date">
+            <Component class="com.toedter.calendar.JDateChooser" name="emp_car_date_date">
               <Properties>
                 <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
                   <Color blue="cc" green="cc" red="cc" type="rgb"/>
@@ -275,28 +272,34 @@
                 <Property name="text" type="java.lang.String" value="Salary"/>
               </Properties>
             </Component>
-            <Component class="javax.swing.JTextField" name="reg_invoice_no_text">
+            <Component class="javax.swing.JTextField" name="emp_car_salary_text">
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Light" size="14" style="0"/>
                 </Property>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="reg_invoice_no_textActionPerformed"/>
-                <EventHandler event="keyTyped" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="reg_invoice_no_textKeyTyped"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="emp_car_salary_textActionPerformed"/>
+                <EventHandler event="keyTyped" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="emp_car_salary_textKeyTyped"/>
               </Events>
               <AuxValues>
                 <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="9"/>
               </AuxValues>
             </Component>
-            <Component class="javax.swing.JComboBox" name="reg_misc_student_name_combo1">
+            <Component class="javax.swing.JComboBox" name="emp_car_change_type_combo">
               <Properties>
-                <Property name="editable" type="boolean" value="true"/>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Light" size="14" style="0"/>
                 </Property>
                 <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                  <StringArray count="0"/>
+                  <StringArray count="6">
+                    <StringItem index="0" value="APPOINTMENT"/>
+                    <StringItem index="1" value="PROMOTION"/>
+                    <StringItem index="2" value="INCREMENT"/>
+                    <StringItem index="3" value="TRANSFER"/>
+                    <StringItem index="4" value="SALARY_REVISION"/>
+                    <StringItem index="5" value="DEMOTION"/>
+                  </StringArray>
                 </Property>
               </Properties>
               <AuxValues>
@@ -319,15 +322,15 @@
                 <Property name="text" type="java.lang.String" value="Remarks"/>
               </Properties>
             </Component>
-            <Component class="javax.swing.JTextField" name="reg_invoice_no_text1">
+            <Component class="javax.swing.JTextField" name="emp_car_remarks_text">
               <Properties>
                 <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                   <Font name="Roboto Light" size="14" style="0"/>
                 </Property>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="reg_invoice_no_text1ActionPerformed"/>
-                <EventHandler event="keyTyped" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="reg_invoice_no_text1KeyTyped"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="emp_car_remarks_textActionPerformed"/>
+                <EventHandler event="keyTyped" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="emp_car_remarks_textKeyTyped"/>
               </Events>
               <AuxValues>
                 <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="9"/>
@@ -339,7 +342,7 @@
           <Properties>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
-                <TitledBorder position="1" title="Issued Miscellaneous">
+                <TitledBorder position="1" title="Career History">
                   <Border PropertyName="innerBorder" info="org.netbeans.modules.form.compat2.border.EtchedBorderInfo">
                     <EtchetBorder>
                       <Color PropertyName="highlight" blue="cc" green="cc" red="cc" type="rgb"/>
@@ -366,7 +369,7 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="jScrollPane2" pref="259" max="32767" attributes="0"/>
+                      <Component id="jScrollPane2" pref="268" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -380,7 +383,7 @@
 
               <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
               <SubComponents>
-                <Component class="javax.swing.JTable" name="reg_misc_issued_table">
+                <Component class="javax.swing.JTable" name="emp_car_Table">
                   <Properties>
                     <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
                       <Table columnCount="7" rowCount="0">
@@ -437,7 +440,7 @@
                     </Property>
                   </Properties>
                   <Events>
-                    <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="reg_misc_issued_tableMouseClicked"/>
+                    <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="emp_car_TableMouseClicked"/>
                   </Events>
                 </Component>
               </SubComponents>
@@ -466,18 +469,6 @@
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonGradientRound2ActionPerformed"/>
-          </Events>
-        </Component>
-        <Component class="Classes.ButtonGradientRound" name="buttonGradientRound3">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="X"/>
-            <Property name="toolTipText" type="java.lang.String" value="Remove row"/>
-            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-              <Font name="Roboto Black" size="17" style="0"/>
-            </Property>
-          </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonGradientRound3ActionPerformed"/>
           </Events>
         </Component>
       </SubComponents>

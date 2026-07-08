@@ -8,9 +8,12 @@ import Classes.LogHelper;
 import Classes.NumberOnlyFilter;
 import Classes.TableGradientCell;
 import Classes.styleDateChooser;
+import Entities.Employee.Employee;
+import Entities.Employee.EmployeeCareerHistory;
 import Entities.Student_Management.StudentAdditionalFees;
 import Entities.Student_Management.StudentAdditionalFeesDetails;
 import Entities.Student_Management.StudentAdditionalFeesMaster;
+import JPA_DAO.Employee.EmployeeCareerHistoryDAO;
 import JPA_DAO.Inventory.ItemDAO;
 import JPA_DAO.Settings.CourseDAO;
 import JPA_DAO.Student_Management.StudentAdditionalFeesDAO;
@@ -53,102 +56,86 @@ public class Employee_Career_History extends javax.swing.JDialog {
     CourseDAO dao = new CourseDAO();
 
     int feeID = 0;
+    int selectedEmployeeId = 0;
     String username;
     String role;
 
-    public Employee_Career_History(Window parent, String username, String role) {
+    public Employee_Career_History(Window parent, int employee_id, String username, String role) {
         super(parent, ModalityType.APPLICATION_MODAL);
         this.parentForm = parentForm;
+        this.selectedEmployeeId = employee_id;
         this.username = username;
         this.role = role;
         initComponents();
 
-        reg_misc_date.setDate(new Date());
-        
-        styleDateChooser.applyDarkTheme(reg_misc_date);
+        emp_car_date_date.setDate(new Date());
+
+        styleDateChooser.applyDarkTheme(emp_car_date_date);
 
         JComboPopulatesBankInfo();
 
-        reg_misc_issued_table.setDefaultRenderer(Object.class, new TableGradientCell());
-        reg_misc_issued_table.getTableHeader().putClientProperty(FlatClientProperties.STYLE, ""
+        new EmployeeCareerHistoryDAO().loadEmployeeCareerHistory(
+                emp_car_Table,
+                selectedEmployeeId
+        );
+
+        emp_car_Table.setDefaultRenderer(Object.class, new TableGradientCell());
+        emp_car_Table.getTableHeader().putClientProperty(FlatClientProperties.STYLE, ""
                 + "hoverBackground:null;"
                 + "pressedBackground:null;"
                 + "separatorColor:$TableHeader.background");
 
-       
-
     }
 
     private void JComboPopulatesBankInfo() {
-        // Medicine brand combo
-//        reg_misc_service_combo.getEditor().getEditorComponent().addKeyListener(new KeyAdapter() {
-//            public void keyReleased(KeyEvent e) {
-//                String input = reg_misc_service_combo.getEditor().getItem().toString();
-//                generalMethods.loadMatchingComboItemswithID(reg_misc_service_combo, "item_id", "fee_name", "fee_types", input);
-//            }
-//
-//        });
-//        setupComboSelectionListener(reg_misc_service_combo, reg_misc_amount_text);
+
+        emp_car_designation_combo.getEditor().getEditorComponent().addKeyListener(new KeyAdapter() {
+            public void keyReleased(KeyEvent e) {
+                String input = emp_car_designation_combo.getEditor().getItem().toString();
+                generalMethods.loadMatchingComboItems(emp_car_designation_combo, "designation", "employee_career_history", input);
+            }
+
+        });
+        setupComboSelectionListener(emp_car_designation_combo, emp_car_salary_text);
 
     }
     private boolean itemSelectedByUser = false;
 
-//    public void setupComboSelectionListener(JComboBox<String> comboBox, JComponent nextFocusComponent) {
-//        comboBox.addPopupMenuListener(new PopupMenuListener() {
-//            @Override
-//            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-//                itemSelectedByUser = false;
-//            }
-//
-//            @Override
-//            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-//                if (itemSelectedByUser) {
-//                    Object selected = comboBox.getSelectedItem();
-//                    if (selected != null) {
-//                        String selectedValue = selected.toString().trim();
-//                        if (!selectedValue.isEmpty() && isValueFromList(comboBox, selectedValue)) {
-//
-//                            ItemDAO itemDAO = new ItemDAO();
-//                            StudentAdditionalFeesDAO studentAdditionalFeesDAO = new StudentAdditionalFeesDAO();
-//                            int itemId = generalMethods.extractIdFromCombo(reg_misc_service_combo.getEditor().getItem().toString());
-//                            String fee_name = generalMethods.extractNameFromCombo(reg_misc_service_combo.getEditor().getItem().toString());
-//                            feeID = studentAdditionalFeesDAO.getFeeTypeId(itemId, fee_name);
-//
-//                            Object[] data = itemDAO.getItemLatestPriceAndStock(itemId, fee_name);
-//
-//                            double price = (double) data[0];
-//                            double stock = (double) data[1];
-//
-//                            reg_misc_stock_text.setText(GeneralMethods.formatWithComma(stock));
-//                            reg_misc_amount_text.setText(GeneralMethods.formatWithComma(price));
-//
-//                            if (itemId == 0) {
-//                                reg_misc_qty_text.setEnabled(false);
-//                                reg_misc_discount_text.requestFocus();
-//                            } else {
-//                                reg_misc_qty_text.setEnabled(true);
-//
-//                            }
-//                            nextFocusComponent.requestFocus();
-//                        }
-//                    }
-//                }
-//            }
-//
-//            @Override
-//            public void popupMenuCanceled(PopupMenuEvent e) {
-//                itemSelectedByUser = false;
-//            }
-//        });
-//
-//        // Detect user selection from keyboard (Enter) or mouse (click)
-//        comboBox.addActionListener(e -> {
-//            if (comboBox.isPopupVisible()) {
-//                itemSelectedByUser = true;
-//            }
-//        });
-//
-//    }
+    public void setupComboSelectionListener(JComboBox<String> comboBox, JComponent nextFocusComponent) {
+        comboBox.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                itemSelectedByUser = false;
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+                if (itemSelectedByUser) {
+                    Object selected = comboBox.getSelectedItem();
+                    if (selected != null) {
+                        String selectedValue = selected.toString().trim();
+                        if (!selectedValue.isEmpty() && isValueFromList(comboBox, selectedValue)) {
+
+                            nextFocusComponent.requestFocus();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+                itemSelectedByUser = false;
+            }
+        });
+
+        // Detect user selection from keyboard (Enter) or mouse (click)
+        comboBox.addActionListener(e -> {
+            if (comboBox.isPopupVisible()) {
+                itemSelectedByUser = true;
+            }
+        });
+
+    }
 
     private boolean isValueFromList(JComboBox<String> comboBox, String value) {
         ComboBoxModel<String> model = comboBox.getModel();
@@ -161,8 +148,6 @@ public class Employee_Career_History extends javax.swing.JDialog {
         return false;
     }
 
-    
-
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -173,20 +158,19 @@ public class Employee_Career_History extends javax.swing.JDialog {
         jPanel6 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
-        reg_misc_student_name_combo = new javax.swing.JComboBox<>();
-        reg_misc_date = new com.toedter.calendar.JDateChooser();
+        emp_car_designation_combo = new javax.swing.JComboBox<>();
+        emp_car_date_date = new com.toedter.calendar.JDateChooser();
         jLabel8 = new javax.swing.JLabel();
-        reg_invoice_no_text = new javax.swing.JTextField();
-        reg_misc_student_name_combo1 = new javax.swing.JComboBox<>();
+        emp_car_salary_text = new javax.swing.JTextField();
+        emp_car_change_type_combo = new javax.swing.JComboBox<>();
         jLabel3 = new javax.swing.JLabel();
         jLabel9 = new javax.swing.JLabel();
-        reg_invoice_no_text1 = new javax.swing.JTextField();
+        emp_car_remarks_text = new javax.swing.JTextField();
         jPanel9 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
-        reg_misc_issued_table = new javax.swing.JTable();
+        emp_car_Table = new javax.swing.JTable();
         buttonGradientRound1 = new Classes.ButtonGradientRound();
         buttonGradientRound2 = new Classes.ButtonGradientRound();
-        buttonGradientRound3 = new Classes.ButtonGradientRound();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -218,7 +202,7 @@ public class Employee_Career_History extends javax.swing.JDialog {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Student Information", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
+        jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Employee Career Information", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
         jLabel1.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
         jLabel1.setText("Effective Date");
@@ -226,29 +210,29 @@ public class Employee_Career_History extends javax.swing.JDialog {
         jLabel2.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
         jLabel2.setText("Designation");
 
-        reg_misc_student_name_combo.setEditable(true);
-        reg_misc_student_name_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        emp_car_designation_combo.setEditable(true);
+        emp_car_designation_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
 
-        reg_misc_date.setForeground(new java.awt.Color(204, 204, 204));
-        reg_misc_date.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        emp_car_date_date.setForeground(new java.awt.Color(204, 204, 204));
+        emp_car_date_date.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
 
         jLabel8.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
         jLabel8.setText("Salary");
 
-        reg_invoice_no_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
-        reg_invoice_no_text.addActionListener(new java.awt.event.ActionListener() {
+        emp_car_salary_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        emp_car_salary_text.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                reg_invoice_no_textActionPerformed(evt);
+                emp_car_salary_textActionPerformed(evt);
             }
         });
-        reg_invoice_no_text.addKeyListener(new java.awt.event.KeyAdapter() {
+        emp_car_salary_text.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyTyped(java.awt.event.KeyEvent evt) {
-                reg_invoice_no_textKeyTyped(evt);
+                emp_car_salary_textKeyTyped(evt);
             }
         });
 
-        reg_misc_student_name_combo1.setEditable(true);
-        reg_misc_student_name_combo1.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        emp_car_change_type_combo.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        emp_car_change_type_combo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "APPOINTMENT", "PROMOTION", "INCREMENT", "TRANSFER", "SALARY_REVISION", "DEMOTION" }));
 
         jLabel3.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
         jLabel3.setText("Change Type");
@@ -256,15 +240,15 @@ public class Employee_Career_History extends javax.swing.JDialog {
         jLabel9.setFont(new java.awt.Font("Roboto Medium", 0, 12)); // NOI18N
         jLabel9.setText("Remarks");
 
-        reg_invoice_no_text1.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
-        reg_invoice_no_text1.addActionListener(new java.awt.event.ActionListener() {
+        emp_car_remarks_text.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
+        emp_car_remarks_text.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                reg_invoice_no_text1ActionPerformed(evt);
+                emp_car_remarks_textActionPerformed(evt);
             }
         });
-        reg_invoice_no_text1.addKeyListener(new java.awt.event.KeyAdapter() {
+        emp_car_remarks_text.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyTyped(java.awt.event.KeyEvent evt) {
-                reg_invoice_no_text1KeyTyped(evt);
+                emp_car_remarks_textKeyTyped(evt);
             }
         });
 
@@ -275,25 +259,25 @@ public class Employee_Career_History extends javax.swing.JDialog {
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(reg_invoice_no_text1)
+                    .addComponent(emp_car_remarks_text)
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel6Layout.createSequentialGroup()
                                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(reg_misc_date, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(emp_car_date_date, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel2)
-                                    .addComponent(reg_misc_student_name_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 268, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addComponent(emp_car_designation_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 268, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(reg_invoice_no_text, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(emp_car_salary_text, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(jLabel8))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel3)
-                                    .addComponent(reg_misc_student_name_combo1, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                    .addComponent(emp_car_change_type_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE)))
                             .addComponent(jLabel9))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
@@ -306,32 +290,32 @@ public class Employee_Career_History extends javax.swing.JDialog {
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel6Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(reg_misc_date, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(emp_car_date_date, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(jPanel6Layout.createSequentialGroup()
                                 .addComponent(jLabel3)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(reg_misc_student_name_combo1, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(emp_car_change_type_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(jPanel6Layout.createSequentialGroup()
                                 .addComponent(jLabel8)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(reg_invoice_no_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(emp_car_salary_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(jPanel6Layout.createSequentialGroup()
                                 .addComponent(jLabel2)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(reg_misc_student_name_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                                .addComponent(emp_car_designation_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel9)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(reg_invoice_no_text1, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(emp_car_remarks_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(24, 24, 24))
         );
 
-        jPanel9.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Issued Miscellaneous", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
+        jPanel9.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Career History", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
-        reg_misc_issued_table.setModel(new javax.swing.table.DefaultTableModel(
+        emp_car_Table.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
@@ -347,22 +331,22 @@ public class Employee_Career_History extends javax.swing.JDialog {
                 return canEdit [columnIndex];
             }
         });
-        reg_misc_issued_table.addMouseListener(new java.awt.event.MouseAdapter() {
+        emp_car_Table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                reg_misc_issued_tableMouseClicked(evt);
+                emp_car_TableMouseClicked(evt);
             }
         });
-        jScrollPane2.setViewportView(reg_misc_issued_table);
-        if (reg_misc_issued_table.getColumnModel().getColumnCount() > 0) {
-            reg_misc_issued_table.getColumnModel().getColumn(0).setPreferredWidth(50);
-            reg_misc_issued_table.getColumnModel().getColumn(1).setPreferredWidth(100);
-            reg_misc_issued_table.getColumnModel().getColumn(2).setPreferredWidth(200);
-            reg_misc_issued_table.getColumnModel().getColumn(3).setPreferredWidth(150);
-            reg_misc_issued_table.getColumnModel().getColumn(4).setPreferredWidth(150);
-            reg_misc_issued_table.getColumnModel().getColumn(5).setPreferredWidth(300);
-            reg_misc_issued_table.getColumnModel().getColumn(6).setMinWidth(30);
-            reg_misc_issued_table.getColumnModel().getColumn(6).setPreferredWidth(30);
-            reg_misc_issued_table.getColumnModel().getColumn(6).setMaxWidth(30);
+        jScrollPane2.setViewportView(emp_car_Table);
+        if (emp_car_Table.getColumnModel().getColumnCount() > 0) {
+            emp_car_Table.getColumnModel().getColumn(0).setPreferredWidth(50);
+            emp_car_Table.getColumnModel().getColumn(1).setPreferredWidth(100);
+            emp_car_Table.getColumnModel().getColumn(2).setPreferredWidth(200);
+            emp_car_Table.getColumnModel().getColumn(3).setPreferredWidth(150);
+            emp_car_Table.getColumnModel().getColumn(4).setPreferredWidth(150);
+            emp_car_Table.getColumnModel().getColumn(5).setPreferredWidth(300);
+            emp_car_Table.getColumnModel().getColumn(6).setMinWidth(30);
+            emp_car_Table.getColumnModel().getColumn(6).setPreferredWidth(30);
+            emp_car_Table.getColumnModel().getColumn(6).setMaxWidth(30);
         }
 
         javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
@@ -378,7 +362,7 @@ public class Employee_Career_History extends javax.swing.JDialog {
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel9Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 259, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 268, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -400,15 +384,6 @@ public class Employee_Career_History extends javax.swing.JDialog {
             }
         });
 
-        buttonGradientRound3.setText("X");
-        buttonGradientRound3.setToolTipText("Remove row");
-        buttonGradientRound3.setFont(new java.awt.Font("Roboto Black", 0, 17)); // NOI18N
-        buttonGradientRound3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonGradientRound3ActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -423,9 +398,7 @@ public class Employee_Career_History extends javax.swing.JDialog {
                         .addGap(6, 6, 6)
                         .addComponent(buttonGradientRound2, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonGradientRound1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(buttonGradientRound3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(buttonGradientRound1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -439,12 +412,11 @@ public class Employee_Career_History extends javax.swing.JDialog {
                 .addGap(18, 18, 18)
                 .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonGradientRound1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonGradientRound2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonGradientRound3, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(buttonGradientRound2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
@@ -462,44 +434,165 @@ public class Employee_Career_History extends javax.swing.JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void reg_misc_issued_tableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_reg_misc_issued_tableMouseClicked
+    private void emp_car_TableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_emp_car_TableMouseClicked
         // TODO add your handling code here:
-    }//GEN-LAST:event_reg_misc_issued_tableMouseClicked
+    }//GEN-LAST:event_emp_car_TableMouseClicked
 
     private void buttonGradientRound1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradientRound1ActionPerformed
 
-        
+        try {
 
+            int row = emp_car_Table.getSelectedRow();
+
+            if (row == -1) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Please select a career history record."
+                );
+
+                return;
+            }
+
+            int careerHistoryId = Integer.parseInt(
+                    emp_car_Table.getValueAt(row, 6).toString()
+            );
+
+            String designation = emp_car_Table.getValueAt(row, 2).toString();
+            String changeType = emp_car_Table.getValueAt(row, 4).toString();
+            String remarks = emp_car_Table.getValueAt(row, 5) == null
+                    ? ""
+                    : emp_car_Table.getValueAt(row, 5).toString();
+
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Are you sure you want to delete this career history?\n\n"
+                    + "Designation : " + designation + "\n"
+                    + "Change Type : " + changeType + "\n"
+                    + "Remarks      : " + remarks + "\n\n"
+                    + "This record will be marked as inactive.",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            if (confirm != JOptionPane.YES_OPTION) {
+                return;
+            }
+
+            EmployeeCareerHistoryDAO dao = new EmployeeCareerHistoryDAO();
+
+            if (dao.softDelete(careerHistoryId)) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Career history deleted successfully."
+                );
+
+                dao.loadEmployeeCareerHistory(
+                        emp_car_Table,
+                        selectedEmployeeId
+                );
+
+            } else {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Unable to delete career history.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
 
     }//GEN-LAST:event_buttonGradientRound1ActionPerformed
 
-    private void reg_invoice_no_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reg_invoice_no_textActionPerformed
-       
+    private void emp_car_salary_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_emp_car_salary_textActionPerformed
 
-    }//GEN-LAST:event_reg_invoice_no_textActionPerformed
+        emp_car_remarks_text.requestFocus();
 
-    private void reg_invoice_no_textKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_reg_invoice_no_textKeyTyped
+    }//GEN-LAST:event_emp_car_salary_textActionPerformed
+
+    private void emp_car_salary_textKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_emp_car_salary_textKeyTyped
         // TODO add your handling code here:
-    }//GEN-LAST:event_reg_invoice_no_textKeyTyped
+    }//GEN-LAST:event_emp_car_salary_textKeyTyped
 
     private void buttonGradientRound2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradientRound2ActionPerformed
 
-       
+        EntityManager em = HibernateConfig.getEntityManager();
+
+        try {
+
+            Employee employee = em.find(Employee.class, selectedEmployeeId);
+
+            EmployeeCareerHistory history = new EmployeeCareerHistory();
+            EmployeeCareerHistoryDAO employeeCareerHistoryDAO = new EmployeeCareerHistoryDAO();
+
+            history.setEmployee(employee);
+            history.setEffectiveDate(emp_car_date_date.getDate());
+            history.setDesignation(emp_car_designation_combo.getEditor().getItem().toString());
+            history.setSalary(GeneralMethods.parseCommaNumber(emp_car_salary_text.getText()));
+            history.setChangeType(emp_car_change_type_combo.getSelectedItem().toString());
+            history.setRemarks(emp_car_remarks_text.getText());
+            history.setUser(username);
+            history.setStatus(1);
+
+            boolean success = new EmployeeCareerHistoryDAO().save(history);
+
+            if (success) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Career history saved successfully."
+                );
+
+                employeeCareerHistoryDAO.loadEmployeeCareerHistory(emp_car_Table, selectedEmployeeId);
+
+            } else {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Failed to save career history.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+
+        } finally {
+            em.close();
+        }
+
     }//GEN-LAST:event_buttonGradientRound2ActionPerformed
 
-    private void buttonGradientRound3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradientRound3ActionPerformed
-
-        
-
-    }//GEN-LAST:event_buttonGradientRound3ActionPerformed
-
-    private void reg_invoice_no_text1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reg_invoice_no_text1ActionPerformed
+    private void emp_car_remarks_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_emp_car_remarks_textActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_reg_invoice_no_text1ActionPerformed
+    }//GEN-LAST:event_emp_car_remarks_textActionPerformed
 
-    private void reg_invoice_no_text1KeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_reg_invoice_no_text1KeyTyped
+    private void emp_car_remarks_textKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_emp_car_remarks_textKeyTyped
         // TODO add your handling code here:
-    }//GEN-LAST:event_reg_invoice_no_text1KeyTyped
+    }//GEN-LAST:event_emp_car_remarks_textKeyTyped
 
     /**
      * @param args the command line arguments
@@ -511,7 +604,7 @@ public class Employee_Career_History extends javax.swing.JDialog {
             JFrame frame = new JFrame();
 
             Employee_Career_History dialog
-                    = new Employee_Career_History(frame, "", "");
+                    = new Employee_Career_History(frame, 0, "", "");
 
             dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
             dialog.setVisible(true);
@@ -522,7 +615,12 @@ public class Employee_Career_History extends javax.swing.JDialog {
     public static javax.swing.JLabel Main_Lable;
     private Classes.ButtonGradientRound buttonGradientRound1;
     private Classes.ButtonGradientRound buttonGradientRound2;
-    private Classes.ButtonGradientRound buttonGradientRound3;
+    private javax.swing.JTable emp_car_Table;
+    private javax.swing.JComboBox<String> emp_car_change_type_combo;
+    public static com.toedter.calendar.JDateChooser emp_car_date_date;
+    private javax.swing.JComboBox<String> emp_car_designation_combo;
+    public static javax.swing.JTextField emp_car_remarks_text;
+    public static javax.swing.JTextField emp_car_salary_text;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -533,12 +631,6 @@ public class Employee_Career_History extends javax.swing.JDialog {
     private javax.swing.JPanel jPanel9;
     private javax.swing.JScrollPane jScrollPane2;
     private Classes.PanelRound panelRound2;
-    public static javax.swing.JTextField reg_invoice_no_text;
-    public static javax.swing.JTextField reg_invoice_no_text1;
-    public static com.toedter.calendar.JDateChooser reg_misc_date;
-    private javax.swing.JTable reg_misc_issued_table;
-    private javax.swing.JComboBox<String> reg_misc_student_name_combo;
-    private javax.swing.JComboBox<String> reg_misc_student_name_combo1;
     // End of variables declaration//GEN-END:variables
 
 }

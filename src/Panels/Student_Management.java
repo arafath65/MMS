@@ -1,5 +1,6 @@
 package Panels;
 
+import Additional.LogHelper_new;
 import Classes.CameraCapture;
 import Classes.GeneralMethods;
 import Classes.GeneralMethods.StudentSearchType;
@@ -57,7 +58,8 @@ import javax.swing.event.PopupMenuListener;
 public class Student_Management extends javax.swing.JPanel {
 
     GeneralMethods generalMethods = new GeneralMethods();
-    LogHelper logHelper = new LogHelper();
+    //LogHelper logHelper = new LogHelper();
+    LogHelper_new logHelper_new = new LogHelper_new();
 
     styleDateChooser stDateChooser = new styleDateChooser();
 
@@ -2437,12 +2439,13 @@ public class Student_Management extends javax.swing.JPanel {
                     studentDAO.save(student);
 
                     // ✅ LOG: Sibling added to existing parent
-                    logHelper.log(
+                    logHelper_new.log(
                             "STUDENT_MANAGEMENT",
+                            "NEW_ADMISSION",
                             student.getStudentId(),
-                            "ADD_SIBLING",
+                            "INSERT_SIBLING",
                             "Admission: " + student.getAdmissionNo(),
-                            0.0,
+                            String.format("Sibling added to student: %s (Admission No: %s)", student.getFullName(), student.getAdmissionNo()),
                             String.format("Sibling Registered: %s. Linked to existing Parent ID: %d",
                                     student.getFullName(), existingParent.getStudentParentsId()),
                             username
@@ -2489,14 +2492,14 @@ public class Student_Management extends javax.swing.JPanel {
             em.getTransaction().commit();
 
             // ✅ LOG: Full New Registration
-            logHelper.log(
+            logHelper_new.log(
                     "STUDENT_MANAGEMENT",
+                    "NEW_ADMISSION",
                     student.getStudentId(),
-                    "STUDENT CREATE",
+                    "INSERT_STUDENT",
                     "Admission: " + student.getAdmissionNo(),
-                    0.0,
-                    String.format("New Admission: %s. Parent/Guardian: %s",
-                            student.getFullName(), parents.getMotherName()),
+                    String.format("New student registered: %s (Admission No: %s)", student.getFullName(), student.getAdmissionNo()),
+                    "New student profile created successfully.",
                     username
             );
 
@@ -2620,16 +2623,18 @@ public class Student_Management extends javax.swing.JPanel {
         updateStudentWithParents(selectedStudentId, student, parents, languages, imageToSave);
 
         // ✅ LOG: Student & Parent Update
-        logHelper.log(
+        logHelper_new.log(
                 "STUDENT_MANAGEMENT",
-                selectedStudentId,
-                "STUDENT UPDATE",
+                "NEW_ADMISSION",
+                student.getStudentId(),
+                "UPDATE_STUDENT",
                 "Admission: " + student.getAdmissionNo(),
-                0.0,
-                String.format("Updated info for: %s (%s). Profile image updated: %b",
-                        student.getFullName(), student.getAdmissionNo(), (imageToSave != null)),
+                String.format("Updated details for: %s (Admission No: %s)", student.getFullName(), student.getAdmissionNo()),
+                String.format("Profile image %s", (imageToSave != null ? "was updated/changed" : "remained unchanged")),
                 username
         );
+
+        JOptionPane.showMessageDialog(this, "Student information updated successfully!");
 
     }//GEN-LAST:event_buttonGradient1ActionPerformed
 
@@ -2664,15 +2669,15 @@ public class Student_Management extends javax.swing.JPanel {
             dao.softDeleteByAdmissionNo(admissionNo);
 
             // ✅ LOG: Student Deactivation
-            logHelper.log(
-                    "STUDENT_MANAGEMENT",
-                    student.getStudentId(),
-                    "STUDENT DELETE",
-                    "Admission: " + admissionNo,
-                    0.0,
-                    String.format("STUDENT DEACTIVATED: %s (Adm No: %s).", student.getFullName(), admissionNo),
-                    username
-            );
+//            logHelper.log(
+//                    "STUDENT_MANAGEMENT",
+//                    student.getStudentId(),
+//                    "STUDENT DELETE",
+//                    "Admission: " + admissionNo,
+//                    0.0,
+//                    String.format("STUDENT DEACTIVATED: %s (Adm No: %s).", student.getFullName(), admissionNo),
+//                    username
+//            );
 
             JOptionPane.showMessageDialog(this, "Student deactivated successfully.");
         }
