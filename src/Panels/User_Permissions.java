@@ -4,6 +4,7 @@
  */
 package Panels;
 
+import Additional.PermissionService;
 import Classes.GeneralMethods;
 import Classes.TableGradientCell;
 import Classes.ButtonGradientRound;
@@ -101,7 +102,7 @@ public class User_Permissions extends javax.swing.JPanel {
     }
 
     private void SelectandUnselectAllCheckboxes() {
-        
+
         // ************ DASHBOARD
         setupPermissionGroup(
                 DASH_STU_ALL,
@@ -138,6 +139,7 @@ public class User_Permissions extends javax.swing.JPanel {
                 ST_SAVE_RECORD,
                 ST_UPDATE_RECORD,
                 ST_DELETE_RECORD,
+                ST_SIBBLINGS,
                 ST_COURSE_ENROLMENT,
                 ST_MISCELLANEOUS,
                 ST_ELIMINATION
@@ -319,21 +321,21 @@ public class User_Permissions extends javax.swing.JPanel {
     }
 
     private void initializePermissions() {
-        
+
         // ************ DASHBOARD
         DASH_STU_NEW_ADMISSION.setName("DASH_STU_NEW_ADMISSION");
         DASH_STU_FEES_HANDLING.setName("DASH_STU_FEES_HANDLING");
         DASH_STU_BATCH_TRANSFER.setName("DASH_STU_BATCH_TRANSFER");
         DASH_STU_REPORTS.setName("DASH_STU_REPORTS");
-        
+
         DASH_DON_HANDLING.setName("DASH_DON_HANDLING");
         DASH_DON_REPORTS.setName("DASH_DON_REPORTS");
         DASH_INV_ADD_INVENTORY.setName("DASH_INV_ADD_INVENTORY");
         DASH_INV_REPORTS.setName("DASH_INV_REPORTS");
-        
+
         DASH_EMP_NEW_REGISTRATION.setName("DASH_EMP_NEW_REGISTRATION");
         DASH_ACC_CHQ_HANDLING.setName("DASH_ACC_CHQ_HANDLING");
-        
+
         DASH_SETT_REGISTER_COURSE.setName("DASH_SETT_REGISTER_COURSE");
         DASH_SETT_ADDI_PAYMENTS.setName("DASH_SETT_ADDI_PAYMENTS");
         DASH_SETT_USER_PERMISSIONS.setName("DASH_SETT_USER_PERMISSIONS");
@@ -342,6 +344,7 @@ public class User_Permissions extends javax.swing.JPanel {
         ST_SAVE_RECORD.setName("ST_SAVE_RECORD");
         ST_UPDATE_RECORD.setName("ST_UPDATE_RECORD");
         ST_DELETE_RECORD.setName("ST_DELETE_RECORD");
+        ST_SIBBLINGS.setName("ST_SIBBLINGS");
         ST_COURSE_ENROLMENT.setName("ST_COURSE_ENROLMENT");
         ST_MISCELLANEOUS.setName("ST_MISCELLANEOUS");
         ST_ELIMINATION.setName("ST_ELIMINATION");
@@ -357,21 +360,21 @@ public class User_Permissions extends javax.swing.JPanel {
     }
 
     private void initializePermissionList() {
-        
+
         // ************ DASHBOARD
         permissionBoxes.add(DASH_STU_NEW_ADMISSION);
         permissionBoxes.add(DASH_STU_FEES_HANDLING);
         permissionBoxes.add(DASH_STU_BATCH_TRANSFER);
         permissionBoxes.add(DASH_STU_REPORTS);
-        
+
         permissionBoxes.add(DASH_DON_HANDLING);
         permissionBoxes.add(DASH_DON_REPORTS);
         permissionBoxes.add(DASH_INV_ADD_INVENTORY);
         permissionBoxes.add(DASH_INV_REPORTS);
-        
+
         permissionBoxes.add(DASH_EMP_NEW_REGISTRATION);
         permissionBoxes.add(DASH_ACC_CHQ_HANDLING);
-        
+
         permissionBoxes.add(DASH_SETT_REGISTER_COURSE);
         permissionBoxes.add(DASH_SETT_ADDI_PAYMENTS);
         permissionBoxes.add(DASH_SETT_USER_PERMISSIONS);
@@ -380,6 +383,7 @@ public class User_Permissions extends javax.swing.JPanel {
         permissionBoxes.add(ST_SAVE_RECORD);
         permissionBoxes.add(ST_UPDATE_RECORD);
         permissionBoxes.add(ST_DELETE_RECORD);
+        permissionBoxes.add(ST_SIBBLINGS);
         permissionBoxes.add(ST_COURSE_ENROLMENT);
         permissionBoxes.add(ST_MISCELLANEOUS);
         permissionBoxes.add(ST_ELIMINATION);
@@ -470,8 +474,6 @@ public class User_Permissions extends javax.swing.JPanel {
         buttonGradientRound1 = new Classes.ButtonGradientRound();
         reg_misc_student_name_combo = new javax.swing.JComboBox<>();
         jButton6 = new javax.swing.JButton();
-        jPanel9 = new javax.swing.JPanel();
-        jLabel9 = new javax.swing.JLabel();
         jTabbedPane1 = new javax.swing.JTabbedPane();
         jPanel2 = new javax.swing.JPanel();
         jPanel13 = new javax.swing.JPanel();
@@ -517,6 +519,7 @@ public class User_Permissions extends javax.swing.JPanel {
         jCheckBox9 = new javax.swing.JCheckBox();
         jLabel25 = new javax.swing.JLabel();
         jCheckBox10 = new javax.swing.JCheckBox();
+        ST_SIBBLINGS = new javax.swing.JCheckBox();
         jPanel11 = new javax.swing.JPanel();
         jPanel12 = new javax.swing.JPanel();
         EMP_REG_DELETE = new javax.swing.JCheckBox();
@@ -532,12 +535,10 @@ public class User_Permissions extends javax.swing.JPanel {
         jCheckBox19 = new javax.swing.JCheckBox();
         jLabel22 = new javax.swing.JLabel();
         jLabel23 = new javax.swing.JLabel();
-        buttonGradientRound2 = new Classes.ButtonGradientRound();
-        reg_invoice_no_text1 = new javax.swing.JTextField();
-        jLabel24 = new javax.swing.JLabel();
         jCheckBox8 = new javax.swing.JCheckBox();
         jPasswordField1 = new javax.swing.JPasswordField();
         buttonGradientRound3 = new Classes.ButtonGradientRound();
+        jButton1 = new javax.swing.JButton();
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "User Roles", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
@@ -636,32 +637,6 @@ public class User_Permissions extends javax.swing.JPanel {
                 jButton6ActionPerformed(evt);
             }
         });
-
-        jPanel9.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Image", javax.swing.border.TitledBorder.CENTER, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 0, 14))); // NOI18N
-
-        jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel9.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/student_logo.png"))); // NOI18N
-        jLabel9.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jLabel9MouseClicked(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
-        jPanel9.setLayout(jPanel9Layout);
-        jPanel9Layout.setHorizontalGroup(
-            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel9Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(12, Short.MAX_VALUE))
-        );
-        jPanel9Layout.setVerticalGroup(
-            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel9Layout.createSequentialGroup()
-                .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
 
         jPanel13.setBackground(new java.awt.Color(46, 45, 45));
         jPanel13.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
@@ -826,7 +801,7 @@ public class User_Permissions extends javax.swing.JPanel {
                                 .addComponent(DASH_INV_ADD_INVENTORY)
                                 .addGap(18, 18, 18)
                                 .addComponent(DASH_INV_REPORTS)))
-                        .addGap(0, 374, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel13Layout.setVerticalGroup(
@@ -972,6 +947,15 @@ public class User_Permissions extends javax.swing.JPanel {
         jCheckBox10.setForeground(new java.awt.Color(255, 255, 255));
         jCheckBox10.setText("Save Record");
 
+        ST_SIBBLINGS.setFont(new java.awt.Font("Roboto", 0, 12)); // NOI18N
+        ST_SIBBLINGS.setForeground(new java.awt.Color(255, 255, 255));
+        ST_SIBBLINGS.setText("Student Sibblings ");
+        ST_SIBBLINGS.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ST_SIBBLINGSActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
         jPanel8.setLayout(jPanel8Layout);
         jPanel8Layout.setHorizontalGroup(
@@ -990,6 +974,7 @@ public class User_Permissions extends javax.swing.JPanel {
                         .addComponent(jCheckBox9))
                     .addGroup(jPanel8Layout.createSequentialGroup()
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(ST_ELIMINATION)
                             .addGroup(jPanel8Layout.createSequentialGroup()
                                 .addComponent(ST_SAVE_RECORD)
                                 .addGap(18, 18, 18)
@@ -997,13 +982,13 @@ public class User_Permissions extends javax.swing.JPanel {
                                 .addGap(18, 18, 18)
                                 .addComponent(ST_DELETE_RECORD)
                                 .addGap(18, 18, 18)
+                                .addComponent(ST_SIBBLINGS)
+                                .addGap(18, 18, 18)
                                 .addComponent(ST_COURSE_ENROLMENT)
                                 .addGap(18, 18, 18)
-                                .addComponent(ST_MISCELLANEOUS)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(ST_ELIMINATION))
+                                .addComponent(ST_MISCELLANEOUS))
                             .addComponent(jCheckBox10))
-                        .addGap(0, 38, Short.MAX_VALUE)))
+                        .addGap(0, 64, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel8Layout.setVerticalGroup(
@@ -1020,7 +1005,9 @@ public class User_Permissions extends javax.swing.JPanel {
                     .addComponent(ST_DELETE_RECORD)
                     .addComponent(ST_COURSE_ENROLMENT)
                     .addComponent(ST_MISCELLANEOUS)
-                    .addComponent(ST_ELIMINATION))
+                    .addComponent(ST_SIBBLINGS))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(ST_ELIMINATION)
                 .addGap(18, 18, 18)
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
@@ -1029,7 +1016,7 @@ public class User_Permissions extends javax.swing.JPanel {
                     .addComponent(jCheckBox9))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jCheckBox10)
-                .addContainerGap(380, Short.MAX_VALUE))
+                .addContainerGap(349, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
@@ -1148,7 +1135,7 @@ public class User_Permissions extends javax.swing.JPanel {
                                 .addGap(18, 18, 18)
                                 .addComponent(EMP_REG_BANK_ACCOUNT))
                             .addComponent(jCheckBox19))
-                        .addGap(0, 209, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel12Layout.setVerticalGroup(
@@ -1203,31 +1190,6 @@ public class User_Permissions extends javax.swing.JPanel {
         jLabel23.setFont(new java.awt.Font("Roboto Medium", 1, 13)); // NOI18N
         jLabel23.setText("Password");
 
-        buttonGradientRound2.setText("SAVE");
-        buttonGradientRound2.setToolTipText("Save invoice");
-        buttonGradientRound2.setFont(new java.awt.Font("Roboto Black", 0, 17)); // NOI18N
-        buttonGradientRound2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonGradientRound2ActionPerformed(evt);
-            }
-        });
-
-        reg_invoice_no_text1.setFont(new java.awt.Font("Roboto Light", 0, 14)); // NOI18N
-        reg_invoice_no_text1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                reg_invoice_no_text1ActionPerformed(evt);
-            }
-        });
-        reg_invoice_no_text1.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyTyped(java.awt.event.KeyEvent evt) {
-                reg_invoice_no_text1KeyTyped(evt);
-            }
-        });
-
-        jLabel24.setBackground(new java.awt.Color(0, 0, 0));
-        jLabel24.setFont(new java.awt.Font("Roboto Medium", 1, 13)); // NOI18N
-        jLabel24.setText("Name");
-
         jCheckBox8.setFont(new java.awt.Font("Roboto", 0, 12)); // NOI18N
         jCheckBox8.setText("Show Password");
         jCheckBox8.addActionListener(new java.awt.event.ActionListener() {
@@ -1247,19 +1209,24 @@ public class User_Permissions extends javax.swing.JPanel {
             }
         });
 
+        jButton1.setBackground(new java.awt.Color(102, 102, 102));
+        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/user_permission32.png"))); // NOI18N
+        jButton1.setToolTipText("Assigning User Permission");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(23, 23, 23)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(17, 17, 17)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jLabel24, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(reg_invoice_no_text1, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(jCheckBox8)
                             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                                 .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
@@ -1269,54 +1236,49 @@ public class User_Permissions extends javax.swing.JPanel {
                                 .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
                                     .addComponent(jLabel22, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(reg_misc_student_name_combo, 0, 169, Short.MAX_VALUE))))
+                                    .addComponent(reg_misc_student_name_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE))))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(buttonGradientRound2, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTabbedPane1)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(buttonGradientRound3, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(buttonGradientRound3, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jTabbedPane1))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(18, 18, 18)
+                        .addComponent(jTabbedPane1))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
                         .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(reg_misc_student_name_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jLabel22, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jButton6, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel23, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPasswordField1, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(reg_misc_student_name_combo, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jLabel22, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(jLabel23, javax.swing.GroupLayout.DEFAULT_SIZE, 35, Short.MAX_VALUE)
-                                    .addComponent(jPasswordField1))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jCheckBox8)
-                                .addGap(45, 45, 45)
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(reg_invoice_no_text1, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jLabel24, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jPanel9, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jTabbedPane1))
+                        .addComponent(jCheckBox8)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(buttonGradientRound2, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonGradientRound3, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(buttonGradientRound3, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
@@ -1356,32 +1318,6 @@ public class User_Permissions extends javax.swing.JPanel {
 
 
     }//GEN-LAST:event_jButton6ActionPerformed
-
-    private void jLabel9MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel9MouseClicked
-        //        File selectedFile = ImageHelper.chooseAndSetImageAutoResizeRemember(jLabel9);
-        //
-        //        if (selectedFile != null) {
-        //            System.out.println("Image selected: " + selectedFile.getAbsolutePath());
-        //            // The resized image is now stored in ImageHelper.resizedImageToSave
-        //        } else {
-        //            System.out.println("No image selected.");
-        //        }
-
-        selectedImageFile = GeneralMethods.chooseAndSetImageAutoResizeRemember2(jLabel9);
-    }//GEN-LAST:event_jLabel9MouseClicked
-
-    private void buttonGradientRound2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradientRound2ActionPerformed
-
-
-    }//GEN-LAST:event_buttonGradientRound2ActionPerformed
-
-    private void reg_invoice_no_text1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reg_invoice_no_text1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_reg_invoice_no_text1ActionPerformed
-
-    private void reg_invoice_no_text1KeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_reg_invoice_no_text1KeyTyped
-        // TODO add your handling code here:
-    }//GEN-LAST:event_reg_invoice_no_text1KeyTyped
 
     private void jCheckBox8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBox8ActionPerformed
         // TODO add your handling code here:
@@ -1530,44 +1466,86 @@ public class User_Permissions extends javax.swing.JPanel {
 
         try {
 
-            //    UserPermissionDAO dao = new UserPermissionDAO();
             if (selectedRoleId == 0) {
+
                 JOptionPane.showMessageDialog(
                         this,
-                        "Please select the user role to update.",
+                        "Please select a user role.",
                         "Warning",
-                        JOptionPane.ERROR_MESSAGE
+                        JOptionPane.WARNING_MESSAGE
                 );
+
                 return;
             }
 
-            //  int roleId = Integer.parseInt(model.getValueAt(user_per_add_role_Table.getSelectedRow(), 2).toString());
-            int roleId = selectedRoleId;
-
             UserPermissionDAO dao = new UserPermissionDAO();
 
-            for (JCheckBox box : permissionBoxes) {
+            dao.savePermissions(
+                    selectedRoleId,
+                    permissionBoxes,
+                    username
+            );
+            PermissionService.reloadCurrentUserPermissions();
+          //  dashboard.refreshCurrentPermissions();
 
-                dao.saveOrUpdatePermission(
-                        selectedRoleId,
-                        box.getName(),
-                        box.isSelected(),
-                        username
-                );
+            JOptionPane.showMessageDialog(
+                    this,
+                    "User permissions have been saved successfully.",
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
 
-                JOptionPane.showMessageDialog(
-                        this,
-                        "User permissions have been saved successfully.",
-                        "Success",
-                        JOptionPane.INFORMATION_MESSAGE
-                );
+        } catch (Exception ex) {
 
-            }
+            ex.printStackTrace();
 
-        } catch (Exception e) {
-            e.printStackTrace();
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Failed to save permissions.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
         }
 
+//        try {
+//
+//            //    UserPermissionDAO dao = new UserPermissionDAO();
+//            if (selectedRoleId == 0) {
+//                JOptionPane.showMessageDialog(
+//                        this,
+//                        "Please select the user role to update.",
+//                        "Warning",
+//                        JOptionPane.ERROR_MESSAGE
+//                );
+//                return;
+//            }
+//
+//            //  int roleId = Integer.parseInt(model.getValueAt(user_per_add_role_Table.getSelectedRow(), 2).toString());
+//            int roleId = selectedRoleId;
+//
+//            UserPermissionDAO dao = new UserPermissionDAO();
+//
+//            for (JCheckBox box : permissionBoxes) {
+//
+//                dao.saveOrUpdatePermission(
+//                        selectedRoleId,
+//                        box.getName(),
+//                        box.isSelected(),
+//                        username
+//                );
+//
+//            }
+//
+//            JOptionPane.showMessageDialog(
+//                    this,
+//                    "User permissions have been saved successfully.",
+//                    "Success",
+//                    JOptionPane.INFORMATION_MESSAGE
+//            );
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 
     }//GEN-LAST:event_buttonGradientRound3ActionPerformed
 
@@ -1619,6 +1597,15 @@ public class User_Permissions extends javax.swing.JPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_DASH_STU_REPORTSActionPerformed
 
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+
+
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void ST_SIBBLINGSActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ST_SIBBLINGSActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_ST_SIBBLINGSActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox DASH_ACC_ALL;
@@ -1651,11 +1638,12 @@ public class User_Permissions extends javax.swing.JPanel {
     private javax.swing.JCheckBox ST_MISCELLANEOUS;
     private javax.swing.JCheckBox ST_NEW_ALL;
     private javax.swing.JCheckBox ST_SAVE_RECORD;
+    private javax.swing.JCheckBox ST_SIBBLINGS;
     private javax.swing.JCheckBox ST_UPDATE_RECORD;
     private Classes.ButtonGradientRound buttonGradientRound1;
-    private Classes.ButtonGradientRound buttonGradientRound2;
     private Classes.ButtonGradientRound buttonGradientRound3;
     private javax.swing.ButtonGroup buttonGroup1;
+    private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton6;
     private javax.swing.JCheckBox jCheckBox10;
     private javax.swing.JCheckBox jCheckBox18;
@@ -1665,7 +1653,6 @@ public class User_Permissions extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel22;
     private javax.swing.JLabel jLabel23;
-    private javax.swing.JLabel jLabel24;
     private javax.swing.JLabel jLabel25;
     private javax.swing.JLabel jLabel26;
     private javax.swing.JLabel jLabel27;
@@ -1675,7 +1662,6 @@ public class User_Permissions extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel31;
     private javax.swing.JLabel jLabel32;
     private javax.swing.JLabel jLabel33;
-    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel10;
     private javax.swing.JPanel jPanel11;
@@ -1684,7 +1670,6 @@ public class User_Permissions extends javax.swing.JPanel {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel8;
-    private javax.swing.JPanel jPanel9;
     private javax.swing.JPasswordField jPasswordField1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JSeparator jSeparator1;
@@ -1695,7 +1680,6 @@ public class User_Permissions extends javax.swing.JPanel {
     private javax.swing.JSeparator jSeparator6;
     private javax.swing.JSeparator jSeparator7;
     private javax.swing.JTabbedPane jTabbedPane1;
-    public static javax.swing.JTextField reg_invoice_no_text1;
     private javax.swing.JComboBox<String> reg_misc_student_name_combo;
     private javax.swing.JTable user_per_add_role_Table;
     public static javax.swing.JTextField user_per_add_role_text;

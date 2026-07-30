@@ -4,9 +4,14 @@ import Classes.HibernateConfig;
 import Entities.Settings.UserPermission;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
+import javax.swing.JCheckBox;
 
 public class UserPermissionDAO {
 
@@ -68,10 +73,9 @@ public class UserPermissionDAO {
         }
     }
 
-    public void saveOrUpdatePermission(
+    public void savePermissions(
             int roleId,
-            String permissionCode,
-            boolean selected,
+            List<JCheckBox> permissionBoxes,
             String username) {
 
         EntityManager em = HibernateConfig.getEntityManager();
@@ -81,59 +85,137 @@ public class UserPermissionDAO {
 
             tx.begin();
 
-            List<UserPermission> list = em.createQuery(
-                    "SELECT p FROM UserPermission p "
-                    + "WHERE p.userRolesId = :roleId "
-                    + "AND p.permissions = :permission",
+            // Load all existing permissions for this role once
+            List<UserPermission> existingPermissions = em.createQuery(
+                    "SELECT p FROM UserPermission p WHERE p.userRolesId = :roleId",
                     UserPermission.class)
                     .setParameter("roleId", roleId)
-                    .setParameter("permission", permissionCode)
                     .getResultList();
 
-            UserPermission permission;
+            // Convert to Map for fast searching
+            Map<String, UserPermission> permissionMap = new HashMap<>();
 
-            if (!list.isEmpty()) {
+            for (UserPermission p : existingPermissions) {
+                permissionMap.put(p.getPermissions(), p);
+            }
 
-                permission = list.get(0);
+            Date now = new Date();
 
-                permission.setStatus(selected ? 1 : 0);
-                permission.setLastModified(new Date());
-                permission.setUser(username);
+            for (JCheckBox box : permissionBoxes) {
 
-                em.merge(permission);
+                String permissionCode = box.getName();
+                boolean selected = box.isSelected();
 
-            } else {
+                UserPermission permission = permissionMap.get(permissionCode);
 
-                if (selected) {
+                if (permission != null) {
 
-                    permission = new UserPermission();
-
-                    permission.setUserRolesId(roleId);
-                    permission.setEmployeeId(null);
-                    permission.setPermissions(permissionCode);
-                    permission.setLastModified(new Date());
+                    // Already exists -> update only
+                    permission.setStatus(selected ? 1 : 0);
+                    permission.setLastModified(now);
                     permission.setUser(username);
-                    permission.setStatus(1);
 
-                    em.persist(permission);
+                    em.merge(permission);
+
+                } else {
+
+                    // Doesn't exist -> insert only if selected
+                    if (selected) {
+
+                        permission = new UserPermission();
+
+                        permission.setUserRolesId(roleId);
+                        permission.setEmployeeId(null);
+                        permission.setPermissions(permissionCode);
+                        permission.setStatus(1);
+                        permission.setLastModified(now);
+                        permission.setUser(username);
+
+                        em.persist(permission);
+                    }
                 }
             }
 
             tx.commit();
 
-        } catch (Exception e) {
+        } catch (Exception ex) {
 
             if (tx.isActive()) {
                 tx.rollback();
             }
 
-            e.printStackTrace();
+            throw ex;
 
         } finally {
             em.close();
         }
     }
 
+//    public void saveOrUpdatePermission(
+//            int roleId,
+//            String permissionCode,
+//            boolean selected,
+//            String username) {
+//
+//        EntityManager em = HibernateConfig.getEntityManager();
+//        EntityTransaction tx = em.getTransaction();
+//
+//        try {
+//
+//            tx.begin();
+//
+//            List<UserPermission> list = em.createQuery(
+//                    "SELECT p FROM UserPermission p "
+//                    + "WHERE p.userRolesId = :roleId "
+//                    + "AND p.permissions = :permission",
+//                    UserPermission.class)
+//                    .setParameter("roleId", roleId)
+//                    .setParameter("permission", permissionCode)
+//                    .getResultList();
+//
+//            UserPermission permission;
+//
+//            if (!list.isEmpty()) {
+//
+//                permission = list.get(0);
+//
+//                permission.setStatus(selected ? 1 : 0);
+//                permission.setLastModified(new Date());
+//                permission.setUser(username);
+//
+//                em.merge(permission);
+//
+//            } else {
+//
+//                if (selected) {
+//
+//                    permission = new UserPermission();
+//
+//                    permission.setUserRolesId(roleId);
+//                    permission.setEmployeeId(null);
+//                    permission.setPermissions(permissionCode);
+//                    permission.setLastModified(new Date());
+//                    permission.setUser(username);
+//                    permission.setStatus(1);
+//
+//                    em.persist(permission);
+//                }
+//            }
+//
+//            tx.commit();
+//
+//        } catch (Exception e) {
+//
+//            if (tx.isActive()) {
+//                tx.rollback();
+//            }
+//
+//            e.printStackTrace();
+//
+//        } finally {
+//            em.close();
+//        }
+//    }
     public List<String> getActivePermissionsByRole(int roleId) {
 
         EntityManager em = HibernateConfig.getEntityManager();
@@ -193,5 +275,28 @@ public class UserPermissionDAO {
         } finally {
             em.close();
         }
+    }
+
+    public Set<String> getPermissionsByRole(int roleId) {
+
+        EntityManager em = HibernateConfig.getEntityManager();
+
+        try {
+
+            List<String> list = em.createQuery(
+                    "SELECT p.permissions "
+                    + "FROM UserPermission p "
+                    + "WHERE p.userRolesId = :roleId "
+                    + "AND p.status = 1",
+                    String.class)
+                    .setParameter("roleId", roleId)
+                    .getResultList();
+
+            return new HashSet<>(list);
+
+        } finally {
+            em.close();
+        }
+
     }
 }

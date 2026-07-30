@@ -1,24 +1,26 @@
 package Panels;
 
+import Additional.PermissionManager;
+import Additional.UserSession;
 import Dashboard.Dashboard;
 import JPA_DAO.Dashboard.LoginDAO;
+import JPA_DAO.Settings.UserPermissionDAO;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import java.awt.Color;
 import java.awt.Font;
+import java.util.Set;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 public class Login extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Login.class.getName());
-    
-   
+
     public Login() {
         initComponents();
-        
-        
+
     }
 
     @SuppressWarnings("unchecked")
@@ -174,14 +176,31 @@ public class Login extends javax.swing.JFrame {
 
             if (user != null) {
 
-                int loginId = ((Number) user[0]).intValue();
-                int empId = ((Number) user[1]).intValue();
-                String role = user[2].toString();
+                int loginId = Integer.parseInt(user[0].toString());
+                int employeeId = Integer.parseInt(user[1].toString());
+                int roleId = Integer.parseInt(user[2].toString());
+
                 String uname = user[3].toString();
+                String roleName = user[4].toString();
+                String employeeName = user[5].toString();
 
-            //    JOptionPane.showMessageDialog(this, "Login Successful");
+                UserPermissionDAO permissionDAO = new UserPermissionDAO();
 
-                new Dashboard(role, uname).setVisible(true);
+                Set<String> permissions
+                        = permissionDAO.getPermissionsByRole(roleId);
+
+                UserSession.initialize(
+                        loginId,
+                        employeeId,
+                        roleId,
+                        uname,
+                        roleName,
+                        employeeName,
+                        permissions
+                );
+
+                Dashboard dashboard = new Dashboard();
+                dashboard.setVisible(true);
                 this.dispose();
 
             } else {
@@ -192,7 +211,7 @@ public class Login extends javax.swing.JFrame {
                         "Login Failed",
                         JOptionPane.ERROR_MESSAGE
                 );
-                
+
                 login_password.setText("");
                 login_password.requestFocus();
             }
@@ -214,7 +233,6 @@ public class Login extends javax.swing.JFrame {
 
         FlatRobotoFont.install();
         FlatLaf.registerCustomDefaultsSource("themes");
-        
 
         UIManager.put("defaultFont",
                 new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 13));

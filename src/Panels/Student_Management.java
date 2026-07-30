@@ -1,6 +1,7 @@
 package Panels;
 
 import Additional.LogHelper_new;
+import Additional.UserSession;
 import Classes.CameraCapture;
 import Classes.GeneralMethods;
 import Classes.GeneralMethods.StudentSearchType;
@@ -98,6 +99,36 @@ public class Student_Management extends javax.swing.JPanel {
         generalMethods.setIntegerOnly(stm_ad_student_guardian_contact_text, 10);
         generalMethods.setIntegerOnly(stm_ad_student_guardian_whatsapp_text, 10);
 
+        refreshAllPermissions();
+
+    }
+
+    public void refreshAllPermissions() {
+
+        ST_SAVE_RECORD_BUTTON.setEnabled(
+                UserSession.hasPermission("ST_SAVE_RECORD")
+        );
+
+        ST_UPDATE_RECORD_BUTTON.setEnabled(
+                UserSession.hasPermission("ST_UPDATE_RECORD")
+        );
+
+        ST_DELETE_RECORD_BUTTON.setEnabled(
+                UserSession.hasPermission("ST_DELETE_RECORD")
+        );
+        //****
+        ST_SIBBLINGS_BUTTON.setEnabled(
+                UserSession.hasPermission("ST_SIBBLINGS")
+        );
+        ST_COURSE_ENROLMENT_BUTTON.setEnabled(
+                UserSession.hasPermission("ST_COURSE_ENROLMENT")
+        );
+        ST_MISCELLANEOUS_BUTTON.setEnabled(
+                UserSession.hasPermission("ST_MISCELLANEOUS")
+        );
+        ST_ELIMINATION_BUTTON.setEnabled(
+                UserSession.hasPermission("ST_ELIMINATION")
+        );
     }
 
     private void jComboPopulates() {
@@ -1205,18 +1236,18 @@ public class Student_Management extends javax.swing.JPanel {
         stm_ad_student_father_living_yes_checkbox = new javax.swing.JCheckBox();
         stm_ad_student_father_living_no_checkbox = new javax.swing.JCheckBox();
         jPanel8 = new javax.swing.JPanel();
-        buttonGradient1 = new Classes.ButtonGradient();
+        ST_UPDATE_RECORD_BUTTON = new Classes.ButtonGradient();
         buttonGradient2 = new Classes.ButtonGradient();
-        buttonGradient3 = new Classes.ButtonGradient();
-        buttonGradient4 = new Classes.ButtonGradient();
+        ST_SAVE_RECORD_BUTTON = new Classes.ButtonGradient();
+        ST_DELETE_RECORD_BUTTON = new Classes.ButtonGradient();
         buttonGradient6 = new Classes.ButtonGradient();
         jPanel9 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         stm_ad_student_medical_text = new javax.swing.JEditorPane();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
+        ST_SIBBLINGS_BUTTON = new javax.swing.JButton();
+        ST_COURSE_ENROLMENT_BUTTON = new javax.swing.JButton();
+        ST_MISCELLANEOUS_BUTTON = new javax.swing.JButton();
+        ST_ELIMINATION_BUTTON = new javax.swing.JButton();
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "General Information", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
@@ -2045,10 +2076,10 @@ public class Student_Management extends javax.swing.JPanel {
 
         jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
-        buttonGradient1.setText("EDIT");
-        buttonGradient1.addActionListener(new java.awt.event.ActionListener() {
+        ST_UPDATE_RECORD_BUTTON.setText("EDIT");
+        ST_UPDATE_RECORD_BUTTON.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonGradient1ActionPerformed(evt);
+                ST_UPDATE_RECORD_BUTTONActionPerformed(evt);
             }
         });
 
@@ -2059,17 +2090,17 @@ public class Student_Management extends javax.swing.JPanel {
             }
         });
 
-        buttonGradient3.setText("SAVE (F1)");
-        buttonGradient3.addActionListener(new java.awt.event.ActionListener() {
+        ST_SAVE_RECORD_BUTTON.setText("SAVE (F1)");
+        ST_SAVE_RECORD_BUTTON.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonGradient3ActionPerformed(evt);
+                ST_SAVE_RECORD_BUTTONActionPerformed(evt);
             }
         });
 
-        buttonGradient4.setText("DELETE");
-        buttonGradient4.addActionListener(new java.awt.event.ActionListener() {
+        ST_DELETE_RECORD_BUTTON.setText("DELETE");
+        ST_DELETE_RECORD_BUTTON.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonGradient4ActionPerformed(evt);
+                ST_DELETE_RECORD_BUTTONActionPerformed(evt);
             }
         });
 
@@ -2086,11 +2117,11 @@ public class Student_Management extends javax.swing.JPanel {
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(buttonGradient3, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(ST_SAVE_RECORD_BUTTON, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(buttonGradient1, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(ST_UPDATE_RECORD_BUTTON, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(buttonGradient4, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(ST_DELETE_RECORD_BUTTON, javax.swing.GroupLayout.PREFERRED_SIZE, 165, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonGradient2, javax.swing.GroupLayout.PREFERRED_SIZE, 137, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2102,15 +2133,15 @@ public class Student_Management extends javax.swing.JPanel {
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(buttonGradient1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(ST_UPDATE_RECORD_BUTTON, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(buttonGradient2, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonGradient3, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonGradient4, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(ST_SAVE_RECORD_BUTTON, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(ST_DELETE_RECORD_BUTTON, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(buttonGradient6, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
 
-        jPanel8Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {buttonGradient1, buttonGradient2, buttonGradient3, buttonGradient4});
+        jPanel8Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {ST_DELETE_RECORD_BUTTON, ST_SAVE_RECORD_BUTTON, ST_UPDATE_RECORD_BUTTON, buttonGradient2});
 
         jPanel9.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createEtchedBorder(new java.awt.Color(204, 204, 204), new java.awt.Color(102, 102, 102)), "Medical Information", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.ABOVE_TOP, new java.awt.Font("Roboto", 0, 14))); // NOI18N
 
@@ -2133,39 +2164,39 @@ public class Student_Management extends javax.swing.JPanel {
                 .addContainerGap())
         );
 
-        jButton1.setBackground(new java.awt.Color(102, 102, 102));
-        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/siblings.png"))); // NOI18N
-        jButton1.setToolTipText("Siblings");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        ST_SIBBLINGS_BUTTON.setBackground(new java.awt.Color(102, 102, 102));
+        ST_SIBBLINGS_BUTTON.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/siblings.png"))); // NOI18N
+        ST_SIBBLINGS_BUTTON.setToolTipText("Siblings");
+        ST_SIBBLINGS_BUTTON.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                ST_SIBBLINGS_BUTTONActionPerformed(evt);
             }
         });
 
-        jButton2.setBackground(new java.awt.Color(102, 102, 102));
-        jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/course_enrolment.png"))); // NOI18N
-        jButton2.setToolTipText("Course Enrolment");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
+        ST_COURSE_ENROLMENT_BUTTON.setBackground(new java.awt.Color(102, 102, 102));
+        ST_COURSE_ENROLMENT_BUTTON.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/course_enrolment.png"))); // NOI18N
+        ST_COURSE_ENROLMENT_BUTTON.setToolTipText("Course Enrolment");
+        ST_COURSE_ENROLMENT_BUTTON.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+                ST_COURSE_ENROLMENT_BUTTONActionPerformed(evt);
             }
         });
 
-        jButton3.setBackground(new java.awt.Color(102, 102, 102));
-        jButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/misc32.png"))); // NOI18N
-        jButton3.setToolTipText("Issue Miscellaneous Items");
-        jButton3.addActionListener(new java.awt.event.ActionListener() {
+        ST_MISCELLANEOUS_BUTTON.setBackground(new java.awt.Color(102, 102, 102));
+        ST_MISCELLANEOUS_BUTTON.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/misc32.png"))); // NOI18N
+        ST_MISCELLANEOUS_BUTTON.setToolTipText("Issue Miscellaneous Items");
+        ST_MISCELLANEOUS_BUTTON.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton3ActionPerformed(evt);
+                ST_MISCELLANEOUS_BUTTONActionPerformed(evt);
             }
         });
 
-        jButton4.setBackground(new java.awt.Color(102, 102, 102));
-        jButton4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/termination32.png"))); // NOI18N
-        jButton4.setToolTipText("Eliminate the student");
-        jButton4.addActionListener(new java.awt.event.ActionListener() {
+        ST_ELIMINATION_BUTTON.setBackground(new java.awt.Color(102, 102, 102));
+        ST_ELIMINATION_BUTTON.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/termination32.png"))); // NOI18N
+        ST_ELIMINATION_BUTTON.setToolTipText("Eliminate the student");
+        ST_ELIMINATION_BUTTON.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4ActionPerformed(evt);
+                ST_ELIMINATION_BUTTONActionPerformed(evt);
             }
         });
 
@@ -2179,13 +2210,13 @@ public class Student_Management extends javax.swing.JPanel {
                     .addComponent(jPanel8, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(6, 6, 6)
-                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(ST_SIBBLINGS_BUTTON, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(ST_COURSE_ENROLMENT_BUTTON, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(ST_MISCELLANEOUS_BUTTON, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(ST_ELIMINATION_BUTTON, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2203,10 +2234,10 @@ public class Student_Management extends javax.swing.JPanel {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
-                            .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
-                            .addComponent(jButton3, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
-                            .addComponent(jButton4, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE))
+                            .addComponent(ST_SIBBLINGS_BUTTON, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
+                            .addComponent(ST_COURSE_ENROLMENT_BUTTON, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
+                            .addComponent(ST_MISCELLANEOUS_BUTTON, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
+                            .addComponent(ST_ELIMINATION_BUTTON, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE))
                         .addGap(42, 42, 42)
                         .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -2314,7 +2345,7 @@ public class Student_Management extends javax.swing.JPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_stm_ad_student_guardian_address_contactActionPerformed
 
-    private void buttonGradient3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient3ActionPerformed
+    private void ST_SAVE_RECORD_BUTTONActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ST_SAVE_RECORD_BUTTONActionPerformed
 
         if (stm_ad_admission_no_combo.getEditor().getItem().toString().equalsIgnoreCase("") || stm_ad_student_name_combo.getEditor().getItem().toString().equalsIgnoreCase("")) {
             JOptionPane.showMessageDialog(this, "Please enter student information!");
@@ -2524,7 +2555,7 @@ public class Student_Management extends javax.swing.JPanel {
         }
 
 
-    }//GEN-LAST:event_buttonGradient3ActionPerformed
+    }//GEN-LAST:event_ST_SAVE_RECORD_BUTTONActionPerformed
 
     private void buttonGradient5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient5ActionPerformed
         try {
@@ -2543,7 +2574,7 @@ public class Student_Management extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_buttonGradient5ActionPerformed
 
-    private void buttonGradient1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient1ActionPerformed
+    private void ST_UPDATE_RECORD_BUTTONActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ST_UPDATE_RECORD_BUTTONActionPerformed
 
         if (stm_ad_admission_no_combo.getEditor().getItem().toString().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Enter Admission Number");
@@ -2636,9 +2667,9 @@ public class Student_Management extends javax.swing.JPanel {
 
         JOptionPane.showMessageDialog(this, "Student information updated successfully!");
 
-    }//GEN-LAST:event_buttonGradient1ActionPerformed
+    }//GEN-LAST:event_ST_UPDATE_RECORD_BUTTONActionPerformed
 
-    private void buttonGradient4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient4ActionPerformed
+    private void ST_DELETE_RECORD_BUTTONActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ST_DELETE_RECORD_BUTTONActionPerformed
 
         if (stm_ad_admission_no_combo.getEditor().getItem().toString().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Enter Admission Number");
@@ -2678,24 +2709,23 @@ public class Student_Management extends javax.swing.JPanel {
 //                    String.format("STUDENT DEACTIVATED: %s (Adm No: %s).", student.getFullName(), admissionNo),
 //                    username
 //            );
-
             JOptionPane.showMessageDialog(this, "Student deactivated successfully.");
         }
 
 
-    }//GEN-LAST:event_buttonGradient4ActionPerformed
+    }//GEN-LAST:event_ST_DELETE_RECORD_BUTTONActionPerformed
 
     private void buttonGradient2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient2ActionPerformed
         clearForm();
     }//GEN-LAST:event_buttonGradient2ActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+    private void ST_COURSE_ENROLMENT_BUTTONActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ST_COURSE_ENROLMENT_BUTTONActionPerformed
         JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
 
         Course_Enrollment dialog = new Course_Enrollment(parentFrame, false, selectedStudentId, username, role);
         GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
 
-    }//GEN-LAST:event_jButton2ActionPerformed
+    }//GEN-LAST:event_ST_COURSE_ENROLMENT_BUTTONActionPerformed
 
     private void buttonGradient6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient6ActionPerformed
         stm_ad_admission_no_combo.removeAllItems();
@@ -2732,7 +2762,7 @@ public class Student_Management extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_buttonGradient6ActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void ST_SIBBLINGS_BUTTONActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ST_SIBBLINGS_BUTTONActionPerformed
 
 //        JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
 //
@@ -2792,9 +2822,9 @@ public class Student_Management extends javax.swing.JPanel {
         GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
 
 
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_ST_SIBBLINGS_BUTTONActionPerformed
 
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+    private void ST_MISCELLANEOUS_BUTTONActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ST_MISCELLANEOUS_BUTTONActionPerformed
 
         String st_admi = stm_ad_admission_no_combo.getEditor().getItem().toString();
         String st_name = stm_ad_student_name_combo.getEditor().getItem().toString();
@@ -2806,9 +2836,9 @@ public class Student_Management extends javax.swing.JPanel {
 
         Miscellaneous_Issuing dialog = new Miscellaneous_Issuing(parentFrame, selectedStudentId, st_name, username, role);
         GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
-    }//GEN-LAST:event_jButton3ActionPerformed
+    }//GEN-LAST:event_ST_MISCELLANEOUS_BUTTONActionPerformed
 
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+    private void ST_ELIMINATION_BUTTONActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ST_ELIMINATION_BUTTONActionPerformed
 
         checkStudentElimination(selectedStudentId);
 //        String student_name = stm_ad_student_name_combo.getEditor().getItem().toString();
@@ -2819,7 +2849,7 @@ public class Student_Management extends javax.swing.JPanel {
 //        JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
 //        Eliminate_Student dialog = new Eliminate_Student(parentFrame, selectedStudentId, student_name, username, role);
 //        GeneralMethods.openDialogWithDarkBackground(parentFrame, dialog);
-    }//GEN-LAST:event_jButton4ActionPerformed
+    }//GEN-LAST:event_ST_ELIMINATION_BUTTONActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
 
@@ -2841,18 +2871,18 @@ public class Student_Management extends javax.swing.JPanel {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private Classes.ButtonGradient buttonGradient1;
+    private javax.swing.JButton ST_COURSE_ENROLMENT_BUTTON;
+    private Classes.ButtonGradient ST_DELETE_RECORD_BUTTON;
+    private javax.swing.JButton ST_ELIMINATION_BUTTON;
+    private javax.swing.JButton ST_MISCELLANEOUS_BUTTON;
+    private Classes.ButtonGradient ST_SAVE_RECORD_BUTTON;
+    private javax.swing.JButton ST_SIBBLINGS_BUTTON;
+    private Classes.ButtonGradient ST_UPDATE_RECORD_BUTTON;
     private Classes.ButtonGradient buttonGradient2;
-    private Classes.ButtonGradient buttonGradient3;
-    private Classes.ButtonGradient buttonGradient4;
     private Classes.ButtonGradient buttonGradient5;
     private Classes.ButtonGradient buttonGradient6;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;

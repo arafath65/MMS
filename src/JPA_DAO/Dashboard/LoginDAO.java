@@ -17,22 +17,38 @@ public class LoginDAO {
         try {
 
             List<Object[]> list = em.createNativeQuery(
-                    "SELECT login_id, emp_id, role, username FROM login WHERE username=? AND password=? AND is_active=1 AND status=1 ")
+                    "SELECT "
+                    + "l.login_id, "
+                    + "l.employee_id, "
+                    + "l.user_roles_id, "
+                    + "l.username, "
+                    + "r.user_roles, "
+                    + "e.full_name "
+                    + "FROM login l "
+                    + "INNER JOIN employee e "
+                    + "ON e.employee_id = l.employee_id "
+                    + "INNER JOIN user_roles r "
+                    + "ON r.user_roles_id = l.user_roles_id "
+                    + "WHERE l.username = ? "
+                    + "AND l.password = ? "
+                    + "AND l.is_active = 1 "
+                    + "AND l.status = 1"
+            )
                     .setParameter(1, username.trim())
                     .setParameter(2, password.trim())
                     .getResultList();
 
             if (!list.isEmpty()) {
 
-                // Update last login
+                // Update Last Login
                 em.getTransaction().begin();
 
                 em.createNativeQuery(
                         "UPDATE login "
-                        + "SET last_login=NOW() "
-                        + "WHERE username=?"
+                        + "SET last_login = NOW() "
+                        + "WHERE login_id = ?"
                 )
-                        .setParameter(1, username.trim())
+                        .setParameter(1, list.get(0)[0])
                         .executeUpdate();
 
                 em.getTransaction().commit();
@@ -54,5 +70,4 @@ public class LoginDAO {
 
         return null;
     }
-
 }

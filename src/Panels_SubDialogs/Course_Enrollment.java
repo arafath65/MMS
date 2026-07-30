@@ -629,7 +629,7 @@ public class Course_Enrollment extends javax.swing.JDialog {
 
             fp.setCreatedAt(new Date());
             fp.setLastMofidied(new Date());
-            fp.setUser(Dashboard.main_username.getText());
+            fp.setUser(Dashboard.main_time.getText());
             fp.setStatus(true);
 
             ce.setFeePayments(fp);

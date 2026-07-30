@@ -1,5 +1,6 @@
 package Dashboard;
 
+import Additional.UserSession;
 import Dashboard_Design.AppNavigator;
 import Dashboard_Design.MyDrawerBuilder;
 import Panels.Additional_Payments;
@@ -60,21 +61,19 @@ public class Dashboard extends javax.swing.JFrame {
     String username;
     String role;
 
-    public Dashboard(String username, String role) {
-        this.username = username;
-        this.role = role;
+    public Dashboard() {
+
         GlassPanePopup.install(this);
         MyDrawerBuilder myDrawerBuilder = new MyDrawerBuilder(this);
         Drawer.getInstance().setDrawerBuilder(myDrawerBuilder);
         initComponents();
 
-        username = username;
-        role = role;
+        main_username.setText("Username: " + UserSession.getUsername() + "  Role: " + UserSession.getRoleName());
 
         // main_panels MUST already exist from NetBeans designer
         cardLayout = new CardLayout();
         main_panels.setLayout(cardLayout);
-        
+
         AppNavigator.init(this);
 
         dashboard_Panel = new Dashboard_Panel();
@@ -133,10 +132,27 @@ public class Dashboard extends javax.swing.JFrame {
             return;
         }
 
+        refreshCurrentPermissions();
+
         cardLayout.show(main_panels, name);
         main_panels.revalidate();
         main_panels.repaint();
         Drawer.getInstance().closeDrawer();
+    }
+
+    public void refreshCurrentPermissions() {
+
+        studentManagement.refreshAllPermissions();
+
+//        fees_Management.refreshAllPermissions();
+//
+//        inventory.refreshAllPermissions();
+//
+//        cheque_Handling.refreshAllPermissions();
+//
+//        register_Employee.refreshAllPermissions();
+
+        // Add the rest later
     }
 
     @SuppressWarnings("unchecked")
@@ -146,8 +162,8 @@ public class Dashboard extends javax.swing.JFrame {
         sub_main_panel = new javax.swing.JPanel();
         main_panels = new javax.swing.JPanel();
         jButton1 = new javax.swing.JButton();
+        main_time = new javax.swing.JLabel();
         main_username = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
         panelRound2 = new Classes.PanelRound();
         Main_Lable = new javax.swing.JLabel();
 
@@ -175,15 +191,15 @@ public class Dashboard extends javax.swing.JFrame {
             }
         });
 
+        main_time.setFont(new java.awt.Font("Roboto", 1, 12)); // NOI18N
+        main_time.setForeground(new java.awt.Color(232, 232, 232));
+        main_time.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        main_time.setText("MMM Arafath");
+
         main_username.setFont(new java.awt.Font("Roboto", 1, 12)); // NOI18N
         main_username.setForeground(new java.awt.Color(232, 232, 232));
-        main_username.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        main_username.setText("MMM Arafath");
-
-        jLabel2.setFont(new java.awt.Font("Roboto", 1, 12)); // NOI18N
-        jLabel2.setForeground(new java.awt.Color(232, 232, 232));
-        jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel2.setText("2025-01-18 05:50 PM");
+        main_username.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        main_username.setText("2025-01-18 05:50 PM");
 
         panelRound2.setBackground(new java.awt.Color(247, 178, 50));
         panelRound2.setRoundBottomLeft(10);
@@ -224,9 +240,9 @@ public class Dashboard extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(panelRound2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(main_username, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(main_username, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(main_time, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(19, 19, 19))
         );
         layout.setVerticalGroup(
@@ -235,8 +251,8 @@ public class Dashboard extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, 40, Short.MAX_VALUE)
-                    .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(main_username, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(main_time, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(panelRound2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(sub_main_panel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -311,16 +327,16 @@ public class Dashboard extends javax.swing.JFrame {
         FlatMacDarkLaf.setup();
         //  FlatMacLightLaf.setup();
 
-        java.awt.EventQueue.invokeLater(() -> new Dashboard("", "").setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new Dashboard().setVisible(true));
     }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     public static javax.swing.JLabel Main_Lable;
     private javax.swing.JButton jButton1;
-    private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel main_panels;
-    public static javax.swing.JLabel main_username;
+    public static javax.swing.JLabel main_time;
+    private javax.swing.JLabel main_username;
     private Classes.PanelRound panelRound2;
     private javax.swing.JPanel sub_main_panel;
     // End of variables declaration//GEN-END:variables

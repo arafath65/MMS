@@ -43,13 +43,13 @@
                       <Component id="jPanel8" alignment="1" max="32767" attributes="0"/>
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
-                          <Component id="jButton1" min="-2" pref="50" max="-2" attributes="0"/>
+                          <Component id="ST_SIBBLINGS_BUTTON" min="-2" pref="50" max="-2" attributes="0"/>
                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                          <Component id="jButton2" min="-2" pref="50" max="-2" attributes="0"/>
+                          <Component id="ST_COURSE_ENROLMENT_BUTTON" min="-2" pref="50" max="-2" attributes="0"/>
                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                          <Component id="jButton3" min="-2" pref="50" max="-2" attributes="0"/>
+                          <Component id="ST_MISCELLANEOUS_BUTTON" min="-2" pref="50" max="-2" attributes="0"/>
                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                          <Component id="jButton4" min="-2" pref="50" max="-2" attributes="0"/>
+                          <Component id="ST_ELIMINATION_BUTTON" min="-2" pref="50" max="-2" attributes="0"/>
                           <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                       </Group>
                       <Component id="jPanel2" alignment="0" max="32767" attributes="0"/>
@@ -72,10 +72,10 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" attributes="0">
                           <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                              <Component id="jButton1" pref="50" max="32767" attributes="0"/>
-                              <Component id="jButton2" pref="50" max="32767" attributes="0"/>
-                              <Component id="jButton3" pref="50" max="32767" attributes="0"/>
-                              <Component id="jButton4" pref="50" max="32767" attributes="0"/>
+                              <Component id="ST_SIBBLINGS_BUTTON" pref="50" max="32767" attributes="0"/>
+                              <Component id="ST_COURSE_ENROLMENT_BUTTON" pref="50" max="32767" attributes="0"/>
+                              <Component id="ST_MISCELLANEOUS_BUTTON" pref="50" max="32767" attributes="0"/>
+                              <Component id="ST_ELIMINATION_BUTTON" pref="50" max="32767" attributes="0"/>
                           </Group>
                           <EmptySpace min="-2" pref="42" max="-2" attributes="0"/>
                           <Component id="jPanel2" max="32767" attributes="0"/>
@@ -1699,11 +1699,11 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="buttonGradient3" min="-2" pref="165" max="-2" attributes="0"/>
+                      <Component id="ST_SAVE_RECORD_BUTTON" min="-2" pref="165" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="buttonGradient1" min="-2" pref="165" max="-2" attributes="0"/>
+                      <Component id="ST_UPDATE_RECORD_BUTTON" min="-2" pref="165" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="buttonGradient4" min="-2" pref="165" max="-2" attributes="0"/>
+                      <Component id="ST_DELETE_RECORD_BUTTON" min="-2" pref="165" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="buttonGradient2" min="-2" pref="137" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
@@ -1717,10 +1717,10 @@
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
-                          <Component id="buttonGradient1" linkSize="2" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="ST_UPDATE_RECORD_BUTTON" linkSize="2" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="buttonGradient2" linkSize="2" alignment="3" min="-2" pref="40" max="-2" attributes="0"/>
-                          <Component id="buttonGradient3" linkSize="2" alignment="3" min="-2" pref="40" max="-2" attributes="0"/>
-                          <Component id="buttonGradient4" linkSize="2" alignment="3" min="-2" pref="40" max="-2" attributes="0"/>
+                          <Component id="ST_SAVE_RECORD_BUTTON" linkSize="2" alignment="3" min="-2" pref="40" max="-2" attributes="0"/>
+                          <Component id="ST_DELETE_RECORD_BUTTON" linkSize="2" alignment="3" min="-2" pref="40" max="-2" attributes="0"/>
                           <Component id="buttonGradient6" alignment="3" min="-2" pref="40" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
@@ -1729,12 +1729,12 @@
             </DimensionLayout>
           </Layout>
           <SubComponents>
-            <Component class="Classes.ButtonGradient" name="buttonGradient1">
+            <Component class="Classes.ButtonGradient" name="ST_UPDATE_RECORD_BUTTON">
               <Properties>
                 <Property name="text" type="java.lang.String" value="EDIT"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonGradient1ActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ST_UPDATE_RECORD_BUTTONActionPerformed"/>
               </Events>
             </Component>
             <Component class="Classes.ButtonGradient" name="buttonGradient2">
@@ -1745,20 +1745,20 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonGradient2ActionPerformed"/>
               </Events>
             </Component>
-            <Component class="Classes.ButtonGradient" name="buttonGradient3">
+            <Component class="Classes.ButtonGradient" name="ST_SAVE_RECORD_BUTTON">
               <Properties>
                 <Property name="text" type="java.lang.String" value="SAVE (F1)"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonGradient3ActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ST_SAVE_RECORD_BUTTONActionPerformed"/>
               </Events>
             </Component>
-            <Component class="Classes.ButtonGradient" name="buttonGradient4">
+            <Component class="Classes.ButtonGradient" name="ST_DELETE_RECORD_BUTTON">
               <Properties>
                 <Property name="text" type="java.lang.String" value="DELETE"/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonGradient4ActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ST_DELETE_RECORD_BUTTONActionPerformed"/>
               </Events>
             </Component>
             <Component class="Classes.ButtonGradient" name="buttonGradient6">
@@ -1822,7 +1822,7 @@
             </Container>
           </SubComponents>
         </Container>
-        <Component class="javax.swing.JButton" name="jButton1">
+        <Component class="javax.swing.JButton" name="ST_SIBBLINGS_BUTTON">
           <Properties>
             <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
               <Color blue="66" green="66" red="66" type="rgb"/>
@@ -1833,10 +1833,10 @@
             <Property name="toolTipText" type="java.lang.String" value="Siblings"/>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton1ActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ST_SIBBLINGS_BUTTONActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JButton" name="jButton2">
+        <Component class="javax.swing.JButton" name="ST_COURSE_ENROLMENT_BUTTON">
           <Properties>
             <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
               <Color blue="66" green="66" red="66" type="rgb"/>
@@ -1847,10 +1847,10 @@
             <Property name="toolTipText" type="java.lang.String" value="Course Enrolment"/>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton2ActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ST_COURSE_ENROLMENT_BUTTONActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JButton" name="jButton3">
+        <Component class="javax.swing.JButton" name="ST_MISCELLANEOUS_BUTTON">
           <Properties>
             <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
               <Color blue="66" green="66" red="66" type="rgb"/>
@@ -1861,10 +1861,10 @@
             <Property name="toolTipText" type="java.lang.String" value="Issue Miscellaneous Items"/>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton3ActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ST_MISCELLANEOUS_BUTTONActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JButton" name="jButton4">
+        <Component class="javax.swing.JButton" name="ST_ELIMINATION_BUTTON">
           <Properties>
             <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
               <Color blue="66" green="66" red="66" type="rgb"/>
@@ -1875,7 +1875,7 @@
             <Property name="toolTipText" type="java.lang.String" value="Eliminate the student"/>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton4ActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ST_ELIMINATION_BUTTONActionPerformed"/>
           </Events>
         </Component>
       </SubComponents>

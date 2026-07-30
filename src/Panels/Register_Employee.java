@@ -85,6 +85,8 @@ public class Register_Employee extends javax.swing.JPanel {
 
         JComboPopulates();
 
+        loadLatestEmployeeNo();
+
     }
 
     private void JComboPopulates() {
@@ -256,10 +258,7 @@ public class Register_Employee extends javax.swing.JPanel {
                         String selectedValue = selected.toString().trim();
                         if (!selectedValue.isEmpty() && isValueFromList(comboBox, selectedValue)) {
 
-                            int emp_id = generalMethods.extractIdFromCombo(selectedValue);
-                            selectedEmployeeId = emp_id;
-
-                            loadEmployee(selectedEmployeeId);
+                            
                             nextFocusComponent.requestFocus();
                         }
                     }
@@ -618,6 +617,56 @@ public class Register_Employee extends javax.swing.JPanel {
         new EmployeeCareerHistoryDAO().save(history);
     }
 
+    public void loadLatestEmployeeNo() {
+
+        EntityManager em = HibernateConfig.getEntityManager();
+
+        try {
+
+            Object obj = em.createNativeQuery(
+                    "SELECT employee_no "
+                    + "FROM employee "
+                    + "WHERE status = 1 "
+                    + "ORDER BY employee_id DESC "
+                    + "LIMIT 1"
+            ).getSingleResult();
+
+            int nextNo = 1; // Default if no records
+
+            if (obj != null) {
+
+                String lastNo = obj.toString().trim();
+
+                nextNo = Integer.parseInt(lastNo) + 1;
+
+            }
+
+            String newEmployeeNo = String.format("%06d", nextNo);
+
+            emp_emp_no_combo.removeAllItems();
+            emp_emp_no_combo.addItem(newEmployeeNo);
+            emp_emp_no_combo.setSelectedItem(newEmployeeNo);
+
+        } catch (javax.persistence.NoResultException e) {
+
+            // No employee records yet
+            String newEmployeeNo = String.format("%06d", 1);
+
+            emp_emp_no_combo.removeAllItems();
+            emp_emp_no_combo.addItem(newEmployeeNo);
+            emp_emp_no_combo.setSelectedItem(newEmployeeNo);
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        } finally {
+
+            em.close();
+
+        }
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -711,7 +760,6 @@ public class Register_Employee extends javax.swing.JPanel {
         emp_branch_combo = new javax.swing.JComboBox<>();
         jLabel27 = new javax.swing.JLabel();
         emp_account_number_text = new javax.swing.JTextField();
-        jButton8 = new javax.swing.JButton();
         jPanel7 = new javax.swing.JPanel();
         emp_lang_english_checkbox = new javax.swing.JCheckBox();
         emp_lang_sinhala_checkbox = new javax.swing.JCheckBox();
@@ -1388,7 +1436,7 @@ public class Register_Employee extends javax.swing.JPanel {
                                         .addComponent(jLabel22)
                                         .addGap(0, 0, Short.MAX_VALUE))
                                     .addGroup(jPanel5Layout.createSequentialGroup()
-                                        .addComponent(emp_basic_salary_text)
+                                        .addComponent(emp_basic_salary_text, javax.swing.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))))
                             .addGroup(jPanel5Layout.createSequentialGroup()
                                 .addComponent(emp_medium_combo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -1476,17 +1524,6 @@ public class Register_Employee extends javax.swing.JPanel {
             }
         });
 
-        jButton8.setBackground(new java.awt.Color(102, 102, 102));
-        jButton8.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        jButton8.setForeground(new java.awt.Color(255, 255, 255));
-        jButton8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/closed_eye24.png"))); // NOI18N
-        jButton8.setToolTipText("Course Enrolment");
-        jButton8.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton8ActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
@@ -1502,12 +1539,11 @@ public class Register_Employee extends javax.swing.JPanel {
                     .addComponent(jLabel26))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel27)
                     .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addComponent(emp_account_number_text, javax.swing.GroupLayout.PREFERRED_SIZE, 199, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton8, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(jLabel27)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(emp_account_number_text))
+                .addContainerGap())
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1517,9 +1553,7 @@ public class Register_Employee extends javax.swing.JPanel {
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addComponent(jLabel27)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(emp_account_number_text)
-                            .addComponent(jButton8, javax.swing.GroupLayout.DEFAULT_SIZE, 35, Short.MAX_VALUE)))
+                        .addComponent(emp_account_number_text, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addComponent(jLabel26)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -1718,6 +1752,8 @@ public class Register_Employee extends javax.swing.JPanel {
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
 
+        loadLatestEmployeeNo();
+
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void emp_contact_textActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_emp_contact_textActionPerformed
@@ -1791,6 +1827,8 @@ public class Register_Employee extends javax.swing.JPanel {
     private void buttonGradient3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonGradient3ActionPerformed
 
         try {
+            
+            
 
             EmployeeDAO dao = new EmployeeDAO();
             Employee employee;
@@ -1835,7 +1873,7 @@ public class Register_Employee extends javax.swing.JPanel {
             employee.setPermanentAddress(emp_permanent_address_text.getText());
 
             employee.setJoinedDate(emp_joined_date.getDate());
-            employee.setEmployeeCategory(emp_category_combo.getSelectedItem().toString());
+            employee.setEmployeeCategory(emp_category_combo.getEditor().getItem().toString());
             employee.setJobTitle(emp_job_title_combo.getEditor().getItem().toString());
             employee.setBasicSalary(GeneralMethods.parseCommaNumber(emp_basic_salary_text.getText()));
             employee.setDepartment(emp_department_combo.getEditor().getItem().toString());
@@ -2037,10 +2075,6 @@ public class Register_Employee extends javax.swing.JPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_jButton7ActionPerformed
 
-    private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton8ActionPerformed
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private Classes.ButtonGradient buttonGradient2;
@@ -2090,7 +2124,6 @@ public class Register_Employee extends javax.swing.JPanel {
     private javax.swing.JButton jButton5;
     private javax.swing.JButton jButton6;
     private javax.swing.JButton jButton7;
-    private javax.swing.JButton jButton8;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;

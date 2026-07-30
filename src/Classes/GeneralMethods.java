@@ -328,7 +328,7 @@ public class GeneralMethods {
         combo.getEditor().setItem(typedText);
 
         if (!students.isEmpty()) {
-            styleLightPopup(combo);
+          //  styleLightPopup(combo);
             combo.showPopup();
         } else {
             combo.hidePopup();
